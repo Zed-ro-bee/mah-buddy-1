@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "latest",
+    "@supabase/supabase-js": "latest",
     "ai": "latest",
     "next": "latest",
     "react": "latest",
