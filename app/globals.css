@@ -78,10 +78,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .composer textarea { width: 100%; min-height: 52px; max-height: 180px; display: block; resize: none; border: 0; outline: 0; padding: 15px 52px 5px 16px; color: #222; background: transparent; font-size: 15px; line-height: 1.4; }
 .composer textarea::placeholder { color: #9a9a9a; }
 .composer-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 3px 8px 8px; }
-.icon-btn, .send-btn { width: 32px; height: 32px; border: 0; border-radius: 9px; display: grid; place-items: center; }
-.icon-btn { background: transparent; color: #555; font-size: 17px; }
-.icon-btn:hover { background: #f2f2f2; }
-.icon-btn.listening { color: #c33; }
+.icon-btn, .send-btn { width: 34px; height: 34px; border: 0; border-radius: 50%; display: grid; place-items: center; }
+.mic-btn { background: #f1f1f1; color: #2f2f2f; border: 1px solid #e1e1e1; transition: transform .15s, background .15s, color .15s, box-shadow .15s; }
+.mic-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mic-btn:hover { background: #e7e7e7; transform: scale(1.04); }
+.mic-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.mic-btn.listening { background: #222; color: #fff; border-color: #222; box-shadow: 0 0 0 5px rgba(0,0,0,.08); animation: mic-pulse 1.3s ease-in-out infinite; }
+@keyframes mic-pulse { 0%,100% { box-shadow: 0 0 0 4px rgba(0,0,0,.07); } 50% { box-shadow: 0 0 0 8px rgba(0,0,0,.03); } }
 .send-btn { background: #222; color: #fff; font-size: 18px; font-weight: 700; transition: transform .12s, background .12s; }
 .send-btn:not(:disabled):hover { background: #000; transform: scale(1.03); }
 .send-btn:disabled { background: #e4e4e4; color: #999; cursor: not-allowed; }
@@ -106,5 +109,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .composer { width: 100%; border-radius: 16px; }
   .composer textarea { min-height: 47px; padding: 13px 12px 3px; font-size: 14px; }
   .composer-actions { padding: 2px 6px 6px; }
+  .icon-btn, .send-btn { width: 34px; height: 34px; }
   .composer-note { display: none; }
 }
