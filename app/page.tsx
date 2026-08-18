@@ -5,10 +5,10 @@ type Message = { role: "user" | "assistant"; content: string };
 type Mode = "chat" | "explain" | "flashcards" | "quiz";
 
 const modes: { id: Mode; label: string; icon: string; prompt: string }[] = [
-  { id: "chat", label: "AI Chat", icon: "💬", prompt: "" },
-  { id: "explain", label: "Explain", icon: "📚", prompt: "Explain this topic simply, step by step, with an example: " },
-  { id: "flashcards", label: "Flashcards", icon: "🧠", prompt: "Turn this topic into 5 useful study flashcards with questions and answers: " },
-  { id: "quiz", label: "Quiz Me", icon: "🎯", prompt: "Quiz me on this topic. Ask one question at a time and wait for my answer before continuing: " },
+  { id: "chat", label: "New chat", icon: "＋", prompt: "" },
+  { id: "explain", label: "Explain", icon: "✦", prompt: "Explain this topic simply, step by step, with an example: " },
+  { id: "flashcards", label: "Flashcards", icon: "▤", prompt: "Turn this topic into 5 useful study flashcards with questions and answers: " },
+  { id: "quiz", label: "Quiz me", icon: "✓", prompt: "Quiz me on this topic. Ask one question at a time and wait for my answer before continuing: " },
 ];
 
 export default function Home() {
@@ -31,7 +31,6 @@ export default function Home() {
     const next = [...messages, { role: "user" as const, content: raw }];
     setMessages(next);
     setLoading(true);
-
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -41,7 +40,6 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Mah Buddy could not respond.");
       setMessages((current) => [...current, { role: "assistant", content: data.text }]);
-
       if (speech && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(data.text);
@@ -49,95 +47,91 @@ export default function Home() {
         window.speechSynthesis.speak(utterance);
       }
     } catch (error) {
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: error instanceof Error ? error.message : "I couldn't answer that right now." },
-      ]);
+      setMessages((current) => [...current, { role: "assistant", content: error instanceof Error ? error.message : "I couldn't answer that right now." }]);
     } finally {
       setLoading(false);
     }
   }
 
+  function newChat() {
+    setMode("chat");
+    setInput("");
+    setMessages([{ role: "assistant", content: "Hey! I'm Mah Buddy 👋 What are we learning today?" }]);
+  }
+
   function chooseMode(nextMode: Mode) {
     setMode(nextMode);
     const item = modes.find((entry) => entry.id === nextMode);
-    if (nextMode !== "chat") setInput(item?.prompt ?? "");
-    else setInput("");
+    setInput(nextMode === "chat" ? "" : item?.prompt ?? "");
   }
 
   function voice() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice input is not supported by this browser.");
-      return;
-    }
+    if (!SpeechRecognition) { alert("Voice input is not supported by this browser."); return; }
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
-    recognition.onresult = (event: any) => {
-      const text = event.results[0][0].transcript;
-      sendMessage(undefined, text);
-    };
+    recognition.onresult = (event: any) => sendMessage(undefined, event.results[0][0].transcript);
     recognition.start();
   }
 
   useEffect(() => () => window.speechSynthesis?.cancel(), []);
 
   return (
-    <div className="page">
+    <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">Mah <span>Buddy</span></div>
-        <nav className="nav">
-          {modes.map((item) => (
-            <button key={item.id} className={mode === item.id ? "active" : ""} onClick={() => chooseMode(item.id)}>
-              {item.icon} {item.label}
-            </button>
-          ))}
-          <button onClick={() => setMessages([{ role: "assistant", content: "Fresh chat started 👋 What are we learning?" }])}>✨ New chat</button>
-        </nav>
-        <div className="sidebar-note">Your study space<br /><span>Learn • Practise • Improve</span></div>
+        <div className="sidebar-top">
+          <button className="brand" onClick={newChat}><span className="brand-mark">MB</span><span>Mah Buddy</span></button>
+          <button className="new-chat" onClick={newChat}><span>＋</span> New chat</button>
+          <div className="section-label">Study modes</div>
+          <nav>
+            {modes.slice(1).map((item) => (
+              <button key={item.id} className={mode === item.id ? "nav-item active" : "nav-item"} onClick={() => chooseMode(item.id)}>
+                <span className="nav-icon">{item.icon}</span>{item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="sidebar-bottom">
+          <button className="side-control" onClick={() => setSpeech((value) => !value)}><span>{speech ? "◉" : "○"}</span> Voice {speech ? "on" : "off"}</button>
+          <div className="profile"><span className="profile-dot">M</span><span><strong>Mah Buddy</strong><small>AI Study Companion</small></span></div>
+        </div>
       </aside>
 
-      <main className="main">
-        <header className="topbar">
-          <div><div className="eyebrow">MAH BUDDY</div><h1>AI Study Companion</h1></div>
-          <button className="voice-toggle" onClick={() => setSpeech((value) => !value)}>
-            {speech ? "🔊 Voice on" : "🔇 Voice off"}
-          </button>
+      <main className="chat-app">
+        <header className="mobile-header">
+          <button className="mobile-brand" onClick={newChat}><span className="brand-mark">MB</span> Mah Buddy</button>
+          <button className="mobile-action" onClick={newChat}>＋</button>
         </header>
 
-        <section className="content">
-          <div className="hero">
-            <div>
-              <span className="status">● Ready to learn</span>
-              <h2>Learn smarter with Mah Buddy.</h2>
-              <p>Ask questions, understand difficult topics, revise, and practise with your AI study companion.</p>
-            </div>
-            <div className="hero-orb">MB</div>
+        <div className="chat-scroll">
+          <div className="conversation">
+            <div className="conversation-title"><span className="title-dot">✦</span><span>{mode === "chat" ? "Mah Buddy" : modes.find((item) => item.id === mode)?.label}</span></div>
+            {messages.map((message, index) => (
+              <div key={index} className={`row ${message.role}`}>
+                {message.role === "assistant" && <div className="avatar">MB</div>}
+                <div className="bubble-wrap">
+                  <div className="message-author">{message.role === "assistant" ? "Mah Buddy" : "You"}</div>
+                  <div className="message-content">{message.content}</div>
+                </div>
+              </div>
+            ))}
+            {loading && <div className="row assistant"><div className="avatar">MB</div><div className="bubble-wrap"><div className="message-author">Mah Buddy</div><div className="message-content thinking"><i></i><i></i><i></i></div></div></div>}
           </div>
+        </div>
 
-          <div className="cards">
-            <button className="card" onClick={() => chooseMode("explain")}><strong>📚 Explain a topic</strong><span>Simple step-by-step explanations.</span></button>
-            <button className="card" onClick={() => chooseMode("flashcards")}><strong>🧠 Make flashcards</strong><span>Turn any topic into revision cards.</span></button>
-            <button className="card" onClick={() => chooseMode("quiz")}><strong>🎯 Quiz me</strong><span>Practise what you know.</span></button>
-          </div>
-
-          <section className="chat">
-            <div className="chat-head"><div><strong>{modes.find((item) => item.id === mode)?.icon} {modes.find((item) => item.id === mode)?.label}</strong><span>Mah Buddy is here to help</span></div><button onClick={() => setMessages([{ role: "assistant", content: "Hey again 👋 What should we work on?" }])}>Clear</button></div>
-            <div className="messages">
-              {messages.map((message, index) => <div key={index} className={`message ${message.role}`}><span className="message-label">{message.role === "assistant" ? "Mah Buddy" : "You"}</span>{message.content}</div>)}
-              {loading && <div className="message assistant"><span className="message-label">Mah Buddy</span><span className="dots">Thinking<span>.</span><span>.</span><span>.</span></span></div>}
+        <div className="composer-area">
+          <form className="composer" onSubmit={sendMessage}>
+            <textarea value={input} onChange={(event) => setInput(event.target.value)} placeholder={mode === "chat" ? "Message Mah Buddy…" : `Enter a topic for ${modes.find((item) => item.id === mode)?.label.toLowerCase()}…`} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} />
+            <div className="composer-actions">
+              <button className={`icon-btn ${listening ? "listening" : ""}`} type="button" onClick={voice} disabled={loading} aria-label="Voice input">{listening ? "●" : "♩"}</button>
+              <button className="send-btn" disabled={loading || !input.trim()} type="submit">↑</button>
             </div>
-            <form className="composer" onSubmit={sendMessage}>
-              <textarea value={input} onChange={(event) => setInput(event.target.value)} placeholder={mode === "chat" ? "Ask Mah Buddy anything about your studies…" : "Enter a topic or question…"} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} />
-              <button className="mic" type="button" onClick={voice} disabled={loading}>{listening ? "🔴" : "🎙️"}</button>
-              <button className="send" disabled={loading || !input.trim()} type="submit">Send ↑</button>
-            </form>
-            <div className="composer-hint">Press Enter to send • Shift + Enter for a new line</div>
-          </section>
-        </section>
+          </form>
+          <div className="composer-note">Mah Buddy can make mistakes. Check important information.</div>
+        </div>
       </main>
     </div>
   );
