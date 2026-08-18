@@ -1,5 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { generateText } from "ai";
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -11,19 +10,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No messages provided." }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Mah Buddy's AI key is not configured yet. Add ANTHROPIC_API_KEY in the deployment environment." },
+        { error: "Mah Buddy's AI key is not configured yet. Add OPENAI_API_KEY in the deployment environment." },
         { status: 503 },
       );
     }
 
-    const result = await generateText({
-      model: anthropic(process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514"),
-      system:
+    const client = new OpenAI({ apiKey });
+    const result = await client.responses.create({
+      model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
+      instructions:
         "You are Mah Buddy, a friendly and encouraging AI study companion. Explain school topics clearly and simply, use examples when useful, ask helpful follow-up questions, quiz the student when requested, create useful flashcards when requested, and help students learn rather than just giving answers to assessed work. Keep responses focused, age-appropriate, and encouraging.",
-      messages: messages
+      input: messages
         .filter((message: any) => message && (message.role === "user" || message.role === "assistant") && typeof message.content === "string")
         .slice(-30)
         .map((message: { role: "user" | "assistant"; content: string }) => ({
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         })),
     });
 
-    return NextResponse.json({ text: result.text });
+    return NextResponse.json({ text: result.output_text });
   } catch (error) {
     console.error("Mah Buddy chat error:", error);
     const details = error instanceof Error ? error.message : "Unknown server error";
