@@ -11,7 +11,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No messages provided." }, { status: 400 });
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: "Mah Buddy's AI key is not configured yet. Add ANTHROPIC_API_KEY in the deployment environment." },
         { status: 503 },
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const result = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: anthropic(process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514"),
       system:
         "You are Mah Buddy, a friendly and encouraging AI study companion. Explain school topics clearly and simply, use examples when useful, ask helpful follow-up questions, quiz the student when requested, create useful flashcards when requested, and help students learn rather than just giving answers to assessed work. Keep responses focused, age-appropriate, and encouraging.",
       messages: messages
@@ -34,6 +35,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ text: result.text });
   } catch (error) {
     console.error("Mah Buddy chat error:", error);
-    return NextResponse.json({ error: "Mah Buddy could not respond right now. Please try again." }, { status: 500 });
+    const details = error instanceof Error ? error.message : "Unknown server error";
+    return NextResponse.json(
+      { error: "Mah Buddy could not respond right now.", details: details.slice(0, 500) },
+      { status: 500 },
+    );
   }
 }
