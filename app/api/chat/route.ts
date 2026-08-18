@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const result = await generateText({
-      model: google(process.env.GEMINI_MODEL || "gemini-2.5-flash-lite"),
+      model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
       system:
         "You are Mah Buddy, a friendly and encouraging AI study companion. Explain school topics clearly and simply, use examples when useful, ask helpful follow-up questions, quiz the student when requested, create useful flashcards when requested, and help students learn rather than just giving answers to assessed work. Keep responses focused, age-appropriate, and encouraging.",
       messages: messages
