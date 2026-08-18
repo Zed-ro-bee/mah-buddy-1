@@ -131,7 +131,9 @@ function MahBuddyChat() {
           <form className="composer" onSubmit={sendMessage}>
             <textarea value={input} onChange={(event) => setInput(event.target.value)} placeholder={mode === "chat" ? "Message Mah Buddy…" : `Enter a topic for ${modes.find((item) => item.id === mode)?.label.toLowerCase()}…`} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} />
             <div className="composer-actions">
-              <button className={`icon-btn ${listening ? "listening" : ""}`} type="button" onClick={voice} disabled={loading} aria-label="Voice input">{listening ? "●" : "♩"}</button>
+              <button className={`icon-btn mic-btn ${listening ? "listening" : ""}`} type="button" onClick={voice} disabled={loading} aria-label={listening ? "Stop listening" : "Voice input"} title={listening ? "Listening…" : "Voice input"}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v5a3.5 3.5 0 0 0 3.5 3.5Z"/><path d="M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v3.5M8.5 20.5h7"/></svg>
+              </button>
               <button className="send-btn" disabled={loading || !input.trim()} type="submit">↑</button>
             </div>
           </form>
