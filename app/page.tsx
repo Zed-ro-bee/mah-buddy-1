@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
+import AuthGate from "../components/auth-gate";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Mode = "chat" | "explain" | "flashcards" | "quiz";
@@ -12,6 +13,10 @@ const modes: { id: Mode; label: string; icon: string; prompt: string }[] = [
 ];
 
 export default function Home() {
+  return <AuthGate><MahBuddyChat /></AuthGate>;
+}
+
+function MahBuddyChat() {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hey! I'm Mah Buddy 👋 What are we learning today?" },
   ]);
