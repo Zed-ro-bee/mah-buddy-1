@@ -8,9 +8,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "@ai-sdk/google": "latest",
     "ai": "latest",
     "next": "latest",
-    "openai": "latest",
     "react": "latest",
     "react-dom": "latest"
   },
