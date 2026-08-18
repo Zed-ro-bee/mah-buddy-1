@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 type AuthMode = "signin" | "signup";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
+  const client = supabase;
   const [user, setUser] = useState<any>(null);
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
@@ -14,15 +15,15 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (!client) return;
+    client.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [client]);
 
-  if (!supabase) {
+  if (!client) {
     return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">MB</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
   }
 
@@ -31,8 +32,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     setBusy(true);
     setMessage("");
     const result = mode === "signin"
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      ? await client.auth.signInWithPassword({ email, password })
+      : await client.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
     setBusy(false);
     if (result.error) setMessage(result.error.message);
     else setMessage(mode === "signup" ? "Check your email to confirm your account." : "");
@@ -40,12 +41,12 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   async function google() {
     setMessage("");
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    const { error } = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
     if (error) setMessage(error.message);
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await client.auth.signOut();
   }
 
   if (user) {
