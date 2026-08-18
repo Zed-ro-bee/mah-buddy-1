@@ -1,5 +1,36 @@
 plugins { id 'com.android.application' }
 
-android { namespace 'com.mahbuddy.app'; compileSdk 35
-    defaultConfig { applicationId 'com.mahbuddy.app'; minSdk 23; targetSdk 35; versionCode 1; versionName '1.0' }
+android {
+    namespace 'com.mahbuddy.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.mahbuddy.app'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    signingConfigs {
+        release {
+            def storeFilePath = System.getenv('ANDROID_KEYSTORE_PATH')
+            if (storeFilePath) {
+                storeFile file(storeFilePath)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            debuggable false
+            if (System.getenv('ANDROID_KEYSTORE_PATH')) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
 }
