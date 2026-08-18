@@ -27,13 +27,15 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">MB</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
   }
 
+  const authClient = client;
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setMessage("");
     const result = mode === "signin"
-      ? await client.auth.signInWithPassword({ email, password })
-      : await client.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      ? await authClient.auth.signInWithPassword({ email, password })
+      : await authClient.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
     setBusy(false);
     if (result.error) setMessage(result.error.message);
     else setMessage(mode === "signup" ? "Check your email to confirm your account." : "");
@@ -41,12 +43,12 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   async function google() {
     setMessage("");
-    const { error } = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    const { error } = await authClient.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
     if (error) setMessage(error.message);
   }
 
   async function signOut() {
-    await client.auth.signOut();
+    await authClient.auth.signOut();
   }
 
   if (user) {
