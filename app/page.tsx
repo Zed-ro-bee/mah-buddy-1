@@ -1,44 +1,20 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import AuthGate from "../components/auth-gate";
-
-type Message = { role: "user" | "assistant"; content: string };
-type Mode = "chat" | "conversation" | "explain" | "flashcards" | "quiz";
-const modes: { id: Mode; label: string; icon: string; prompt: string }[] = [
-  { id: "chat", label: "New chat", icon: "＋", prompt: "" },
-  { id: "conversation", label: "Conversation", icon: "◉", prompt: "" },
-  { id: "explain", label: "Explain", icon: "✦", prompt: "Explain this topic simply, step by step, with an example: " },
-  { id: "flashcards", label: "Flashcards", icon: "▤", prompt: "Turn this topic into 5 useful study flashcards with questions and answers: " },
-  { id: "quiz", label: "Quiz me", icon: "✓", prompt: "Quiz me on this topic. Ask one question at a time and wait for my answer before continuing: " },
-];
-export default function Home() { return <AuthGate><MahBuddyChat /></AuthGate>; }
-function MahBuddyChat() {
-  const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: "Hey! I'm Mah Buddy 👋 What are we learning today?" }]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<Mode>("chat");
-
-  async function sendMessage(event?: FormEvent) {
-    event?.preventDefault();
-    const raw = input.trim();
-    if (!raw || loading) return;
-    const selected = modes.find(item => item.id === mode);
-    const text = mode === "chat" || mode === "conversation" ? raw : `${selected?.prompt ?? ""}${raw}`;
-    setInput("");
-    setMessages(c => [...c, { role: "user", content: raw }]);
-    setLoading(true);
-    try {
-      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: [...messages, { role: "user", content: text }] }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Mah Buddy could not respond.");
-      setMessages(c => [...c, { role: "assistant", content: data.text }]);
-    } catch (error) {
-      setMessages(c => [...c, { role: "assistant", content: error instanceof Error ? error.message : "I couldn't answer that right now." }]);
-    } finally { setLoading(false); }
-  }
-
-  function newChat() { setMode("chat"); setInput(""); setMessages([{ role: "assistant", content: "Hey! I'm Mah Buddy 👋 What are we learning today?" }]); }
-  function chooseMode(nextMode: Mode) { setMode(nextMode); const item = modes.find(e => e.id === nextMode); setInput(nextMode === "chat" || nextMode === "conversation" ? "" : item?.prompt ?? ""); }
-
-  return <div className="app-shell"><aside className="sidebar"><div className="sidebar-top"><button className="brand" onClick={newChat}><span className="brand-mark">MB</span><span>Mah Buddy</span></button><button className="new-chat" onClick={newChat}><span>＋</span> New chat</button><div className="section-label">Study modes</div><nav>{modes.slice(1).map(item => <button key={item.id} className={mode === item.id ? "nav-item active" : "nav-item"} onClick={() => chooseMode(item.id)}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}</nav></div><div className="sidebar-bottom"><div className="profile"><span className="profile-dot">M</span><span><strong>Mah Buddy</strong><small>AI Study Companion</small></span></div></div></aside><main className="chat-app"><header className="mobile-header"><button className="mobile-brand" onClick={newChat}><span className="brand-mark">MB</span> Mah Buddy</button><button className="mobile-action" onClick={newChat}>＋</button></header><div className="chat-scroll"><div className="conversation"><div className="conversation-title"><span className="title-dot">✦</span><span>{mode === "chat" ? "Mah Buddy" : modes.find(item => item.id === mode)?.label}</span></div>{messages.map((message, index) => <div key={index} className={`row ${message.role}`}>{message.role === "assistant" && <div className="avatar">MB</div>}<div className="bubble-wrap"><div className="message-author">{message.role === "assistant" ? "Mah Buddy" : "You"}</div><div className="message-content">{message.content}</div></div></div>)}{loading && <div className="row assistant"><div className="avatar">MB</div><div className="bubble-wrap"><div className="message-author">Mah Buddy</div><div className="message-content thinking"><i></i><i></i><i></i></div></div></div>}</div></div><div className="composer-area"><form className="composer" onSubmit={sendMessage}><textarea value={input} onChange={e => setInput(e.target.value)} placeholder={mode === "conversation" ? "Message Mah Buddy…" : mode === "chat" ? "Message Mah Buddy…" : `Enter a topic for ${modes.find(item => item.id === mode)?.label.toLowerCase()}…`} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} /><div className="composer-actions"><button className="send-btn" disabled={loading || !input.trim()} type="submit">↑</button></div></form><div className="composer-note">Mah Buddy can make mistakes. Check important information.</div></div></main></div>;
+type Message={role:"user"|"assistant";content:string};
+type Mode="chat"|"conversation"|"explain"|"flashcards"|"quiz";
+const modes=[{id:"chat" as Mode,label:"New chat",icon:"＋",prompt:""},{id:"conversation" as Mode,label:"Conversation",icon:"◉",prompt:""},{id:"explain" as Mode,label:"Explain",icon:"✦",prompt:"Explain this topic simply, step by step, with an example: "},{id:"flashcards" as Mode,label:"Flashcards",icon:"▤",prompt:"Turn this topic into 5 useful study flashcards with questions and answers: "},{id:"quiz" as Mode,label:"Quiz me",icon:"✓",prompt:"Quiz me on this topic. Ask one question at a time and wait for my answer before continuing: "}];
+export default function Home(){return <AuthGate><MahBuddyChat/></AuthGate>}
+function MahBuddyChat(){
+ const [messages,setMessages]=useState<Message[]>([{role:"assistant",content:"Hey! I'm Mah Buddy 👋 What are we learning today?"}]);
+ const [input,setInput]=useState("");const [loading,setLoading]=useState(false);const [listening,setListening]=useState(false);const [mode,setMode]=useState<Mode>("chat");const [voiceOn,setVoiceOn]=useState(true);const recognitionRef=useRef<any>(null);
+ function stopSpeaking(){window.speechSynthesis?.cancel()}
+ function speak(text:string){if(!voiceOn||!("speechSynthesis" in window))return;stopSpeaking();const voices=window.speechSynthesis.getVoices();const v=voices.find(x=>x.lang.toLowerCase().startsWith("en-gb"))||voices.find(x=>x.lang.toLowerCase().startsWith("en"));const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";if(v)u.voice=v;u.rate=.95;window.speechSynthesis.speak(u)}
+ async function sendMessage(event?:FormEvent,textOverride?:string){event?.preventDefault();const raw=(textOverride??input).trim();if(!raw||loading)return;setInput("");const selected=modes.find(x=>x.id===mode);const text=mode==="chat"||mode==="conversation"?raw:`${selected?.prompt??""}${raw}`;setMessages(c=>[...c,{role:"user",content:raw}]);setLoading(true);try{const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[...messages,{role:"user",content:text}]})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Mah Buddy could not respond.");setMessages(c=>[...c,{role:"assistant",content:data.text}]);speak(data.text)}catch(error){const t=error instanceof Error?error.message:"I couldn't answer that right now.";setMessages(c=>[...c,{role:"assistant",content:t}]);speak(t)}finally{setLoading(false)}}
+ function voice(){if(mode!=="conversation")setMode("conversation");const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;if(!SR){alert("Voice input is not supported by this browser.");return}if(listening){recognitionRef.current?.stop();return}const r=new SR();recognitionRef.current=r;r.lang="en-GB";r.interimResults=false;r.continuous=false;r.onstart=()=>setListening(true);r.onend=()=>{setListening(false);recognitionRef.current=null};r.onerror=()=>setListening(false);r.onresult=(e:any)=>sendMessage(undefined,e.results[0][0].transcript);r.start()}
+ function toggleVoice(){setVoiceOn(v=>{const n=!v;if(!n)stopSpeaking();return n})}
+ function newChat(){setMode("chat");setInput("");stopSpeaking();setMessages([{role:"assistant",content:"Hey! I'm Mah Buddy 👋 What are we learning today?"}])}
+ function chooseMode(next:Mode){stopSpeaking();setMode(next);const item=modes.find(x=>x.id===next);setInput(next==="chat"||next==="conversation"?"":item?.prompt??"")}
+ useEffect(()=>()=>{stopSpeaking();recognitionRef.current?.stop()},[]);
+ return <div className="app-shell"><aside className="sidebar"><div className="sidebar-top"><button className="brand" onClick={newChat}><span className="brand-mark">MB</span><span>Mah Buddy</span></button><button className="new-chat" onClick={newChat}>＋ New chat</button><div className="section-label">Study modes</div><nav>{modes.slice(1).map(item=><button key={item.id} className={mode===item.id?"nav-item active":"nav-item"} onClick={()=>chooseMode(item.id)}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}</nav></div><div className="sidebar-bottom"><button className="side-control" onClick={toggleVoice}>{voiceOn?"🔊 Voice on":"🔇 Voice off"}</button>{voiceOn&&<button className="side-control" onClick={stopSpeaking}>■ Stop speaking</button>}<div className="profile"><span className="profile-dot">M</span><span><strong>Mah Buddy</strong><small>AI Study Companion</small></span></div></div></aside><main className="chat-app"><header className="mobile-header"><button className="mobile-brand" onClick={newChat}><span className="brand-mark">MB</span> Mah Buddy</button><button className="mobile-action" onClick={newChat}>＋</button></header><div className="chat-scroll"><div className="conversation"><div className="conversation-title"><span className="title-dot">✦</span><span>{mode==="chat"?"Mah Buddy":modes.find(x=>x.id===mode)?.label}</span></div>{messages.map((m,i)=><div key={i} className={`row ${m.role}`}>{m.role==="assistant"&&<div className="avatar">MB</div>}<div className="bubble-wrap"><div className="message-author">{m.role==="assistant"?"Mah Buddy":"You"}</div><div className="message-content">{m.content}</div></div></div>)}{loading&&<div className="row assistant"><div className="avatar">MB</div><div className="bubble-wrap"><div className="message-author">Mah Buddy</div><div className="message-content thinking"><i></i><i></i><i></i></div></div></div>}</div></div><div className="composer-area"><form className="composer" onSubmit={sendMessage}><textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={mode==="conversation"?"Tap the mic and speak to Mah Buddy…":mode==="chat"?"Message Mah Buddy…":`Enter a topic for ${modes.find(x=>x.id===mode)?.label.toLowerCase()}…`} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();e.currentTarget.form?.requestSubmit()}}}/><div className="composer-actions"><button className={`icon-btn mic-btn ${listening?"listening":""}`} type="button" onClick={voice} disabled={loading} aria-label={listening?"Stop listening":"Start voice conversation"}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v5a3.5 3.5 0 0 0 3.5 3.5Z"/><path d="M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v3.5M8.5 20.5h7"/></svg></button><button className="send-btn" disabled={loading||!input.trim()} type="submit">↑</button></div></form><div className="composer-note">Tap 🎙️ to speak with Mah Buddy. It will answer using voice.</div></div></main></div>
 }
