@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import PersistenceBridge from "./persistence-bridge";
 
 type AuthMode = "signin" | "signup";
 type AuthClient = NonNullable<typeof supabase>;
@@ -29,7 +30,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   const auth: AuthClient = supabase;
 
-  if (user) return <>{children}</>;
+  if (user) return <><PersistenceBridge userId={user.id} />{children}</>;
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
