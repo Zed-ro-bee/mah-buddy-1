@@ -17,19 +17,22 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!client) return;
-    client.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: listener } = client.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    const authClient = client;
+    authClient.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = authClient.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     return () => listener.subscription.unsubscribe();
   }, [client]);
 
   if (!client) return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">MB</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
-  if (user) return <>{children}<button className="account-float" onClick={() => client.auth.signOut()}>Sign out</button></>;
+  const authClient = client;
+
+  if (user) return <>{children}<button className="account-float" onClick={() => authClient.auth.signOut()}>Sign out</button></>;
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
     const result = mode === "signin"
-      ? await client.auth.signInWithPassword({ email, password })
-      : await client.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      ? await authClient.auth.signInWithPassword({ email, password })
+      : await authClient.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
     setBusy(false);
     if (result.error) setMessage(result.error.message);
     else if (mode === "signup") setMessage("Check your email to confirm your account.");
@@ -37,7 +40,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   async function google() {
     setMessage("");
-    const { error } = await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    const { error } = await authClient.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
     if (error) setMessage(error.message);
   }
 
