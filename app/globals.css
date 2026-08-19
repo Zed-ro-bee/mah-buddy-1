@@ -8,10 +8,20 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 /* Safety cleanup: the old floating account/sign-out control is no longer part of Mah Buddy's UI. */
 .account-float { display: none !important; }
 
-/* Keep the sidebar controls above decorative/legacy layers and explicitly tappable on mobile. */
+/* Keep sidebar controls above decorative/legacy layers and explicitly tappable. */
 .sidebar { position: relative; z-index: 20; }
 .sidebar-bottom { position: relative; z-index: 30; pointer-events: auto; }
 .side-control { position: relative; z-index: 40; pointer-events: auto !important; touch-action: manipulation; }
 .tools-card { position: relative; z-index: 50; pointer-events: auto; }
+
+/* Portrait phones: reserve a real touch area for the tools control and prevent the fixed composer from intercepting it. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .sidebar { display: block !important; position: fixed; left: 0; top: 0; bottom: 0; width: min(86vw, 320px); overflow-y: auto; z-index: 1000; transform: translateX(0); }
+  .sidebar-bottom { padding-bottom: 24px; }
+  .side-control { min-height: 48px; display: flex; align-items: center; width: 100%; }
+  .tools-card { z-index: 1100; }
+  .chat-app { min-width: 0; }
+  .composer-area { z-index: 10; }
+}
 
 .intro-screen { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: 10px; padding: 24px; background: radial-gradient(circle at 50% 42%, #fafafa 0, #f4f4f5 38%, #ededee 100%); overflow: hidden; position: relative; animation: intro-fade .7s ease-out; }
