@@ -5,6 +5,8 @@ import { supabase } from "../lib/supabase";
 
 type AuthMode = "signin" | "signup";
 
+type AuthClient = NonNullable<typeof supabase>;
+
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [mode, setMode] = useState<AuthMode>("signin");
@@ -16,20 +18,25 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    const auth: AuthClient = supabase;
+    auth.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = auth.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  if (!supabase) return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">MB</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
+  if (!supabase) {
+    return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">MB</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
+  }
 
-  if (user) return <>{children}<button className="account-float" onClick={() => supabase.auth.signOut()}>Sign out</button></>;
+  const auth: AuthClient = supabase;
+
+  if (user) return <>{children}<button className="account-float" onClick={() => auth.auth.signOut()}>Sign out</button></>;
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
     const result = mode === "signin"
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      ? await auth.auth.signInWithPassword({ email, password })
+      : await auth.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
     setBusy(false);
     if (result.error) setMessage(result.error.message);
     else if (mode === "signup") setMessage("Check your email to confirm your account.");
@@ -37,7 +44,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   async function google() {
     setMessage("");
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    const { error } = await auth.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
     if (error) setMessage(error.message);
   }
 
