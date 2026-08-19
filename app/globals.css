@@ -8,4 +8,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 /* Safety cleanup: the old floating account/sign-out control is no longer part of Mah Buddy's UI. */
 .account-float { display: none !important; }
 
+/* Keep the sidebar controls above decorative/legacy layers and explicitly tappable on mobile. */
+.sidebar { position: relative; z-index: 20; }
+.sidebar-bottom { position: relative; z-index: 30; pointer-events: auto; }
+.side-control { position: relative; z-index: 40; pointer-events: auto !important; touch-action: manipulation; }
+.tools-card { position: relative; z-index: 50; pointer-events: auto; }
+
 .intro-screen { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: 10px; padding: 24px; background: radial-gradient(circle at 50% 42%, #fafafa 0, #f4f4f5 38%, #ededee 100%); overflow: hidden; position: relative; animation: intro-fade .7s ease-out; }
