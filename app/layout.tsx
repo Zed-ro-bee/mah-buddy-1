@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./mah-buddy-environment.css";
 
 export const metadata: Metadata = {
   title: "Mah Buddy — Your AI Study Companion",
