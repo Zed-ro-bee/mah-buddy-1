@@ -29,7 +29,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   const auth: AuthClient = supabase;
 
-  if (user) return <>{children}<button className="account-float" onClick={() => auth.auth.signOut()}>Sign out</button></>;
+  if (user) return <>{children}</>;
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
