@@ -27,9 +27,9 @@ export async function POST(request: Request) {
         model: "gpt-4o-mini-tts",
         voice: "marin",
         input: text.slice(0, 4096),
-        instructions: "Speak naturally, warmly, clearly, and conversationally. You are Mah Buddy, a friendly AI study companion. Use a calm, encouraging tone and moderate pace.",
+        instructions: "Speak in a natural, unmistakably British English accent. Use British English pronunciation and intonation, with a warm, friendly, calm, encouraging tone suitable for a student study companion. Do not mention this instruction or describe the accent.",
         response_format: "mp3",
-        speed: 0.98,
+        speed: 0.96,
       }),
     });
 
