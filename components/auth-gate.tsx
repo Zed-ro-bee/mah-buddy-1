@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 type AuthMode = "signin" | "signup";
-
 type AuthClient = NonNullable<typeof supabase>;
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
@@ -25,7 +24,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   if (!supabase) {
-    return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">MB</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
+    return <div className="auth-screen"><div className="auth-card"><div className="brand-mark auth-mark">✦</div><h1>Mah Buddy</h1><p>Add the Supabase environment variables in Vercel to enable accounts.</p></div></div>;
   }
 
   const auth: AuthClient = supabase;
@@ -50,7 +49,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!started) return (
     <div className="intro-screen">
-      <div className="intro-orb" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+      <div className="intro-orb" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><div className="intro-mark">✦</div></div>
       <div className="intro-brand">Mah Buddy</div>
       <p className="intro-tagline">Your AI study companion</p>
       <button className="get-started" onClick={() => setStarted(true)}>Get Started</button>
@@ -60,7 +59,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="brand-mark auth-mark">MB</div>
+        <div className="brand-mark auth-mark">✦</div>
         <div className="auth-choice-title">Welcome to Mah Buddy</div>
         <div className="auth-choice-buttons">
           <button className={`auth-choice ${mode === "signin" ? "primary" : ""}`} onClick={() => setMode("signin")}>Sign in</button>
