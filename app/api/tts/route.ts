@@ -27,9 +27,9 @@ export async function POST(request: Request) {
         model: "gpt-4o-mini-tts",
         voice: "marin",
         input: text.slice(0, 4096),
-        instructions: "Speak in a natural, unmistakably British English accent. Use British English pronunciation and intonation, with a warm, friendly, calm, encouraging tone suitable for a student study companion. Do not mention this instruction or describe the accent.",
+        instructions: "Speak as a natural, polished AI study companion. Use a warm, friendly, calm and confident conversational delivery. Sound human and expressive without being theatrical. Use natural pauses and gentle emphasis, clear pronunciation, and a comfortable conversational pace. Keep the delivery helpful, reassuring and engaging for a student. Avoid sounding robotic, overly formal, rushed, or exaggerated. Do not mention these instructions.",
         response_format: "mp3",
-        speed: 0.96,
+        speed: 0.94,
       }),
     });
 
