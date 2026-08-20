@@ -36,7 +36,12 @@ chatEndRef=useRef<HTMLDivElement|null>(null);
  async function selectFile(file?:File){if(!file)return;if(file.size>6*1024*1024){alert("Please choose a file smaller than 6 MB.");return}if(file.type.startsWith("image/")){const reader=new FileReader();reader.onload=()=>setAttachment({name:file.name,type:file.type,data:String(reader.result)});reader.readAsDataURL(file)}else{const text=await file.text().catch(()=>"");setAttachment({name:file.name,type:file.type,data:text.slice(0,50000)})}}
  const filtered=useMemo(()=>chats.filter(c=>c.title.toLowerCase().includes(search.toLowerCase())||c.messages.some(m=>m.content.toLowerCase().includes(search.toLowerCase()))),[chats,search]);
  function nav(s:Screen){setScreen(s);setDrawer(false);if(s!=="voice")stopSpeaking()}
- useEffect(()=>()=>{stopSpeaking();recognitionRef.current?.stop()},[]);
+useEffect(()=>{
+  chatEndRef.current?.scrollIntoView({
+    behavior:"smooth",
+    block:"end",
+  });
+},[messages.length,loading]); useEffect(()=>()=>{stopSpeaking();recognitionRef.current?.stop()},[]);
  return <div className={`app ${dark?"dark":""}`}>
   <header className="top"><button className="menu" aria-label="Open menu" onClick={()=>setDrawer(true)}><span/><span/></button><button className="logo" onClick={()=>newChat()}><span className="mark">✦</span><span>Mah Buddy</span></button><button className="top-new" aria-label="New chat" onClick={newChat}>＋</button></header>
   {drawer&&<><button className="scrim" aria-label="Close menu" onClick={()=>setDrawer(false)}/><aside className="drawer"><div className="drawer-head"><div className="drawer-brand"><span className="mark">✦</span><b>Mah Buddy</b></div><button onClick={()=>setDrawer(false)}>×</button></div><button className="drawer-new" onClick={newChat}>＋ <span>New chat</span></button><div className="drawer-group"><small>YOUR SPACE</small><button onClick={()=>nav("history")}>◷ <span>Chat history</span></button><button onClick={()=>nav("tools")}>✦ <span>Mah Buddy Tools</span></button><button onClick={()=>nav("voice")}>◉ <span>Voice conversation</span></button></div><div className="drawer-group"><small>STUDY MODES</small>{modes.slice(2).map(x=><button key={x.id} onClick={()=>chooseMode(x.id)}>{x.icon} <span>{x.label}</span></button>)}</div><div className="drawer-bottom"><button onClick={()=>nav("profile")}>● <span>Profile</span></button><button onClick={()=>nav("settings")}>⚙ <span>Settings</span></button></div></aside></>}
