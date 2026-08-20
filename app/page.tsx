@@ -12,7 +12,12 @@ const starter=():Message[]=>[{role:"assistant",content:"Hey! I'm Mah Buddy 👋\
 export default function Home(){return <AuthGate><MahBuddyChat/></AuthGate>}
 function MahBuddyChat(){
  const [chats,setChats]=useState<Chat[]>([]),[chatId,setChatId]=useState(""),[input,setInput]=useState(""),[loading,setLoading]=useState(false),[listening,setListening]=useState(false),[mode,setMode]=useState<Mode>("chat"),[voiceOn,setVoiceOn]=useState(true),[speaking,setSpeaking]=useState(false),[search,setSearch]=useState(""),[drawer,setDrawer]=useState(false),[screen,setScreen]=useState<Screen>("chat"),[dark,setDark]=useState(false),[memory,setMemory]=useState(true),[instructions,setInstructions]=useState(""),[attachment,setAttachment]=useState<Message["attachment"]>();
- const recognitionRef=useRef<any>(null),audioRef=useRef<HTMLAudioElement|null>(null),audioUrlRef=useRef<string|null>(null),fileRef=useRef<HTMLInputElement|null>(null);
+ const 
+recognitionRef=useRef<any>(null),
+audioRef=useRef<HTMLAudioElement|null>(null),
+audioUrlRef=useRef<string|null>(null),
+fileRef=useRef<HTMLInputElement|null>(null),
+chatEndRef=useRef<HTMLDivElement|null>(null);
  const active=chats.find(c=>c.id===chatId)||chats[0],messages=active?.messages||starter();
  useEffect(()=>{try{const saved=localStorage.getItem("mah-buddy-chats"),prefs=JSON.parse(localStorage.getItem("mah-buddy-prefs")||"{}");const loaded:Chat[]=saved?JSON.parse(saved):[];if(loaded.length){setChats(loaded);setChatId(loaded[0].id)}else{const c={id:crypto.randomUUID(),title:"New chat",messages:starter(),updatedAt:Date.now()};setChats([c]);setChatId(c.id)}setDark(!!prefs.dark);setMemory(prefs.memory!==false);setInstructions(prefs.instructions||"")}catch{const c={id:Date.now().toString(),title:"New chat",messages:starter(),updatedAt:Date.now()};setChats([c]);setChatId(c.id)}},[]);
  useEffect(()=>{if(chats.length)localStorage.setItem("mah-buddy-chats",JSON.stringify(chats))},[chats]);
