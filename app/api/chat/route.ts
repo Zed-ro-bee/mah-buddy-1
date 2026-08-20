@@ -10,10 +10,18 @@ function imageData(data: string) {
   return match ? { mediaType: match[1], data: match[2] } : null;
 }
 
+function fileData(data: string, fallbackType: string) {
+  const match = data.match(/^data:([^;]+);base64,(.+)$/s);
+  if (match) return { mediaType: match[1] || fallbackType, data: match[2] };
+  return null;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const messages = Array.isArray(body.messages) ? body.messages : [];
+    const customInstructions = typeof body.customInstructions === "string" ? body.customInstructions.trim() : "";
+    const memory = typeof body.memory === "string" ? body.memory.trim() : "";
 
     if (!messages.length) {
       return NextResponse.json({ error: "No messages provided." }, { status: 400 });
@@ -57,6 +65,25 @@ export async function POST(request: Request) {
         }
       }
 
+      // PDF and other binary attachments must arrive as a data URL from the browser.
+      // This keeps the binary bytes intact instead of trying to read a PDF as text.
+      if (type === "application/pdf" || type.startsWith("audio/") || type.startsWith("video/")) {
+        const file = fileData(attachment.data, type);
+        if (file) {
+          return {
+            role: message.role,
+            content: [
+              { type: "text" as const, text: `${message.content.slice(0, 12000)}\n\nAttached file: ${name}. Analyze this file as part of the user's request.` },
+              { type: "file" as const, data: file.data, mediaType: file.mediaType },
+            ],
+          };
+        }
+        return {
+          role: message.role,
+          content: `${message.content.slice(0, 12000)}\n\nThe attached ${name} could not be transferred safely for analysis. Please attach it again.`,
+        };
+      }
+
       if (["text/plain", "text/markdown", "text/csv", "application/json", "text/html"].includes(type)) {
         return {
           role: message.role,
@@ -66,13 +93,12 @@ export async function POST(request: Request) {
 
       return {
         role: message.role,
-        content: `${message.content.slice(0, 12000)}\n\nThe user attached a file named "${name}" (${type}), but this file type could not be extracted by the current browser attachment reader. Tell the user that this file type is not yet supported for content analysis and ask them to attach an image or text-based file instead.`,
+        content: `${message.content.slice(0, 12000)}\n\nThe user attached a file named "${name}" (${type}), but this file type is not currently supported for content analysis. Tell the user which supported format to use instead.`,
       };
     });
 
-    const result = await generateText({
-      model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
-      system: `You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.
+    const systemParts = [
+      `You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.
 
 CORE BEHAVIOR:
 - Understand what kind of question the user is asking before deciding how to answer.
@@ -92,24 +118,6 @@ ACADEMIC AND SCHOOL QUESTIONS:
 - Use simple language unless the user asks for an advanced explanation.
 - Help the student understand the topic rather than simply completing assessed work for them.
 
-BUSINESS QUESTIONS:
-- When the user asks about a business, business idea, industry, trade, or entrepreneurship, respond as a practical business guide rather than using the academic Answer/Explanation format.
-- First identify and explain the nature/type of the business and what it does.
-- Then cover the most important factors relevant to that particular business, such as:
-  * products or services offered
-  * target customers and who is likely to buy
-  * suitable location or market
-  * customer demand and buying behavior
-  * seasonality and when demand may increase or decrease
-  * competition and how the business could differentiate itself
-  * pricing and possible revenue sources
-  * startup and operating considerations
-  * important resources, skills, or staff needed
-  * major risks, challenges, and practical things to watch out for
-- Do not force every category into every business answer. Choose the factors that actually matter for the specific business.
-- If the user is asking whether a business is a good idea, explain both opportunities and challenges rather than simply saying yes or no.
-- If location matters, ask for the user's target city/country when it is necessary for a useful local answer rather than inventing local facts.
-
 GENERAL QUESTIONS:
 - For everyday, conversational, technical, creative, or general-knowledge questions, answer naturally according to the user's request.
 - Do not automatically use the academic Answer/Explanation format unless the question is actually academic.
@@ -119,10 +127,22 @@ QUIZZES:
 
 ATTACHMENTS:
 - When an image is attached, inspect it carefully and use its visible information to answer the user's request.
-- When supported text-based files are attached, use their contents when answering.
-- If an attachment type cannot be analyzed, clearly explain that limitation and suggest a supported format.
+- When a supported text file is attached, use its contents when answering.
+- When a PDF or other supported binary file is attached, inspect the file itself rather than pretending it is plain text.
+- If an attachment cannot be analyzed, clearly explain the limitation and suggest a supported format.`,
+    ];
 
-The goal is to make Mah Buddy feel intelligent and useful: understand the user's intent first, then choose the most appropriate response style.`,
+    if (customInstructions) {
+      systemParts.push(`\nUSER CUSTOM INSTRUCTIONS:\n${customInstructions.slice(0, 4000)}`);
+    }
+
+    if (memory) {
+      systemParts.push(`\nRECENT USER CONTEXT:\n${memory.slice(0, 4000)}`);
+    }
+
+    const result = await generateText({
+      model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
+      system: systemParts.join("\n"),
       messages: modelMessages as any,
     });
 
