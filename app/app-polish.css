@@ -1,0 +1,31 @@
+/* Mah Buddy — final visual consistency layer */
+:root{--mb-radius:18px;--mb-shadow:0 10px 30px rgba(28,27,44,.08)}
+*,*::before,*::after{scrollbar-width:thin;scrollbar-color:rgba(28,27,44,.18) transparent}
+button,input,textarea{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.mb-app{isolation:isolate}
+.mb-top{box-shadow:0 1px 0 rgba(28,27,44,.05),0 6px 20px rgba(28,27,44,.025)!important}
+.mb-brand{font-weight:400!important}
+.chat-msg{box-shadow:var(--mb-shadow)!important;transition:transform .16s ease,box-shadow .16s ease}
+.chat-msg.user{background:linear-gradient(135deg,#c9dcf0,#f1cadf)!important}
+.chat-msg:not(.user){background:#fff!important}
+.chat-actions button,.chat-tools button{border-radius:999px!important;transition:background .16s ease,color .16s ease,transform .16s ease}
+.chat-actions button:active,.chat-tools button:active{transform:scale(.97)}
+.composer{box-shadow:var(--mb-shadow)!important;border-radius:22px!important}
+.composer textarea::placeholder{color:#9b99a2}
+.composer-row .send{box-shadow:0 6px 16px rgba(28,27,44,.16);transition:transform .16s ease}
+.composer-row .send:active{transform:scale(.93)}
+.tool-visual,.setting-icon-art,.flashcard,.quiz-card,.profile-art,.voice-card{box-shadow:var(--mb-shadow)}
+.tool-visual{transition:transform .18s ease,box-shadow .18s ease}.tool:active .tool-visual{transform:scale(.985)}
+.flashcard{box-shadow:0 18px 45px rgba(28,27,44,.13)!important}
+.quiz-options button{border-radius:13px!important;transition:transform .14s ease,background .14s ease}.quiz-options button:active{transform:scale(.985)}
+.settings-controls label{border-radius:12px!important}
+.voice-card{box-shadow:0 18px 45px rgba(0,0,0,.18)!important}
+.profile-avatar{box-shadow:0 24px 55px rgba(0,0,0,.22)!important}
+.mb-drawer{box-shadow:20px 0 55px rgba(0,0,0,.28)!important}
+@media(max-width:759px){
+ .chat-panel,.tools-inner,.settings-inner,.study-body,.generic-page,.voice-page,.profile-copy{overscroll-behavior-y:auto}
+ .chat-messages{-webkit-overflow-scrolling:touch}
+ .composer-area{padding-bottom:max(0px,env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:reduce){.chat-msg,.chat-actions button,.chat-tools button,.composer-row .send,.tool-visual,.quiz-options button{transition:none!important}}
