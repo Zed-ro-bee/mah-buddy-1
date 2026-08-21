@@ -33,7 +33,55 @@ chatEndRef=useRef<HTMLDivElement|null>(null);
  function deleteChat(id:string){setChats(cs=>{const rest=cs.filter(c=>c.id!==id);if(!rest.length){const c={id:crypto.randomUUID(),title:"New chat",messages:starter(),updatedAt:Date.now()};setChatId(c.id);return[c]}if(id===chatId)setChatId(rest[0].id);return rest})}
  function exportChat(){if(!active)return;const text=active.messages.map(m=>`${m.role==="assistant"?"Mah Buddy":"You"}: ${m.content}`).join("\n\n");const blob=new Blob([text],{type:"text/plain"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`mah-buddy-chat.txt`;a.click();URL.revokeObjectURL(a.href)}
  function chooseMode(next:Mode){stopSpeaking();setMode(next);setScreen(next==="conversation"?"voice":"chat");setDrawer(false);const item=modes.find(x=>x.id===next);setInput(next==="chat"||next==="conversation"?"":item?.prompt??"")}
- async function selectFile(file?:File){if(!file)return;if(file.size>6*1024*1024){alert("Please choose a file smaller than 6 MB.");return}if(file.type.startsWith("image/")){const reader=new FileReader();reader.onload=()=>setAttachment({name:file.name,type:file.type,data:String(reader.result)});reader.readAsDataURL(file)}else{const text=await file.text().catch(()=>"");setAttachment({name:file.name,type:file.type,data:text.slice(0,50000)})}}
+  async function selectFile(file?:File){
+  if(!file)return;
+
+  if(file.size>6*1024*1024){
+    alert("Please choose a file smaller than 6 MB.");
+    return;
+  }
+
+  if(file.type.startsWith("image/")){
+    const reader=new FileReader();
+    reader.onload=()=>{
+      setAttachment({
+        name:file.name,
+        type:file.type,
+        data:String(reader.result)
+      });
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  const isTextFile =
+    file.type==="text/plain" ||
+    file.type==="text/markdown" ||
+    file.type==="text/csv" ||
+    file.name.endsWith(".txt") ||
+    file.name.endsWith(".md") ||
+    file.name.endsWith(".csv");
+
+  if(isTextFile){
+    const text=await file.text().catch(()=> "");
+    setAttachment({
+      name:file.name,
+      type:file.type,
+      data:text.slice(0,50000)
+    });
+    return;
+  }
+
+  const reader=new FileReader();
+  reader.onload=()=>{
+    setAttachment({
+      name:file.name,
+      type:file.type,
+      data:String(reader.result)
+    });
+  };
+  reader.readAsDataURL(file);
+}
  const filtered=useMemo(()=>chats.filter(c=>c.title.toLowerCase().includes(search.toLowerCase())||c.messages.some(m=>m.content.toLowerCase().includes(search.toLowerCase()))),[chats,search]);
  function nav(s:Screen){setScreen(s);setDrawer(false);if(s!=="voice")stopSpeaking()}
 useEffect(()=>{
