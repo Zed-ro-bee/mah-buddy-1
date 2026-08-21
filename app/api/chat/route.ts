@@ -5,6 +5,10 @@ import { NextResponse } from "next/server";
 type Attachment = { name?: string; type?: string; data?: string };
 type InputMessage = { role: "user" | "assistant"; content: string; attachment?: Attachment };
 
+const MAX_ATTACHMENT_CHARS = 8_500_000;
+const MAX_TEXT_CHARS = 50_000;
+const MAX_MESSAGE_CHARS = 12_000;
+
 function imageData(data: string) {
   const match = data.match(/^data:([^;]+);base64,(.+)$/s);
   return match ? { mediaType: match[1], data: match[2] } : null;
@@ -13,7 +17,17 @@ function imageData(data: string) {
 function fileData(data: string, fallbackType: string) {
   const match = data.match(/^data:([^;]+);base64,(.+)$/s);
   if (match) return { mediaType: match[1] || fallbackType, data: match[2] };
+
+  // Accept a raw base64 payload too. This makes the API more tolerant of
+  // clients that omit the data:...;base64, prefix.
+  if (/^[A-Za-z0-9+/\s]+={0,2}$/.test(data) && data.replace(/\s/g, "").length > 32) {
+    return { mediaType: fallbackType, data: data.replace(/\s/g, "") };
+  }
   return null;
+}
+
+function attachmentError(name: string, type: string) {
+  return `The attached file "${name}" (${type}) could not be transferred safely. Please attach it again or use a supported format.`;
 }
 
 export async function POST(request: Request) {
@@ -46,54 +60,60 @@ export async function POST(request: Request) {
     const modelMessages = normalized.map((message) => {
       const attachment = message.attachment;
       if (!attachment?.data) {
-        return { role: message.role, content: message.content.slice(0, 12000) };
+        return { role: message.role, content: message.content.slice(0, MAX_MESSAGE_CHARS) };
       }
 
       const type = attachment.type || "application/octet-stream";
       const name = attachment.name || "attached file";
+      const rawData = attachment.data;
+
+      if (rawData.length > MAX_ATTACHMENT_CHARS) {
+        return {
+          role: message.role,
+          content: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\nThe attachment "${name}" is too large to process. Please choose a smaller file.`
+        };
+      }
 
       if (type.startsWith("image/")) {
-        const image = imageData(attachment.data);
+        const image = imageData(rawData);
         if (image) {
           return {
             role: message.role,
             content: [
-              { type: "text" as const, text: `${message.content.slice(0, 12000)}\n\nAttached image: ${name}. Analyze the image as part of the user's request.` },
+              { type: "text" as const, text: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\nAttached image: ${name}. Analyze the image as part of the user's request.` },
               { type: "file" as const, data: image.data, mediaType: image.mediaType },
             ],
           };
         }
+        return { role: message.role, content: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\n${attachmentError(name, type)}` };
       }
 
-      // PDF and other binary attachments must arrive as a data URL from the browser.
-      // This keeps the binary bytes intact instead of trying to read a PDF as text.
+      // Binary attachments must arrive as a data URL or raw base64. The
+      // browser should never send binary files through File.text().
       if (type === "application/pdf" || type.startsWith("audio/") || type.startsWith("video/")) {
-        const file = fileData(attachment.data, type);
+        const file = fileData(rawData, type);
         if (file) {
           return {
             role: message.role,
             content: [
-              { type: "text" as const, text: `${message.content.slice(0, 12000)}\n\nAttached file: ${name}. Analyze this file as part of the user's request.` },
+              { type: "text" as const, text: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\nAttached file: ${name}. Analyze this file as part of the user's request.` },
               { type: "file" as const, data: file.data, mediaType: file.mediaType },
             ],
           };
         }
-        return {
-          role: message.role,
-          content: `${message.content.slice(0, 12000)}\n\nThe attached ${name} could not be transferred safely for analysis. Please attach it again.`,
-        };
+        return { role: message.role, content: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\n${attachmentError(name, type)}` };
       }
 
       if (["text/plain", "text/markdown", "text/csv", "application/json", "text/html"].includes(type)) {
         return {
           role: message.role,
-          content: `${message.content.slice(0, 12000)}\n\nAttached file: ${name}\n\nFile contents:\n${attachment.data.slice(0, 50000)}`,
+          content: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\nAttached file: ${name}\n\nFile contents:\n${rawData.slice(0, MAX_TEXT_CHARS)}`,
         };
       }
 
       return {
         role: message.role,
-        content: `${message.content.slice(0, 12000)}\n\nThe user attached a file named "${name}" (${type}), but this file type is not currently supported for content analysis. Tell the user which supported format to use instead.`,
+        content: `${message.content.slice(0, MAX_MESSAGE_CHARS)}\n\nThe user attached a file named "${name}" (${type}), but this file type is not currently supported for content analysis. Tell the user which supported format to use instead.`,
       };
     });
 
