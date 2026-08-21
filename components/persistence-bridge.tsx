@@ -49,6 +49,27 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
       } catch {}
     };
 
+    const signOut = async () => {
+      try {
+        const { error } = await client.auth.signOut();
+        if (error) throw error;
+        onSignOut?.();
+        localStorage.removeItem("mah-buddy-chats");
+        localStorage.removeItem("mah-buddy-prefs");
+        sessionStorage.removeItem("mah-buddy-hydrated");
+      } catch (error) {
+        console.error("Mah Buddy sign out failed", error);
+      }
+    };
+
+    const wireSignOut = () => {
+      const button = document.querySelector<HTMLButtonElement>(".danger");
+      if (!button || button.dataset.mahBuddySignout === "true") return;
+      button.dataset.mahBuddySignout = "true";
+      button.addEventListener("click", signOut);
+      button.setAttribute("aria-label", "Sign out of Mah Buddy");
+    };
+
     const scheduleChatsSync = (value: string) => { if (chatsTimer) clearTimeout(chatsTimer); chatsTimer = setTimeout(() => void persistChats(value), 350); };
     const schedulePrefsSync = (value: string) => { if (prefsTimer) clearTimeout(prefsTimer); prefsTimer = setTimeout(() => void persistPrefs(value), 350); };
 
@@ -73,11 +94,12 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
         }
         if (settings) localStorage.setItem("mah-buddy-prefs", JSON.stringify({ dark: settings.theme === "dark", memory: settings.memory_enabled, voice: settings.voice_enabled, instructions: "" }));
         hydrated = true;
+        wireSignOut();
         if (rows.length && active && !sessionStorage.getItem("mah-buddy-hydrated")) {
           sessionStorage.setItem("mah-buddy-hydrated", "1");
           window.setTimeout(() => { if (active) window.location.reload(); }, 0);
         }
-      } catch { hydrated = true; }
+      } catch { hydrated = true; wireSignOut(); }
     };
 
     const onStorage = (event: StorageEvent) => {
@@ -92,14 +114,18 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
       if (key === "mah-buddy-prefs") schedulePrefsSync(value);
     };
     void hydrate();
+    const observer = new MutationObserver(wireSignOut);
+    observer.observe(document.body, { childList: true, subtree: true });
+
     return () => {
       active = false;
       if (chatsTimer) clearTimeout(chatsTimer);
       if (prefsTimer) clearTimeout(prefsTimer);
       window.removeEventListener("storage", onStorage);
       localStorage.setItem = originalSetItem;
+      observer.disconnect();
     };
-  }, [userId]);
+  }, [userId, onSignOut]);
 
   return null;
 }
