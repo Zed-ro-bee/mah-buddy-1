@@ -4,6 +4,7 @@ import "./mah-buddy-environment.css";
 import "./phase2.css";
 import "./mah-buddy-intro.css";
 import "./app-shell.css";
+import "./app-chat.css";
 
 export const metadata: Metadata = {
   title: "Mah Buddy — Your AI Study Companion",
