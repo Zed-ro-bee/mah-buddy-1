@@ -1,0 +1,42 @@
+/* Mah Buddy — native-feeling navigation and secondary screens */
+.mb-top{height:58px!important;min-height:58px!important;padding-left:14px!important;padding-right:14px!important}
+.mb-brand{font-size:22px!important}
+.mb-menu,.mb-plus{width:42px!important;height:42px!important;border-radius:50%!important}
+.mb-menu:active,.mb-plus:active{background:rgba(28,27,44,.08)!important}
+.mb-scrim{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.mb-drawer{width:min(330px,88vw)!important;border-radius:0 24px 24px 0!important;padding:20px 18px!important;padding-top:calc(18px + env(safe-area-inset-top))!important;padding-bottom:calc(18px + env(safe-area-inset-bottom))!important}
+.mb-drawer-head{font-size:25px!important}
+.mb-drawer-start{border-radius:16px!important;margin-top:20px!important;padding:14px!important;background:rgba(255,255,255,.05)!important}
+.mb-nav{border-radius:13px!important;margin:2px 0!important;padding:12px!important;transition:background .15s ease,transform .15s ease}
+.mb-nav:active{transform:scale(.98)}
+.mb-label{margin:24px 0 7px!important}
+.tools-page,.settings-page,.study-page,.voice-page,.profile-page,.generic-page{min-height:calc(100svh - 58px)!important}
+.tools-inner,.settings-inner{padding:28px 18px 70px!important}
+.tools-rule{margin:20px 0 34px!important}
+.tool-grid{grid-template-columns:1fr!important;gap:18px!important}
+.tool{display:grid!important;grid-template-columns:1fr 110px!important;gap:16px!important;align-items:center!important;padding:16px 0!important;border-bottom:1px solid rgba(28,27,44,.12)!important}
+.tool h2{font-size:28px!important;margin-bottom:6px!important}
+.tool p{font-size:13px!important;min-height:0!important;margin-bottom:0!important}
+.tool-visual{height:110px!important;border-radius:18px!important;grid-column:2!important;grid-row:1!important}
+.fake-phone{width:56px!important;height:90px!important;border-radius:14px!important;box-shadow:0 10px 22px rgba(0,0,0,.18)!important;padding:9px 6px!important}
+.phone-bar{height:3px!important;width:18px!important;margin-bottom:7px!important}
+.phone-lines{gap:4px!important}.phone-lines i{height:9px!important;border-radius:3px!important}
+.voice-page{display:flex!important;flex-direction:column!important;padding:30px 18px 70px!important;min-height:calc(100svh - 58px)!important}
+.voice-copy{padding:0!important}.voice-copy h1{font-size:54px!important}.voice-copy p{font-size:16px!important}
+.voice-visuals{grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:18px!important}
+.voice-card{min-height:250px!important;border-radius:22px!important;padding:18px!important;font-size:17px!important}
+.mic-orb{width:76px!important;height:76px!important;font-size:28px!important}
+.voice-bottom{position:static!important;margin-top:12px!important}.voice-bottom button{width:100%;border-radius:14px!important}
+.profile-page{display:flex!important;flex-direction:column!important;min-height:calc(100svh - 58px)!important}
+.profile-art{min-height:250px!important;flex:none!important}.profile-avatar{width:120px!important;height:145px!important;font-size:52px!important}
+.profile-copy{padding:28px 20px 70px!important}.profile-copy h1{font-size:52px!important}.profile-sub{font-size:16px!important}
+.profile-columns{grid-template-columns:1fr 1fr!important;gap:14px!important;margin-top:38px!important}.profile-columns h2{font-size:24px!important}.profile-columns li{font-size:13px!important}
+.settings-page h1{font-size:52px!important;text-align:left!important;margin-bottom:32px!important}.settings-grid{grid-template-columns:1fr 1fr!important;gap:12px!important}
+.setting-icon-art{height:130px!important;border-radius:18px!important;font-size:38px!important}.setting-card h2{font-size:20px!important}.setting-card p{font-size:12px!important}
+.settings-controls{grid-template-columns:1fr!important;margin-top:28px!important}.settings-controls textarea{grid-column:auto!important}
+.study-head{padding:24px 18px 16px!important}.study-head h1{font-size:46px!important}.study-body{padding:25px 18px 60px!important}.study-intro h2{font-size:30px!important}.study-intro p{font-size:15px!important}
+.study-create{margin:18px 0!important}.study-create input{min-width:0;border-radius:12px 0 0 12px}.study-create button{border-radius:0 12px 12px 0}
+.flashcard{min-height:270px!important;border-radius:22px!important;padding:28px 18px!important}.flashcard span{font-size:34px!important}
+.quiz-card{border-radius:20px!important;padding:22px!important}.quiz-card h2{font-size:29px!important}
+.generic-page{padding:30px 18px 70px!important}.generic-head h1{font-size:50px!important}
+@media(min-width:760px){.tool-grid{grid-template-columns:repeat(3,1fr)!important}.tool{display:block!important;border:0!important}.tool-visual{height:220px!important}.voice-page{display:grid!important;grid-template-columns:45% 55%!important;padding:50px 30px!important}.profile-page{display:grid!important;grid-template-columns:46% 54%!important}.profile-art{min-height:calc(100svh - 58px)!important}.settings-grid{grid-template-columns:repeat(4,1fr)!important}.settings-inner{padding:50px 38px 80px!important}}
