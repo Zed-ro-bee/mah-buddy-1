@@ -1,32 +1,470 @@
-* { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; }
-html { background: #fff; }
-body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
-button, textarea, input { font: inherit; }
-button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.account-float { display: none !important; }
-.sidebar { position: relative; z-index: 20; }
-.sidebar-bottom { position: relative; z-index: 30; pointer-events: auto; }
-.side-control { position: relative; z-index: 40; pointer-events: auto !important; touch-action: manipulation; }
-.tools-card { position: relative; z-index: 50; pointer-events: auto; }
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-/* Mobile navigation: the top-left hamburger opens the existing full feature drawer. */
-@media (max-width: 760px) and (orientation: portrait) {
-  .chat-app .mobile-header { display: flex !important; position: relative !important; z-index: 5000 !important; height: 62px; align-items: center; justify-content: space-between; padding: 10px 14px; }
-  .mobile-header > div { display: contents !important; }
-  .mobile-header .mobile-action:first-child { display: grid !important; place-items: center !important; order: -2 !important; width: 44px !important; height: 44px !important; margin: 0 !important; padding: 0 !important; background: transparent !important; border: 0 !important; border-radius: 12px !important; font-size: 0 !important; color: inherit !important; z-index: 5001 !important; }
-  .mobile-header .mobile-action:first-child::before { content: "☰" !important; display: block !important; font-size: 26px !important; line-height: 1 !important; }
-  .mobile-header .mobile-brand { order: 1 !important; margin: 0 auto !important; }
-  .mobile-header .mobile-action:last-child { order: 3 !important; }
-
-  .sidebar { display: none !important; }
-  .sidebar.history-open { display: flex !important; position: fixed !important; inset: 0 auto 0 0 !important; width: min(86vw, 320px) !important; height: 100dvh !important; overflow-y: auto !important; z-index: 6000 !important; transform: translateX(0) !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; box-shadow: 14px 0 40px rgba(0,0,0,.16) !important; }
-  .sidebar.history-open::after { content: ""; position: fixed; inset: 0 0 0 min(86vw, 320px); background: rgba(0,0,0,.12); z-index: -1; pointer-events: none; }
-  .sidebar-bottom { padding-bottom: 24px; }
-  .side-control { min-height: 48px; display: flex; align-items: center; width: 100%; }
-  .tools-card { z-index: 6100; }
-  .chat-app { min-width: 0; }
-  .composer-area { z-index: 10; }
+:root {
+  --mb-bg: #f7f7fb;
+  --mb-surface: #ffffff;
+  --mb-surface-soft: #f0efff;
+  --mb-primary: #5b52f5;
+  --mb-primary-dark: #4842d6;
+  --mb-primary-light: #eeecff;
+  --mb-accent: #ff9f43;
+  --mb-text: #18182b;
+  --mb-muted: #73738c;
+  --mb-border: #e4e3ee;
+  --mb-radius: 18px;
+  --mb-shadow: 0 10px 35px rgba(40, 35, 90, 0.08);
 }
 
-.intro-screen { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: 10px; padding: 24px; background: radial-gradient(circle at 50% 42%, #fafafa 0, #f4f4f5 38%, #ededee 100%); overflow: hidden; position: relative; animation: intro-fade .7s ease-out; }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(91, 82, 245, 0.08), transparent 28%),
+    radial-gradient(circle at 100% 100%, rgba(255, 159, 67, 0.06), transparent 25%),
+    var(--mb-bg);
+  color: var(--mb-text);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------------------------------------------------------
+   MAH BUDDY — GLOBAL LAYOUT
+--------------------------------------------------------- */
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--mb-primary);
+  color: white;
+}
+
+/* ---------------------------------------------------------
+   SCROLLBARS
+--------------------------------------------------------- */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c9c7dc transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #c9c7dc;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #aaa7c5;
+}
+
+/* ---------------------------------------------------------
+   COMMON CARDS
+--------------------------------------------------------- */
+
+.mb-card {
+  background: var(--mb-surface);
+  border: 1px solid var(--mb-border);
+  border-radius: var(--mb-radius);
+  box-shadow: var(--mb-shadow);
+}
+
+.mb-soft-card {
+  background: var(--mb-primary-light);
+  border: 1px solid rgba(91, 82, 245, 0.08);
+  border-radius: var(--mb-radius);
+}
+
+/* ---------------------------------------------------------
+   BUTTONS
+--------------------------------------------------------- */
+
+.mb-primary-button {
+  border: 0;
+  border-radius: 13px;
+  padding: 11px 18px;
+  background: var(--mb-primary);
+  color: white;
+  font-weight: 700;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mb-primary-button:hover {
+  background: var(--mb-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(91, 82, 245, 0.22);
+}
+
+.mb-primary-button:active {
+  transform: translateY(0);
+}
+
+.mb-secondary-button {
+  border: 1px solid var(--mb-border);
+  border-radius: 13px;
+  padding: 10px 17px;
+  background: white;
+  color: var(--mb-text);
+  font-weight: 600;
+  transition: all 0.18s ease;
+}
+
+.mb-secondary-button:hover {
+  border-color: var(--mb-primary);
+  color: var(--mb-primary);
+  background: var(--mb-primary-light);
+}
+
+/* ---------------------------------------------------------
+   INPUTS
+--------------------------------------------------------- */
+
+.mb-input {
+  width: 100%;
+  border: 1px solid var(--mb-border);
+  border-radius: 14px;
+  background: white;
+  color: var(--mb-text);
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mb-input:focus {
+  border-color: var(--mb-primary);
+  box-shadow: 0 0 0 4px rgba(91, 82, 245, 0.1);
+}
+
+.mb-input::placeholder {
+  color: #9a99aa;
+}
+
+/* ---------------------------------------------------------
+   TEXT
+--------------------------------------------------------- */
+
+.mb-heading {
+  margin: 0;
+  color: var(--mb-text);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.mb-subtitle {
+  margin: 0;
+  color: var(--mb-muted);
+  line-height: 1.6;
+}
+
+.mb-gradient-text {
+  background: linear-gradient(90deg, #5b52f5, #7d72ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------------------------------------------------------
+   CHAT BUBBLES
+--------------------------------------------------------- */
+
+.mb-user-message {
+  background: var(--mb-primary);
+  color: white;
+  border-radius: 20px 20px 5px 20px;
+  box-shadow: 0 8px 24px rgba(91, 82, 245, 0.15);
+}
+
+.mb-assistant-message {
+  background: white;
+  color: var(--mb-text);
+  border: 1px solid var(--mb-border);
+  border-radius: 20px 20px 20px 5px;
+  box-shadow: 0 6px 24px rgba(40, 35, 90, 0.05);
+}
+
+/* ---------------------------------------------------------
+   BRAND ICON
+--------------------------------------------------------- */
+
+.mb-logo {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #5b52f5, #7b70ff);
+  color: white;
+  box-shadow: 0 8px 20px rgba(91, 82, 245, 0.22);
+}
+
+.mb-logo-small {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+/* ---------------------------------------------------------
+   SIDEBAR
+--------------------------------------------------------- */
+
+.mb-sidebar {
+  background: rgba(255, 255, 255, 0.88);
+  border-right: 1px solid var(--mb-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.mb-sidebar-item {
+  border-radius: 12px;
+  color: var(--mb-muted);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.mb-sidebar-item:hover {
+  background: var(--mb-primary-light);
+  color: var(--mb-primary);
+}
+
+.mb-sidebar-item.active {
+  background: var(--mb-primary-light);
+  color: var(--mb-primary);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+   CHAT COMPOSER
+--------------------------------------------------------- */
+
+.mb-composer {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--mb-border);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(40, 35, 90, 0.1);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.mb-composer textarea {
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--mb-text);
+}
+
+.mb-composer textarea::placeholder {
+  color: #9a99aa;
+}
+
+/* ---------------------------------------------------------
+   MIC / VOICE BUTTON
+--------------------------------------------------------- */
+
+.mb-voice-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mb-primary-light);
+  color: var(--mb-primary);
+  transition: all 0.18s ease;
+}
+
+.mb-voice-button:hover {
+  background: var(--mb-primary);
+  color: white;
+  transform: scale(1.04);
+}
+
+.mb-voice-button.active {
+  background: var(--mb-accent);
+  color: white;
+  animation: mb-pulse 1.4s infinite;
+}
+
+/* ---------------------------------------------------------
+   FEATURE CARDS
+--------------------------------------------------------- */
+
+.mb-feature-card {
+  padding: 20px;
+  border: 1px solid var(--mb-border);
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 8px 30px rgba(40, 35, 90, 0.05);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.mb-feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(91, 82, 245, 0.25);
+  box-shadow: 0 14px 35px rgba(40, 35, 90, 0.1);
+}
+
+/* ---------------------------------------------------------
+   BADGES
+--------------------------------------------------------- */
+
+.mb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--mb-primary-light);
+  color: var(--mb-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mb-badge-orange {
+  background: #fff1df;
+  color: #d97816;
+}
+
+/* ---------------------------------------------------------
+   ANIMATIONS
+--------------------------------------------------------- */
+
+@keyframes mb-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mb-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes mb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes mb-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 159, 67, 0.35);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(255, 159, 67, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 159, 67, 0);
+  }
+}
+
+.mb-fade-in {
+  animation: mb-fade-in 0.35s ease both;
+}
+
+.mb-slide-in {
+  animation: mb-slide-in 0.35s ease both;
+}
+
+.mb-float {
+  animation: mb-float 3s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   MOBILE
+--------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .mb-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--mb-border);
+  }
+
+  .mb-composer {
+    border-radius: 17px;
+  }
+
+  .mb-feature-card {
+    padding: 16px;
+  }
+}
+
+/* ---------------------------------------------------------
+   REDUCED MOTION
+--------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
