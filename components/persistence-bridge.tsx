@@ -6,11 +6,7 @@ import { supabase } from "../lib/supabase";
 type StoredMessage = { role: "user" | "assistant" | "system"; content: string; attachment?: unknown };
 type StoredChat = { id: string; title: string; messages: StoredMessage[]; updatedAt: number };
 
-/**
- * Keeps the existing local-first UI backed by Supabase without monkeypatching
- * localStorage globally. The UI remains usable offline; signed-in changes are
- * synced to the user's private Supabase rows.
- */
+/** Keeps the local-first UI backed by the signed-in user's Supabase data. */
 export default function PersistenceBridge({ userId }: { userId: string }) {
   useEffect(() => {
     if (!supabase || !userId) return;
@@ -24,6 +20,20 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
       if (!active || !hydrated) return;
       try {
         const chats = JSON.parse(value) as StoredChat[];
+        const localIds = new Set(chats.map((chat) => chat.id));
+
+        // Remove conversations deleted in the UI so they do not come back after refresh.
+        const { data: remote } = await client.from("conversations")
+          .select("id")
+          .eq("user_id", userId);
+        const removedIds = (remote ?? []).map((row) => row.id).filter((id) => !localIds.has(id));
+        if (removedIds.length) {
+          await client.from("conversations")
+            .delete()
+            .eq("user_id", userId)
+            .in("id", removedIds);
+        }
+
         for (const chat of chats) {
           const { error } = await client.from("conversations").upsert({
             id: chat.id,
@@ -46,7 +56,7 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
           if (rows.length) await client.from("messages").insert(rows);
         }
       } catch {
-        // Local storage remains the offline source of truth if sync fails.
+        // Keep local storage working if remote sync fails.
       }
     };
 
@@ -63,7 +73,7 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
           updated_at: new Date().toISOString(),
         });
       } catch {
-        // Keep local preferences working even if remote sync fails.
+        // Keep local preferences working if remote sync fails.
       }
     };
 
@@ -71,7 +81,6 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
       if (chatsTimer) clearTimeout(chatsTimer);
       chatsTimer = setTimeout(() => void persistChats(value), 350);
     };
-
     const schedulePrefsSync = (value: string) => {
       if (prefsTimer) clearTimeout(prefsTimer);
       prefsTimer = setTimeout(() => void persistPrefs(value), 350);
@@ -89,7 +98,6 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
             .eq("user_id", userId)
             .maybeSingle(),
         ]);
-
         if (!active || conversationsError) return;
 
         const rows = conversations ?? [];
@@ -98,27 +106,20 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
             .select("id,conversation_id,role,content,created_at")
             .eq("user_id", userId)
             .order("created_at", { ascending: true });
-
           const byConversation = new Map<string, StoredMessage[]>();
           for (const m of messages ?? []) {
             const list = byConversation.get(m.conversation_id) ?? [];
             list.push({ role: m.role, content: m.content });
             byConversation.set(m.conversation_id, list);
           }
-
           const chats: StoredChat[] = rows.map((c) => ({
             id: c.id,
             title: c.title,
-            messages: byConversation.get(c.id) ?? [{
-              role: "assistant",
-              content: "Hey! I'm Mah Buddy 👋\nWhat are we learning today?",
-            }],
+            messages: byConversation.get(c.id) ?? [{ role: "assistant", content: "Hey! I'm Mah Buddy 👋\nWhat are we learning today?" }],
             updatedAt: new Date(c.updated_at).getTime(),
           }));
-
           localStorage.setItem("mah-buddy-chats", JSON.stringify(chats));
         }
-
         if (settings) {
           localStorage.setItem("mah-buddy-prefs", JSON.stringify({
             dark: settings.theme === "dark",
@@ -129,17 +130,11 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
         }
 
         hydrated = true;
-
-        // page.tsx initializes its React state from localStorage. Reload once
-        // after remote hydration so that existing accounts actually see their
-        // database history instead of a fresh local-only chat.
-        if (rows.length && active) {
-          window.setTimeout(() => {
-            if (active && !sessionStorage.getItem("mah-buddy-hydrated")) {
-              sessionStorage.setItem("mah-buddy-hydrated", "1");
-              window.location.reload();
-            }
-          }, 0);
+        // page.tsx initializes React state from localStorage. Reload once after
+        // remote hydration when an account already has server-side history.
+        if (rows.length && active && !sessionStorage.getItem("mah-buddy-hydrated")) {
+          sessionStorage.setItem("mah-buddy-hydrated", "1");
+          window.setTimeout(() => { if (active) window.location.reload(); }, 0);
         }
       } catch {
         hydrated = true;
@@ -150,12 +145,8 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
       if (event.key === "mah-buddy-chats" && event.newValue) scheduleChatsSync(event.newValue);
       if (event.key === "mah-buddy-prefs" && event.newValue) schedulePrefsSync(event.newValue);
     };
-
     window.addEventListener("storage", onStorage);
 
-    // Patch only this tab's storage calls through a small wrapper rather than
-    // replacing localStorage.setItem globally. This avoids interfering with
-    // other libraries while retaining compatibility with the existing page.
     const originalSetItem = localStorage.setItem.bind(localStorage);
     localStorage.setItem = (key: string, value: string) => {
       originalSetItem(key, value);
@@ -164,7 +155,6 @@ export default function PersistenceBridge({ userId }: { userId: string }) {
     };
 
     void hydrate();
-
     return () => {
       active = false;
       if (chatsTimer) clearTimeout(chatsTimer);
