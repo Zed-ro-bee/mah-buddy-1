@@ -24,17 +24,42 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
         const { data: remote } = await client.from("conversations").select("id").eq("user_id", userId);
         const removedIds = (remote ?? []).map((row) => row.id).filter((id) => !localIds.has(id));
         if (removedIds.length) await client.from("conversations").delete().eq("user_id", userId).in("id", removedIds);
+
         for (const chat of chats) {
           const { error } = await client.from("conversations").upsert({
-            id: chat.id, user_id: userId, title: chat.title || "New chat",
+            id: chat.id,
+            user_id: userId,
+            title: chat.title || "New chat",
             updated_at: new Date(chat.updatedAt || Date.now()).toISOString(),
           });
           if (error) continue;
+
+          const { data: existingMessages } = await client
+            .from("messages")
+            .select("id,role,content")
+            .eq("conversation_id", chat.id)
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true });
+
+          const nextMessages = chat.messages.map((m) => ({ role: m.role, content: m.content }));
+          const currentMessages = existingMessages ?? [];
+          const unchanged = currentMessages.length === nextMessages.length &&
+            currentMessages.every((m, index) => m.role === nextMessages[index].role && m.content === nextMessages[index].content);
+          if (unchanged) continue;
+
           await client.from("messages").delete().eq("conversation_id", chat.id).eq("user_id", userId);
-          const rows = chat.messages.map((m) => ({ conversation_id: chat.id, user_id: userId, role: m.role, content: m.content }));
-          if (rows.length) await client.from("messages").insert(rows);
+          if (nextMessages.length) {
+            await client.from("messages").insert(nextMessages.map((m) => ({
+              conversation_id: chat.id,
+              user_id: userId,
+              role: m.role,
+              content: m.content,
+            })));
+          }
         }
-      } catch {}
+      } catch {
+        // Local storage remains the offline source of truth when Supabase is unavailable.
+      }
     };
 
     const persistPrefs = async (value: string) => {
@@ -42,11 +67,16 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
       try {
         const prefs = JSON.parse(value);
         await client.from("user_settings").upsert({
-          user_id: userId, theme: prefs.dark ? "dark" : "light", memory_enabled: prefs.memory !== false,
-          voice_enabled: prefs.voice !== false, tts_enabled: prefs.voice !== false,
+          user_id: userId,
+          theme: prefs.dark ? "dark" : "light",
+          memory_enabled: prefs.memory !== false,
+          voice_enabled: prefs.voice !== false,
+          tts_enabled: prefs.voice !== false,
           updated_at: new Date().toISOString(),
         });
-      } catch {}
+      } catch {
+        // Preferences remain available locally when offline.
+      }
     };
 
     const signOut = async () => {
@@ -70,8 +100,14 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
       button.setAttribute("aria-label", "Sign out of Mah Buddy");
     };
 
-    const scheduleChatsSync = (value: string) => { if (chatsTimer) clearTimeout(chatsTimer); chatsTimer = setTimeout(() => void persistChats(value), 350); };
-    const schedulePrefsSync = (value: string) => { if (prefsTimer) clearTimeout(prefsTimer); prefsTimer = setTimeout(() => void persistPrefs(value), 350); };
+    const scheduleChatsSync = (value: string) => {
+      if (chatsTimer) clearTimeout(chatsTimer);
+      chatsTimer = setTimeout(() => void persistChats(value), 500);
+    };
+    const schedulePrefsSync = (value: string) => {
+      if (prefsTimer) clearTimeout(prefsTimer);
+      prefsTimer = setTimeout(() => void persistPrefs(value), 500);
+    };
 
     const hydrate = async () => {
       try {
@@ -79,7 +115,11 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
           client.from("conversations").select("id,title,created_at,updated_at").eq("user_id", userId).order("updated_at", { ascending: false }),
           client.from("user_settings").select("theme,voice_enabled,tts_enabled,notifications_enabled,memory_enabled,british_english").eq("user_id", userId).maybeSingle(),
         ]);
-        if (!active || conversationsError) return;
+        if (!active || conversationsError) {
+          hydrated = true;
+          wireSignOut();
+          return;
+        }
         const rows = conversations ?? [];
         if (rows.length) {
           const { data: messages } = await client.from("messages").select("id,conversation_id,role,content,created_at").eq("user_id", userId).order("created_at", { ascending: true });
@@ -89,7 +129,12 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
             list.push({ role: m.role, content: m.content });
             byConversation.set(m.conversation_id, list);
           }
-          const chats: StoredChat[] = rows.map((c) => ({ id: c.id, title: c.title, messages: byConversation.get(c.id) ?? [{ role: "assistant", content: "Hey! I'm Mah Buddy 👋\nWhat are we learning today?" }], updatedAt: new Date(c.updated_at).getTime() }));
+          const chats: StoredChat[] = rows.map((c) => ({
+            id: c.id,
+            title: c.title,
+            messages: byConversation.get(c.id) ?? [{ role: "assistant", content: "Hey! I'm Mah Buddy 👋\nWhat are we learning today?" }],
+            updatedAt: new Date(c.updated_at).getTime(),
+          }));
           localStorage.setItem("mah-buddy-chats", JSON.stringify(chats));
         }
         if (settings) localStorage.setItem("mah-buddy-prefs", JSON.stringify({ dark: settings.theme === "dark", memory: settings.memory_enabled, voice: settings.voice_enabled, instructions: "" }));
@@ -99,7 +144,10 @@ export default function PersistenceBridge({ userId, onSignOut }: { userId: strin
           sessionStorage.setItem("mah-buddy-hydrated", "1");
           window.setTimeout(() => { if (active) window.location.reload(); }, 0);
         }
-      } catch { hydrated = true; wireSignOut(); }
+      } catch {
+        hydrated = true;
+        wireSignOut();
+      }
     };
 
     const onStorage = (event: StorageEvent) => {
