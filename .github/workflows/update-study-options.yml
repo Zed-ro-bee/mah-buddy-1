@@ -1,0 +1,59 @@
+name: Add study options
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch study generator
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/page.tsx')
+          s=p.read_text()
+
+          old='const [flashcards,setFlashcards]=useState<Flashcard[]>(fallbackCards),[flashIndex,setFlashIndex]=useState(0),[flashFlipped,setFlashFlipped]=useState(false),[flashTopic,setFlashTopic]=useState(""),[flashBusy,setFlashBusy]=useState(false);'
+          new=old+'\n const [flashCount,setFlashCount]=useState(5),[flashDifficulty,setFlashDifficulty]=useState("Medium");'
+          if old in s and 'flashCount' not in s: s=s.replace(old,new,1)
+
+          old='const [quiz,setQuiz]=useState<QuizQuestion[]>(fallbackQuiz),[quizIndex,setQuizIndex]=useState(0),[quizSelected,setQuizSelected]=useState<number|null>(null),[quizScore,setQuizScore]=useState(0),[quizTopic,setQuizTopic]=useState(""),[quizBusy,setQuizBusy]=useState(false);'
+          new=old+'\n const [quizCount,setQuizCount]=useState(5),[quizDifficulty,setQuizDifficulty]=useState("Medium");'
+          if old in s and 'quizCount' not in s: s=s.replace(old,new,1)
+
+          old='Create exactly 5 study flashcards about ${topic}. Return ONLY valid JSON as an array of objects with keys front and back. Keep each front short and each back concise.'
+          new='Create exactly ${flashCount} study flashcards about ${topic}. Difficulty: ${flashDifficulty}. Return ONLY valid JSON as an array of objects with keys front and back. Keep each front short and each back concise.'
+          s=s.replace(old,new,1)
+          old='setFlashcards(parsed.slice(0,5));'
+          s=s.replace(old,'setFlashcards(parsed.slice(0,flashCount));',1)
+
+          old='Create exactly 5 multiple-choice quiz questions about ${topic}. Return ONLY valid JSON as an array of objects with keys question, options (array of 4 strings), answer (0-3 integer), explanation. No markdown.'
+          new='Create exactly ${quizCount} multiple-choice quiz questions about ${topic}. Difficulty: ${quizDifficulty}. Return ONLY valid JSON as an array of objects with keys question, options (array of 4 strings), answer (0-3 integer), explanation. No markdown.'
+          s=s.replace(old,new,1)
+          old='setQuiz(parsed.slice(0,5));'
+          s=s.replace(old,'setQuiz(parsed.slice(0,quizCount));',1)
+
+          marker=' <main>{screen==="chat"&&'
+          panel=' <StudyOptions screen={screen} flashCount={flashCount} setFlashCount={setFlashCount} flashDifficulty={flashDifficulty} setFlashDifficulty={setFlashDifficulty} quizCount={quizCount} setQuizCount={setQuizCount} quizDifficulty={quizDifficulty} setQuizDifficulty={setQuizDifficulty}/><main>{screen==="chat"&&'
+          if 'function StudyOptions' not in s and marker in s: s=s.replace(marker,panel,1)
+
+          marker='\nfunction ChatScreen('
+          component='''\nfunction StudyOptions({screen,flashCount,setFlashCount,flashDifficulty,setFlashDifficulty,quizCount,setQuizCount,quizDifficulty,setQuizDifficulty}:{screen:Screen;flashCount:number;setFlashCount:(n:number)=>void;flashDifficulty:string;setFlashDifficulty:(s:string)=>void;quizCount:number;setQuizCount:(n:number)=>void;quizDifficulty:string;setQuizDifficulty:(s:string)=>void}){\n if(screen!=="flashcards"&&screen!=="quiz")return null;\n const quizMode=screen==="quiz";\n const count=quizMode?quizCount:flashCount; const setCount=quizMode?setQuizCount:setFlashCount;\n const difficulty=quizMode?quizDifficulty:flashDifficulty; const setDifficulty=quizMode?setQuizDifficulty:setFlashDifficulty;\n return <section className="study-options"><div className="study-options-title">{quizMode?"Quiz settings":"Flashcard settings"}</div><label>{quizMode?"Number of questions":"Number of cards"}<select value={count} onChange={e=>setCount(Number(e.target.value))}>{[5,10,15,20].map(n=><option key={n} value={n}>{n}</option>)}</select></label><label>Difficulty<select value={difficulty} onChange={e=>setDifficulty(e.target.value)}><option>Easy</option><option>Medium</option><option>Hard</option></select></label></section>\n}\n'''
+          if 'function StudyOptions' not in s and marker in s: s=s.replace(marker,component+marker,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/page.tsx
+          git diff --cached --quiet || git commit -m 'Add quiz and flashcard count and difficulty options'
+          git push
