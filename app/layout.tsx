@@ -5,6 +5,7 @@ import "./phase2.css";
 import "./mah-buddy-intro.css";
 import "./mah-buddy-unified.css";
 import "./chat-ui.css";
+import "./mah-buddy-native.css";
 import PWARegister from "../components/pwa-register";
 
 export const metadata: Metadata = {
