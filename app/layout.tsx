@@ -7,6 +7,7 @@ import "./mah-buddy-unified.css";
 import "./chat-ui.css";
 import "./mah-buddy-native.css";
 import "./mah-buddy-app.css";
+import "./mah-buddy-current-ui.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#1f201e",
+  themeColor: "#20202a",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
