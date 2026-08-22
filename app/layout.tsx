@@ -7,6 +7,7 @@ import "./mah-buddy-unified.css";
 import "./chat-ui.css";
 import "./mah-buddy-native.css";
 import PWARegister from "../components/pwa-register";
+import PreferencesBridge from "../components/preferences-bridge";
 
 export const metadata: Metadata = {
   title: "Mah Buddy — Your AI Study Companion",
@@ -23,5 +24,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><PWARegister />{children}</body></html>;
+  return <html lang="en"><body><PWARegister /><PreferencesBridge />{children}</body></html>;
 }
