@@ -3,6 +3,7 @@ import "./globals.css";
 import "./mah-buddy-environment.css";
 import "./phase2.css";
 import "./mah-buddy-intro.css";
+import "./mah-buddy-unified.css";
 
 export const metadata: Metadata = {
   title: "Mah Buddy — Your AI Study Companion",
