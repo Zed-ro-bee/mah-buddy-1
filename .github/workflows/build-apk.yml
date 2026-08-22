@@ -24,10 +24,7 @@ jobs:
       - name: Install Capacitor
         run: npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android
 
-      - name: Create Android project
-        run: npx cap add android
-
-      - name: Sync Capacitor
+      - name: Sync Android project
         run: npx cap sync android
 
       - name: Setup Java
