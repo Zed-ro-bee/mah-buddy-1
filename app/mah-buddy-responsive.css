@@ -1,0 +1,125 @@
+/* Mah Buddy responsive layer: preserves the existing visual language while making every screen phone-safe. */
+html,body{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+*,*::before,*::after{max-width:100%}
+button,input,textarea,select{min-width:0}
+
+@media (max-width: 900px){
+  .mb-top{height:60px;padding:0 16px;grid-template-columns:42px 1fr 42px}
+  .mb-brand{font-size:21px;justify-self:center}
+  .chat-page,.voice-page,.profile-page{grid-template-columns:1fr;min-height:calc(100svh - 60px)}
+  .chat-visual{display:none}
+  .chat-panel{padding:34px 20px calc(28px + env(safe-area-inset-bottom));min-height:calc(100svh - 60px)}
+  .chat-panel h1,.tools-page h1,.study-head h1,.settings-page h1,.generic-head h1,.profile-copy h1,.voice-copy h1{font-size:clamp(44px,12vw,66px);letter-spacing:-1.2px}
+  .lead{font-size:17px}
+  .chat-messages{max-height:none;min-height:0}
+  .composer-area{margin-top:24px}
+  .composer{border-radius:12px}
+  .composer textarea{min-height:48px;font-size:16px}
+  .tools-inner,.settings-inner{padding:38px 20px 60px}
+  .tools-rule{margin:25px 0 55px}
+  .tool-grid{grid-template-columns:1fr;gap:42px}
+  .tool-visual{height:250px}
+  .voice-page{padding:38px 20px 72px;display:flex;flex-direction:column;gap:25px}
+  .voice-copy{padding:10px 0}
+  .voice-copy p{font-size:17px}
+  .voice-visuals{grid-template-columns:1fr;gap:12px}
+  .voice-card{min-height:280px;padding:25px;font-size:20px}
+  .mic-orb{width:92px;height:92px;font-size:34px}
+  .voice-bottom{position:static;text-align:center}
+  .profile-page{display:flex;flex-direction:column}
+  .profile-art{min-height:300px}
+  .profile-avatar{width:130px;height:160px;font-size:58px}
+  .profile-copy{padding:40px 22px 60px}
+  .profile-columns{grid-template-columns:1fr;gap:22px;margin-top:48px}
+  .settings-page h1{margin-bottom:55px}
+  .settings-grid{grid-template-columns:1fr 1fr;gap:16px}
+  .setting-icon-art{height:170px;font-size:46px}
+  .setting-card h2{font-size:21px}
+  .settings-controls{grid-template-columns:1fr}
+  .settings-controls textarea{grid-column:auto}
+  .study-head{padding:34px 20px 20px;align-items:center}
+  .study-body{padding:34px 20px 60px}
+  .study-intro h2{font-size:34px}
+  .study-intro p{font-size:16px}
+  .study-create{flex-direction:column}
+  .study-create input,.study-create button{width:100%;min-height:48px}
+  .flashcard{min-height:280px;padding:30px 20px}
+  .quiz-card{padding:22px;margin:0 4px}
+  .quiz-card h2{font-size:30px}
+  .generic-page{padding:38px 20px 60px}
+  .history-item{gap:8px}
+  .mb-drawer{width:min(320px,88vw);padding:20px}
+}
+
+@media (max-width: 600px){
+  .mb-top{height:56px;padding:0 10px}
+  .mb-menu,.mb-plus{font-size:23px}
+  .mb-menu{width:38px}
+  .mb-brand{font-size:19px}
+  .chat-page{min-height:calc(100svh - 56px)}
+  .chat-panel{padding:25px 14px calc(18px + env(safe-area-inset-bottom))}
+  .chat-panel h1,.tools-page h1,.study-head h1,.settings-page h1,.generic-head h1,.profile-copy h1,.voice-copy h1{font-size:clamp(38px,11vw,54px)}
+  .chat-panel .rule{margin:20px 0}
+  .lead{font-size:16px}
+  .chat-messages{gap:10px;margin-top:18px}
+  .chat-msg{max-width:96%;padding:12px 13px;font-size:14px}
+  .chat-tools{gap:6px;margin:14px 0}
+  .chat-tools button{padding:8px 9px;font-size:12px}
+  .composer-area{margin-top:16px}
+  .composer-row button{width:36px;height:36px}
+  .tools-inner,.settings-inner{padding:28px 14px 45px}
+  .tools-rule{margin:20px 0 38px}
+  .tool-grid{gap:34px}
+  .tool h2{font-size:27px}
+  .tool p{font-size:13px;min-height:0}
+  .tool-visual{height:210px}
+  .voice-page{padding:26px 14px 55px}
+  .voice-card{min-height:230px}
+  .profile-art{min-height:250px}
+  .profile-copy{padding:30px 16px 50px}
+  .settings-page h1{margin-bottom:35px}
+  .settings-grid{grid-template-columns:1fr;gap:25px}
+  .setting-icon-art{height:145px}
+  .study-head{padding:25px 14px 15px}
+  .study-head>button{font-size:30px}
+  .study-body{padding:26px 14px 50px}
+  .study-intro h2{font-size:30px}
+  .flashcard{min-height:245px}
+  .quiz-card{padding:18px 14px}
+  .quiz-card h2{font-size:26px}
+  .quiz-options button{padding:13px;font-size:14px}
+  .generic-page{padding:28px 14px 50px}
+  .generic-body{margin-top:24px}
+  .auth-intro{padding:20px 14px calc(28px + env(safe-area-inset-bottom));min-height:100svh}
+  .auth-screen{min-height:100svh!important;height:auto!important}
+  .intro-hero{width:100%}
+  .intro-art{height:min(52vh,330px)}
+  .auth-side{padding:30px 18px!important}
+  .auth-form-card{width:100%!important;max-width:none!important;margin:0!important;padding:24px 18px calc(28px + env(safe-area-inset-bottom))!important;border-radius:0!important;box-shadow:none!important}
+  .auth-screen{display:flex!important;flex-direction:column!important}
+  .auth-side h1{font-size:48px!important}
+  .auth-side p{font-size:15px!important}
+  .google-btn,.auth-submit{min-height:48px}
+  .auth-form-card input{font-size:16px!important;min-height:48px}
+}
+
+@media (max-width: 380px){
+  .chat-panel{padding-left:11px;padding-right:11px}
+  .chat-panel h1,.tools-page h1,.study-head h1,.settings-page h1,.generic-head h1,.profile-copy h1,.voice-copy h1{font-size:37px}
+  .settings-grid{gap:20px}
+  .auth-side h1{font-size:42px!important}
+  .auth-form-card{padding-left:14px!important;padding-right:14px!important}
+}
+
+@media (orientation:landscape) and (max-height:520px){
+  .mb-top{height:50px}
+  .chat-page{min-height:calc(100svh - 50px)}
+  .chat-panel{padding-top:18px;padding-bottom:18px}
+  .chat-visual{display:none}
+  .auth-intro{padding-top:14px}
+  .intro-art{height:230px}
+}
+
+@supports (padding: max(0px)){
+  .composer-area{padding-bottom:max(0px,env(safe-area-inset-bottom))}
+}
