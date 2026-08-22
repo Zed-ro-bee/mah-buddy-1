@@ -11,6 +11,7 @@ import "./mah-buddy-current-ui.css";
 import "./mah-buddy-responsive.css";
 import "./mah-buddy-app-interface.css";
 import "./mah-buddy-mobile.css";
+import "./mah-buddy-final-mobile.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 
