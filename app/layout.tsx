@@ -6,6 +6,7 @@ import "./mah-buddy-intro.css";
 import "./mah-buddy-unified.css";
 import "./chat-ui.css";
 import "./mah-buddy-native.css";
+import "./mah-buddy-app.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 
