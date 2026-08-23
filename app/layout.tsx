@@ -1,19 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import "./mah-buddy-environment.css";
-import "./phase2.css";
-import "./mah-buddy-intro.css";
-import "./mah-buddy-unified.css";
-import "./chat-ui.css";
-import "./mah-buddy-native.css";
-import "./mah-buddy-app.css";
-import "./mah-buddy-current-ui.css";
-import "./mah-buddy-responsive.css";
-import "./mah-buddy-app-interface.css";
-import "./mah-buddy-mobile.css";
-import "./mah-buddy-final-mobile.css";
-import "./mah-buddy-showcase.css";
-import "./mah-buddy-native-final.css";
+import "./mah-buddy-redesign.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 
@@ -30,7 +17,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f7f7f9",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
