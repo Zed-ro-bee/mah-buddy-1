@@ -1,0 +1,85 @@
+/* Mah Buddy native-mobile finish: no desktop card, no web-like framing, phone-first UI. */
+:root{--mb-user-bg:#f7f7f9;--mb-surface:#ffffff;--mb-surface-2:#f0f0f3;--mb-ink:#17171c;--mb-muted:#6f7078;--mb-line:#dedee4;--mb-accent:#6d4aff;--mb-accent-2:#8b5cf6;--mb-text-scale:1}
+*{box-sizing:border-box}
+html,body{width:100%;min-width:100%;margin:0;padding:0;background:var(--mb-user-bg)!important;color:var(--mb-ink);-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+
+/* Light / dark / system themes are driven by Settings. */
+html[data-mb-theme="dark"]{--mb-user-bg:#0b0b0f;--mb-surface:#15151a;--mb-surface-2:#222229;--mb-ink:#f7f7f8;--mb-muted:#a5a5ae;--mb-line:#303038}
+@media(prefers-color-scheme:dark){html[data-mb-theme="system"]{--mb-user-bg:#0b0b0f;--mb-surface:#15151a;--mb-surface-2:#222229;--mb-ink:#f7f7f8;--mb-muted:#a5a5ae;--mb-line:#303038}}
+html[data-mb-accent="pink"]{--mb-accent:#e34ca8;--mb-accent-2:#f06bc5}
+html[data-mb-accent="blue"]{--mb-accent:#3b82f6;--mb-accent-2:#60a5fa}
+html[data-mb-accent="teal"]{--mb-accent:#10a98b;--mb-accent-2:#34d399}
+html[data-mb-accent="orange"]{--mb-accent:#ea7a18;--mb-accent-2:#f59e0b}
+
+/* True full-screen app surfaces. */
+.mb-app,.mb-main,.auth-intro,.auth-screen,.settings-app-shell{width:100%!important;max-width:none!important;min-height:100svh!important;margin:0!important;border-radius:0!important}
+.mb-app{background:var(--mb-user-bg)!important;color:var(--mb-ink)!important;transition:background .2s,color .2s}
+.mb-main{background:var(--mb-user-bg)!important}
+.mb-header{height:64px!important;padding:calc(8px + env(safe-area-inset-top)) 14px 8px!important;background:var(--mb-user-bg)!important;border:0!important;box-shadow:none!important;position:sticky!important;top:0!important;z-index:20!important}
+.mb-header .mb-round{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border:1px solid var(--mb-line)!important;box-shadow:0 2px 10px #0000000a!important}
+.mb-chat-area{background:var(--mb-user-bg)!important;padding:10px 14px 16px!important}
+.mb-welcome{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border:1px solid var(--mb-line)!important;box-shadow:0 10px 30px #0000000d!important}
+.mb-welcome h1,.mb-welcome h2,.mb-welcome p{color:var(--mb-ink)!important}.mb-welcome p{color:var(--mb-muted)!important}
+.mb-welcome>span{color:var(--mb-accent)!important}
+.mb-welcome .mb-listen,.mb-primary,.mb-send{background:var(--mb-accent)!important;color:#fff!important}
+.mb-suggestions button,.mb-composer,.mb-bubble,.mb-tool,.mb-tool-grid button{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border-color:var(--mb-line)!important}
+.mb-suggestions small,.mb-disclaimer{color:var(--mb-muted)!important}
+.mb-composer-wrap{bottom:calc(68px + env(safe-area-inset-bottom))!important}
+.mb-composer{border:1px solid var(--mb-line)!important;box-shadow:0 8px 25px #00000012!important}
+.mb-composer textarea{color:var(--mb-ink)!important;background:transparent!important}
+.mb-composer textarea::placeholder{color:var(--mb-muted)!important}
+.mb-composer-icon{color:var(--mb-ink)!important}
+.mb-bottom-nav{height:calc(68px + env(safe-area-inset-bottom))!important;padding-bottom:env(safe-area-inset-bottom)!important;background:color-mix(in srgb,var(--mb-surface) 94%,transparent)!important;border-top:1px solid var(--mb-line)!important;box-shadow:none!important;backdrop-filter:blur(18px)!important}
+.mb-bottom-nav button,.mb-bottom-nav a{color:var(--mb-muted)!important}.mb-bottom-nav .mb-icon-active,.mb-bottom-nav button:first-child .mb-icon-active{color:var(--mb-accent)!important}
+.mb-icon-active{color:var(--mb-accent)!important}
+.mb-toast{background:var(--mb-ink)!important;color:var(--mb-user-bg)!important}
+.mb-sidebar{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border-right:1px solid var(--mb-line)!important}
+.mb-sidebar button,.mb-sidebar a{color:var(--mb-ink)!important}
+.mb-overlay{background:var(--mb-user-bg)!important}
+.mb-tool{color:var(--mb-ink)!important}.mb-tool-topbar{background:var(--mb-user-bg)!important;border-bottom:1px solid var(--mb-line)!important}.mb-tool-topbar strong,.mb-tool h1,.mb-tool h2,.mb-tool p{color:var(--mb-ink)!important}.mb-tool p{color:var(--mb-muted)!important}
+.mb-round{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border-color:var(--mb-line)!important}
+
+/* Settings follows the same native theme instead of a separate web page palette. */
+.settings-app-shell,.settings-app-screen{background:var(--mb-user-bg)!important;color:var(--mb-ink)!important}
+.settings-card,.account-row,.name-field,.settings-hero{border-color:var(--mb-line)!important}
+.settings-card,.account-row,.name-field{background:var(--mb-surface)!important;color:var(--mb-ink)!important}
+.settings-card p,.settings-card small,.choice-row span,.settings-hero p{color:var(--mb-muted)!important}
+.settings-icon-btn{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border-color:var(--mb-line)!important}
+.settings-bottom-nav{background:color-mix(in srgb,var(--mb-surface) 94%,transparent)!important;border-color:var(--mb-line)!important}
+.settings-bottom-nav a{color:var(--mb-muted)!important}.settings-bottom-nav a.active{color:var(--mb-accent)!important}
+
+/* New Get Started: short, clean native launch animation rather than a large web hero. */
+.mb-onboarding{background:var(--mb-user-bg)!important;color:var(--mb-ink)!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;position:relative!important;overflow:hidden!important}
+.mb-onboarding:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:var(--mb-accent);opacity:.09;filter:blur(4px);animation:mb-pulse 2.8s ease-in-out infinite}
+.mb-onboarding .intro-top{position:absolute!important;top:calc(18px + env(safe-area-inset-top))!important;left:18px!important;right:18px!important;color:var(--mb-muted)!important;letter-spacing:.16em!important;font-size:9px!important}
+.mb-onboarding .intro-top span:last-child{display:none!important}
+.mb-onboarding .intro-hero{width:100%!important;display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;gap:24px!important;position:relative!important;z-index:2!important}
+.mb-onboarding .intro-orbit{width:150px!important;height:150px!important;border:1px solid var(--mb-line)!important;border-radius:50%!important;display:grid!important;place-items:center!important;box-shadow:0 0 0 12px color-mix(in srgb,var(--mb-accent) 5%,transparent)!important;animation:mb-float 3.2s ease-in-out infinite!important}
+.mb-onboarding .intro-logo-wrap{width:105px!important;height:105px!important;border-radius:30px!important;background:var(--mb-surface)!important;border:1px solid var(--mb-line)!important;display:grid!important;place-items:center!important;box-shadow:0 18px 45px #00000018!important}
+.mb-onboarding .auth-logo.large{width:78px!important;height:78px!important}
+.mb-onboarding .orbit-dot{display:none!important}
+.mb-onboarding .intro-copy{display:flex!important;flex-direction:column!important;align-items:center!important;max-width:330px!important;padding:0 20px!important}
+.mb-onboarding .intro-kicker{font-size:10px!important;letter-spacing:.2em!important;color:var(--mb-accent)!important;font-weight:800!important}
+.mb-onboarding h1{font-family:Georgia,serif!important;font-size:40px!important;line-height:1.03!important;color:var(--mb-ink)!important;margin:7px 0 12px!important}
+.mb-onboarding h1 em{color:var(--mb-accent)!important;font-style:normal!important}
+.mb-onboarding .intro-copy>p:not(.intro-kicker){font-size:13px!important;line-height:1.55!important;color:var(--mb-muted)!important;margin:0 0 22px!important}
+.mb-onboarding .intro-start{border:0!important;background:var(--mb-accent)!important;color:#fff!important;border-radius:16px!important;min-height:52px!important;width:min(300px,90vw)!important;font-weight:800!important;box-shadow:0 10px 25px color-mix(in srgb,var(--mb-accent) 30%,transparent)!important;transition:transform .16s ease,filter .16s ease!important}
+.mb-onboarding .intro-start:active{transform:scale(.97)!important;filter:brightness(.94)!important}
+.mb-onboarding .intro-bottom{position:absolute!important;bottom:calc(20px + env(safe-area-inset-bottom))!important;color:var(--mb-muted)!important;font-size:9px!important;letter-spacing:.14em!important}
+.mb-onboarding .intro-bottom i{display:none!important}
+@keyframes mb-pulse{0%,100%{transform:scale(.9);opacity:.06}50%{transform:scale(1.12);opacity:.12}}
+@keyframes mb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* Auth is a phone screen, not a two-column website. */
+.mb-auth{background:var(--mb-user-bg)!important;color:var(--mb-ink)!important;display:flex!important;justify-content:center!important}
+.mb-auth .auth-side{display:none!important}
+.mb-auth .auth-form-card{width:100%!important;max-width:480px!important;min-height:100svh!important;border-radius:0!important;background:var(--mb-user-bg)!important;color:var(--mb-ink)!important;box-shadow:none!important;padding:calc(24px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom))!important}
+.mb-auth .auth-form-card input{background:var(--mb-surface)!important;color:var(--mb-ink)!important;border-color:var(--mb-line)!important}
+.mb-auth .auth-form-card .auth-submit{background:var(--mb-accent)!important;color:#fff!important}
+.mb-auth .auth-tabs{background:var(--mb-surface-2)!important}.mb-auth .auth-tabs button.active{background:var(--mb-surface)!important;color:var(--mb-accent)!important}
+
+@media(min-width:700px){.mb-main,.settings-app-screen,.auth-form-card{max-width:480px!important;margin:0 auto!important;box-shadow:0 0 0 1px var(--mb-line)!important}.mb-app,.settings-app-shell,.auth-screen{background:#e9e9ed!important}}
+@media(max-width:380px){.mb-header{height:60px!important}.mb-chat-area{padding-left:10px!important;padding-right:10px!important}.mb-welcome{padding:18px!important}.mb-welcome h1{font-size:35px!important}}
