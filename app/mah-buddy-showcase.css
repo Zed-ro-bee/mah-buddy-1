@@ -1,0 +1,30 @@
+/* Approved Mah Buddy showcase direction: app-like mobile layout with a user-selectable background. */
+:root{--mb-user-bg:#f8f6ff}
+html,body{background:var(--mb-user-bg)!important}
+.mb-app{background:radial-gradient(circle at 50% -5%,rgba(146,111,255,.18),transparent 30%),var(--mb-user-bg)!important;transition:background .25s ease}
+.mb-main{max-width:560px!important;min-height:100svh!important}
+.mb-header{height:68px!important;background:color-mix(in srgb,var(--mb-user-bg) 88%,white)!important;border-bottom:0!important;box-shadow:0 6px 24px rgba(63,42,100,.05)!important}
+.mb-header strong{display:none!important}
+.mb-header>img{width:34px!important;height:34px!important;grid-column:2!important}
+.mb-header .mb-round{width:42px!important;height:42px!important;border-radius:15px!important;background:rgba(255,255,255,.88)!important}
+.mb-chat-area{padding:14px 14px 12px!important;min-height:calc(100svh - 154px)!important}
+.mb-empty{gap:13px!important}
+.mb-welcome{min-height:300px!important;border-radius:27px!important;padding:24px!important;box-shadow:0 22px 48px rgba(100,72,215,.20)!important}
+.mb-welcome-logo{position:absolute!important;right:20px!important;top:26px!important;width:112px!important;height:112px!important;border-radius:32px!important;background:rgba(255,255,255,.15)!important;box-shadow:0 16px 35px rgba(44,15,110,.18)!important;margin:0!important}
+.mb-welcome-logo img{width:78px!important;height:78px!important}
+.mb-welcome>span,.mb-welcome h1,.mb-welcome h2,.mb-welcome p,.mb-welcome .mb-listen{max-width:65%!important}
+.mb-welcome>span{margin-top:102px!important;display:block!important;font-size:10px!important;letter-spacing:.24em!important}
+.mb-welcome h1{font-size:45px!important;margin-top:8px!important;letter-spacing:-2px!important}
+.mb-welcome h2{font-size:19px!important;margin-top:8px!important}
+.mb-welcome p{font-size:12px!important;line-height:1.5!important}
+.mb-listen{padding:8px 13px!important}
+.mb-suggestions{grid-template-columns:repeat(4,1fr)!important;gap:8px!important}
+.mb-suggestions button{min-height:68px!important;border-radius:17px!important;padding:11px 9px!important;text-align:center!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important}
+.mb-suggestions strong{font-size:11px!important;margin:0!important}.mb-suggestions small{font-size:9px!important;margin-top:3px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+.mb-composer-wrap{bottom:74px!important;width:min(560px,calc(100% - 24px))!important}
+.mb-composer{border-radius:22px!important;padding:8px!important;box-shadow:0 16px 40px rgba(48,34,78,.14)!important}
+.mb-bottom-nav{height:70px!important;background:rgba(255,255,255,.94)!important;border-top:1px solid #e6e0ec!important;box-shadow:0 -8px 26px rgba(52,38,83,.07)!important}
+.mb-tool,.mb-overlay{background:var(--mb-user-bg)!important}.mb-tool-topbar{background:color-mix(in srgb,var(--mb-user-bg) 90%,white)!important}
+.mb-tool-grid button,.mb-suggestions button,.mb-bubble,.mb-composer{background:rgba(255,255,255,.94)!important}
+@media(max-width:700px){.mb-welcome{min-height:285px!important}.mb-welcome-logo{width:94px!important;height:94px!important}.mb-welcome-logo img{width:68px!important;height:68px!important}.mb-welcome>span{margin-top:82px!important}.mb-welcome h1{font-size:39px!important}.mb-suggestions{grid-template-columns:repeat(2,1fr)!important}.mb-suggestions button{min-height:64px!important}}
+@media(max-width:380px){.mb-welcome{min-height:270px!important;padding:19px!important}.mb-welcome-logo{width:82px!important;height:82px!important;right:15px!important;top:20px!important}.mb-welcome-logo img{width:59px!important;height:59px!important}.mb-welcome>span{margin-top:72px!important}.mb-welcome h1{font-size:35px!important}.mb-welcome>span,.mb-welcome h1,.mb-welcome h2,.mb-welcome p,.mb-welcome .mb-listen{max-width:68%!important}}
