@@ -20,6 +20,7 @@ export default function PreferencesBridge() {
         root.dataset.mbReducedMotion = p.reducedMotion ? "true" : "false";
         root.dataset.mbTextScale = p.textSize || "medium";
         root.style.setProperty("--mb-accent", accents[p.accent] || accents.lilac);
+        root.style.setProperty("--mb-user-bg", p.background || "#f8f6ff");
         root.style.setProperty(
           "--mb-text-scale",
           p.textSize === "small" ? ".94" : p.textSize === "large" ? "1.08" : "1"
