@@ -1,16 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 190" role="img" aria-label="Mah Buddy logo">
-  <defs>
-    <linearGradient id="mahBuddyGradient" x1="35" y1="25" x2="190" y2="170" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#6847F5"/>
-      <stop offset="0.5" stop-color="#8747E9"/>
-      <stop offset="1" stop-color="#D63BC7"/>
-    </linearGradient>
-    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
-      <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#6847F5" flood-opacity=".2"/>
-    </filter>
-  </defs>
-  <g filter="url(#softShadow)">
-    <path d="M42 145V76c0-23 17-41 39-41 14 0 25 6 34 18 9-12 20-18 34-18 22 0 39 18 39 41v69" fill="none" stroke="url(#mahBuddyGradient)" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M109 73c-8-10-24-6-24 8 0 14 24 27 24 27s24-13 24-27c0-14-16-18-24-8Z" fill="#fff"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" role="img" aria-label="Mah Buddy logo"><image href="data:image/webp;base64,UklGRl4XAA..." width="1254" height="1254" preserveAspectRatio="xMidYMid slice"/></svg>
