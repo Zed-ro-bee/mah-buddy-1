@@ -13,6 +13,7 @@ import "./mah-buddy-app-interface.css";
 import "./mah-buddy-mobile.css";
 import "./mah-buddy-final-mobile.css";
 import "./mah-buddy-showcase.css";
+import "./mah-buddy-native-final.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 
@@ -26,8 +27,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f8f6ff",
+  themeColor: "#f7f7f9",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
