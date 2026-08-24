@@ -1,4 +1,4 @@
-const CACHE="mah-buddy-shell-v2";
+const CACHE="mah-buddy-shell-v3";
 const SHELL=["/","/icon.svg","/mah-buddy-logo.svg"];
 
 self.addEventListener("install",event=>{
