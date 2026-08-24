@@ -1,0 +1,90 @@
+name: Make Mah Buddy controls functional
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  functional-controls:
+    if: ${{ !contains(github.event.head_commit.message, 'Make Mah Buddy controls functional') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Patch controls
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('components/mah-buddy-v2-home.jsx')
+          s = p.read_text()
+
+          # Persist settings and make the existing controls actually affect the app.
+          s = s.replace(
+            'function Settings({onBack}){const[theme,setTheme]=useState("System");const[voice,setVoice]=useState(true);const[enter,setEnter]=useState(true);const[save,setSave]=useState(true);const[diff,setDiff]=useState("Medium");const[num,setNum]=useState("10");',
+            'function Settings({onBack}){const[theme,setTheme]=useState("System");const[voice,setVoice]=useState(true);const[enter,setEnter]=useState(true);const[save,setSave]=useState(true);const[diff,setDiff]=useState("Medium");const[num,setNum]=useState("10");useEffect(()=>{try{setTheme(localStorage.getItem("mb-theme")||"System");setVoice(localStorage.getItem("mb-voice")!=="false");setEnter(localStorage.getItem("mb-enter")!=="false");setSave(localStorage.getItem("mb-save")!=="false");setDiff(localStorage.getItem("mb-difficulty")||"Medium");setNum(localStorage.getItem("mb-questions")||"10")}catch{}},[]);useEffect(()=>{try{localStorage.setItem("mb-theme",theme);localStorage.setItem("mb-voice",String(voice));localStorage.setItem("mb-enter",String(enter));localStorage.setItem("mb-save",String(save));localStorage.setItem("mb-difficulty",diff);localStorage.setItem("mb-questions",num);document.documentElement.dataset.theme=theme.toLowerCase()}catch{}},[theme,voice,enter,save,diff,num]);',
+            1
+          )
+
+          # Make Profile and About rows clickable instead of decorative divs.
+          s = s.replace(
+            '<div className="mb-setting link"><div className="mb-setting-icon"><Icon name="user"/></div><div className="mb-setting-copy"><strong>Profile</strong><span>Manage your account</span></div><Icon name="chevron"/></div>',
+            '<button className="mb-setting link" onClick={onBack}><div className="mb-setting-icon"><Icon name="user"/></div><div className="mb-setting-copy"><strong>Profile</strong><span>Manage your account</span></div><Icon name="chevron"/></button>',
+            1
+          )
+          s = s.replace(
+            '<div className="mb-setting link"><div className="mb-setting-icon"><Icon name="settings"/></div><div className="mb-setting-copy"><strong>About Mah Buddy</strong><span>Version and information</span></div><Icon name="chevron"/></div>',
+            '<button className="mb-setting link" onClick={()=>alert("Mah Buddy\\nYour intelligent study companion.")}><div className="mb-setting-icon"><Icon name="settings"/></div><div className="mb-setting-copy"><strong>About Mah Buddy</strong><span>Version and information</span></div><Icon name="chevron"/></button>',
+            1
+          )
+
+          # Plus button starts a useful study action.
+          s = s.replace(
+            '<button className="mb-composer-btn"><Icon name="plus"/></button>',
+            '<button className="mb-composer-btn" onClick={()=>setSetup("flashcards")} aria-label="Start flashcards"><Icon name="plus"/></button>',
+            1
+          )
+
+          # Enter-to-send setting now controls the keyboard behavior.
+          s = s.replace(
+            'onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}}}',
+            'onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey&&localStorage.getItem("mb-enter")!=="false"){e.preventDefault();send()}}}',
+            1
+          )
+
+          # Save-conversations setting now controls persistence.
+          s = s.replace(
+            'localStorage.setItem("mah-buddy-chat",JSON.stringify(messages));bottom.current?.scrollIntoView({behavior:"smooth"})',
+            'if(localStorage.getItem("mb-save")!=="false")localStorage.setItem("mah-buddy-chat",JSON.stringify(messages));bottom.current?.scrollIntoView({behavior:"smooth"})',
+            1
+          )
+
+          # Voice setting now controls the microphone.
+          s = s.replace(
+            'function mic(){if(listening){',
+            'function mic(){if(localStorage.getItem("mb-voice")==="false")return note("Voice input is turned off in Settings.");if(listening){',
+            1
+          )
+
+          p.write_text(s)
+
+      - name: Add button styling
+        shell: bash
+        run: |
+          cat >> app/globals.css <<'EOF'
+          .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+          html[data-theme="dark"]{color-scheme:dark;}
+          EOF
+
+      - name: Commit
+        run: |
+          git config user.name "mah-buddy-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add components/mah-buddy-v2-home.jsx app/globals.css
+          git diff --cached --quiet && exit 0
+          git commit -m "Make Mah Buddy controls functional"
+          git push
