@@ -5,6 +5,7 @@ import "./auth.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 import ProfileButtonBridge from "../components/profile-button-bridge";
+import MahBuddyNav from "../components/mah-buddy-nav";
 export const metadata: Metadata={title:"Mah Buddy — Your AI Study Companion",description:"A friendly AI study companion for learning, revision, quizzes, and more.",applicationName:"Mah Buddy",appleWebApp:{capable:true,title:"Mah Buddy",statusBarStyle:"black-translucent"}};
 export const viewport: Viewport={width:"device-width",initialScale:1,maximumScale:1,userScalable:false,viewportFit:"cover",themeColor:"#0e0d14"};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><PWARegister/><PreferencesBridge/><ProfileButtonBridge/>{children}</body></html>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><PWARegister/><PreferencesBridge/><ProfileButtonBridge/>{children}<MahBuddyNav/></body></html>}
