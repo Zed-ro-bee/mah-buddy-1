@@ -7,7 +7,7 @@ import PreferencesBridge from "../components/preferences-bridge";
 import ProfileButtonBridge from "../components/profile-button-bridge";
 import MahBuddyNav from "../components/mah-buddy-nav";
 
-const siteUrl = "https://mah-buddy-1.vercel.app";
+const siteUrl = "https://mah-buddy.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
