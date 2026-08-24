@@ -1,19 +1,179 @@
 "use client";
-import {useEffect,useState} from "react";
-import {createClient} from "@supabase/supabase-js";
-type Prefs={theme:string;voice:boolean;autoSpeak:boolean;memory:boolean;notifications:boolean;reducedMotion:boolean;difficulty:string;questions:string;enterToSend:boolean};
-const KEY="mah-buddy-prefs";const defaults:Prefs={theme:"System",voice:true,autoSpeak:false,memory:true,notifications:true,reducedMotion:false,difficulty:"Medium",questions:"10",enterToSend:true};
-function getSupabase(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL;const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return url&&key?createClient(url,key):null}
-function Mark({size=38}:{size?:number}){return <img src="/mah-buddy-logo.svg" width={size} height={size} alt="Mah Buddy"/>}
-function Icon({kind}:{kind:string}){return <span className="picon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{kind==="sun"?<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></>:kind==="moon"?<path d="M20.7 15.2A8.7 8.7 0 0 1 8.8 3.3 8.7 8.7 0 1 0 20.7 15.2Z"/>:kind==="monitor"?<><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></>:kind==="mic"?<><rect x="8" y="3" width="8" height="12" rx="4"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></>:kind==="spark"?<path d="m12 3 1.6 6.4L20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>:<path d="M4 6h16M4 12h16M4 18h16"/>}</svg></span>}
-function Toggle({on,setOn}:{on:boolean;setOn:(v:boolean)=>void}){return <button type="button" aria-pressed={on} className={on?"switch on":"switch"} onClick={()=>setOn(!on)}><span/></button>}
-function Seg({value,options,onChange}:{value:string;options:string[];onChange:(v:string)=>void}){return <div className="seg">{options.map(x=><button key={x} type="button" className={value===x?"selected":""} onClick={()=>onChange(x)}>{x}</button>)}</div>}
-function Row({kind,title,sub,children}:{kind:string;title:string;sub:string;children:React.ReactNode}){return <div className="setting-row"><Icon kind={kind}/><div className="row-copy"><strong>{title}</strong><span>{sub}</span></div>{children}</div>}
-export default function SettingsPage(){
- const[s,setS]=useState(defaults);const[saved,setSaved]=useState(false);const[custom,setCustom]=useState(25);const[signingOut,setSigningOut]=useState(false);
- useEffect(()=>{try{const loaded={...defaults,...JSON.parse(localStorage.getItem(KEY)||"{}")} as Prefs;setS(loaded);if(loaded.questions!=="Custom")setCustom(Math.max(1,Number(loaded.questions)||25));applyTheme(loaded.theme)}catch{applyTheme("System")}},[]);
- function applyTheme(theme:string){document.documentElement.dataset.mbTheme=theme.toLowerCase();window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"))}
- function update(p:Partial<Prefs>){const n={...s,...p};setS(n);localStorage.setItem(KEY,JSON.stringify(n));applyTheme(n.theme);setSaved(true);window.setTimeout(()=>setSaved(false),900)}
- function clear(){localStorage.removeItem("mah-buddy-chat");localStorage.removeItem("mah-buddy-chats");window.dispatchEvent(new CustomEvent("mah-buddy-chat-cleared"));setSaved(true);window.setTimeout(()=>setSaved(false),900)}
- async function signOut(){if(signingOut)return;setSigningOut(true);try{const sb=getSupabase();if(sb)await sb.auth.signOut();localStorage.removeItem("mah-buddy-onboarding");window.location.href="/"}finally{setSigningOut(false)}}
- return <main className="settings-app"><div className="ambient a"/><div className="ambient b"/><header className="settings-header"><a href="/" className="icon-back" aria-label="Back">←</a><div className="header-title"><Mark size={30}/><div><strong>Settings</strong><span>Mah Buddy</span></div></div>{saved?<span className="saved">Saved ✓</span>:<span className="header-dot"/>}</header><div className="settings-content"><section className="settings-hero"><div className="hero-orb"><Mark size={62}/></div><div><span className="eyebrow">PERSONAL CONTROL</span><h1>Make it yours.</h1><p>Fine-tune Mah Buddy so every study session feels natural to you.</p></div></section><section className="panel"><div className="panel-heading"><div><span>APPEARANCE</span><h2>Look & feel</h2></div><Icon kind="spark"/></div><div className="theme-grid"><button className={s.theme==="Light"?"theme-card active":"theme-card"} onClick={()=>update({theme:"Light"})}><span className="theme-preview light"><i/></span><b>Light</b><small>Bright & clean</small></button><button className={s.theme==="Dark"?"theme-card active":"theme-card"} onClick={()=>update({theme:"Dark"})}><span className="theme-preview dark"><i/></span><b>Dark</b><small>Easy on the eyes</small></button><button className={s.theme==="System"?"theme-card active":"theme-card"} onClick={()=>update({theme:"System"})}><span className="theme-preview system"><i/></span><b>System</b><small>Follow device</small></button></div></section><section className="panel"><div className="panel-heading"><div><span>VOICE</span><h2>Conversation</h2></div><Icon kind="mic"/></div><Row kind="mic" title="Voice responses" sub="Let Mah Buddy speak answers."><Toggle on={s.voice} setOn={v=>update({voice:v})}/></Row><Row kind="spark" title="Auto-speak" sub="Read new answers aloud automatically."><Toggle on={s.autoSpeak} setOn={v=>update({autoSpeak:v,voice:v||s.voice})}/></Row><div className="inline-note"><span>Voice language</span><b>British English</b></div></section><section className="panel"><div className="panel-heading"><div><span>STUDY</span><h2>Learning defaults</h2></div><Icon kind="spark"/></div><div className="field-block"><label>Difficulty</label><Seg value={s.difficulty} options={["Easy","Medium","Hard"]} onChange={v=>update({difficulty:v})}/></div><div className="field-block"><label>Questions per session</label><Seg value={s.questions} options={["5","10","20","Custom"]} onChange={v=>{if(v==="Custom")setCustom(custom||25);update({questions:v})}}/>{s.questions==="Custom"&&<div className="custom-wrap"><input type="number" min="1" max="100" value={custom} onChange={e=>{const n=Math.max(1,Math.min(100,Number(e.target.value)||1));setCustom(n);update({questions:String(n)})}}/><span>questions</span></div>}</div></section><section className="panel"><div className="panel-heading"><div><span>BEHAVIOUR</span><h2>How Mah Buddy works</h2></div><Icon kind="monitor"/></div><Row kind="spark" title="Enter to send" sub="Send messages with the Enter key."><Toggle on={s.enterToSend} setOn={v=>update({enterToSend:v})}/></Row><Row kind="spark" title="Memory" sub="Use your saved study preferences."><Toggle on={s.memory} setOn={v=>update({memory:v})}/></Row><Row kind="monitor" title="Notifications" sub="Receive helpful study reminders."><Toggle on={s.notifications} setOn={v=>update({notifications:v})}/><Row kind="moon" title="Reduced motion" sub="Use gentler animations throughout the app."><Toggle on={s.reducedMotion} setOn={v=>update({reducedMotion:v})}/></Row></section><section className="panel danger-panel"><div className="panel-heading"><div><span>DATA</span><h2>Your data</h2></div></div><button className="data-action" onClick={clear}><div><strong>Clear chat history</strong><span>Remove conversations stored on this device.</span></div><b>Clear</b></button></section><a href="/profile" className="profile-card-link"><span className="profile-avatar"><Mark size={27}/></span><div><strong>Profile</strong><small>Personal details & learning goals</small></div><b>→</b></a><button className="signout" onClick={signOut} disabled={signingOut}>{signingOut?"Signing out…":"Sign out"}</button></div><nav className="settings-nav"><a href="/"><span>⌂</span>Home</a><a href="/profile"><span>◎</span>Profile</a><a className="active" href="/settings"><span>⚙</span>Settings</a></nav><style jsx>{`*{box-sizing:border-box}.settings-app{min-height:100svh;position:relative;overflow:hidden;background:#f6f5fa;color:#17171c;font-family:Inter,ui-sans-serif,system-ui,sans-serif;padding-bottom:34px}.ambient{position:fixed;border-radius:50%;filter:blur(3px);pointer-events:none}.ambient.a{width:360px;height:360px;top:-170px;right:-120px;background:rgba(126,99,255,.13)}.ambient.b{width:300px;height:300px;bottom:-160px;left:-130px;background:rgba(205,101,255,.09)}.settings-header{position:sticky;top:0;z-index:20;height:70px;display:flex;align-items:center;padding:10px max(16px,calc((100vw - 860px)/2));background:rgba(248,247,252,.78);border-bottom:1px solid rgba(225,222,234,.7);backdrop-filter:blur(24px)}.icon-back{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;text-decoration:none;color:#292832;background:rgba(255,255,255,.72);border:1px solid #e3e0e9;box-shadow:0 7px 22px rgba(40,31,70,.06);font-size:20px}.header-title{display:flex;align-items:center;gap:10px;margin-left:11px;flex:1}.header-title img{border-radius:10px}.header-title strong,.header-title span{display:block}.header-title strong{font-size:14px}.header-title span{font-size:9px;color:#92909a;margin-top:2px}.saved{font-size:10px;color:#6655dc;font-weight:800}.header-dot{width:7px;height:7px;border-radius:50%;background:#8c7cff;box-shadow:0 0 0 5px rgba(140,124,255,.11)}.settings-content{width:min(760px,100%);margin:auto;padding:22px 16px 100px;position:relative;z-index:1}.settings-hero{display:flex;align-items:center;gap:20px;padding:26px;border-radius:30px;background:linear-gradient(135deg,#eeebff 0%,#fbfaff 56%,#f5eafd 100%);border:1px solid rgba(221,216,235,.95);box-shadow:0 25px 70px rgba(51,40,83,.09);overflow:hidden;position:relative}.settings-hero:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-80px;top:-80px;border:1px solid rgba(109,93,252,.12);box-shadow:0 0 0 35px rgba(109,93,252,.025),0 0 0 70px rgba(109,93,252,.018)}.hero-orb{width:88px;height:88px;flex:0 0 auto;border-radius:27px;display:grid;place-items:center;background:rgba(255,255,255,.76);border:1px solid rgba(255,255,255,.9);box-shadow:0 18px 45px rgba(68,50,120,.14);position:relative;z-index:1}.hero-orb img{border-radius:16px}.eyebrow,.panel-heading span{font-size:9px;letter-spacing:.18em;font-weight:900;color:#7667d8}.settings-hero h1{font-size:clamp(38px,7vw,58px);line-height:.94;letter-spacing:-.07em;margin:7px 0 9px}.settings-hero p{font-size:13px;line-height:1.6;color:#77747f;margin:0;max-width:480px}.panel{margin-top:14px;padding:21px;border-radius:25px;background:rgba(255,255,255,.86);border:1px solid rgba(226,223,232,.95);box-shadow:0 14px 45px rgba(38,31,55,.055);backdrop-filter:blur(16px)}.panel-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}.panel-heading h2{font-size:18px;letter-spacing:-.025em;margin:5px 0 0}.panel-heading>.picon{width:36px;height:36px}.picon{width:38px;height:38px;border-radius:12px;background:#f0edff;color:#6c5bdc;display:grid;place-items:center;flex:0 0 auto}.picon svg{width:18px;height:18px}.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.theme-card{border:1px solid #e4e1ea;border-radius:17px;background:#fbfafc;padding:10px;text-align:left;cursor:pointer;transition:.18s;position:relative}.theme-card:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(48,39,70,.07)}.theme-card.active{border-color:#8a7bff;box-shadow:0 0 0 3px rgba(111,94,252,.10);background:#fff}.theme-preview{height:58px;border-radius:11px;display:block;margin-bottom:9px;position:relative;overflow:hidden}.theme-preview:before,.theme-preview:after{content:"";position:absolute;border-radius:5px}.theme-preview.light{background:#f4f3f7}.theme-preview.light:before{left:8px;top:9px;width:26px;height:40px;background:#fff;box-shadow:34px 0 #fff}.theme-preview.dark{background:#17171d}.theme-preview.dark:before{left:8px;top:9px;width:26px;height:40px;background:#292931;box-shadow:34px 0 #292931}.theme-preview.system{background:linear-gradient(90deg,#f3f2f6 50%,#1c1c22 50%)}.theme-preview.system:before{left:10px;top:14px;width:48px;height:28px;background:linear-gradient(90deg,#fff 50%,#303039 50%)}.theme-card b,.theme-card small{display:block}.theme-card b{font-size:11px}.theme-card small{font-size:9px;color:#99969f;margin-top:3px}.setting-row{display:flex;align-items:center;gap:11px;padding:13px 0;border-top:1px solid #eeeef2}.setting-row:first-of-type{border-top:0}.row-copy{flex:1;min-width:0}.row-copy strong,.row-copy span{display:block}.row-copy strong{font-size:12px}.row-copy span{font-size:10px;color:#96939c;margin-top:4px;line-height:1.35}.switch{width:46px;height:27px;border:0;border-radius:99px;background:#d8d7de;padding:3px;cursor:pointer;flex:0 0 auto;transition:.2s}.switch span{display:block;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.12);transition:.2s}.switch.on{background:#7968ee}.switch.on span{transform:translateX(19px)}.inline-note{margin-top:9px;padding:12px 14px;border-radius:13px;background:#f7f6fb;display:flex;justify-content:space-between;align-items:center}.inline-note span{font-size:10px;color:#88858f}.inline-note b{font-size:10px;color:#5e5869}.field-block+ .field-block{margin-top:20px}.field-block label{display:block;font-size:10px;font-weight:800;color:#77747e;margin-bottom:8px}.seg{display:flex;gap:5px;padding:4px;border-radius:14px;background:#f1f0f5;border:1px solid #e9e7ee}.seg button{flex:1;border:0;background:transparent;border-radius:10px;padding:10px 5px;font-size:10px;font-weight:800;color:#89868f;cursor:pointer}.seg button.selected{background:#fff;color:#2a2731;box-shadow:0 4px 12px rgba(36,30,51,.08)}.custom-wrap{display:flex;align-items:center;gap:8px;margin-top:9px}.custom-wrap input{width:90px;border:1px solid #dfdce7;border-radius:12px;padding:10px 11px;background:#fff;outline:0;font-size:12px}.custom-wrap input:focus{border-color:#8c7dff;box-shadow:0 0 0 4px rgba(111,94,252,.09)}.custom-wrap span{font-size:10px;color:#8f8b95}.data-action{width:100%;border:1px solid #ebe8ef;background:#faf9fb;border-radius:16px;padding:14px;display:flex;align-items:center;text-align:left;cursor:pointer}.data-action div{flex:1}.data-action strong,.data-action span{display:block}.data-action strong{font-size:12px}.data-action span{font-size:10px;color:#97949c;margin-top:3px}.data-action>b{font-size:10px;color:#bd394d;background:#fff0f2;padding:8px 10px;border-radius:9px}.profile-card-link{margin-top:14px;display:flex;align-items:center;gap:12px;padding:14px;border-radius:20px;background:#18171d;color:#fff;text-decoration:none;box-shadow:0 18px 40px rgba(20,18,25,.15)}.profile-avatar{width:43px;height:43px;border-radius:14px;background:#302d39;display:grid;place-items:center}.profile-avatar img{border-radius:9px}.profile-card-link div{flex:1}.profile-card-link strong,.profile-card-link small{display:block}.profile-card-link strong{font-size:12px}.profile-card-link small{font-size:9px;color:#aaa6b0;margin-top:3px}.profile-card-link>b{font-size:19px;font-weight:400;color:#d9d5e1}.signout{width:100%;margin-top:10px;padding:13px;border-radius:16px;border:1px solid #efcbd2;background:rgba(255,255,255,.75);color:#b12943;font-size:11px;font-weight:850;cursor:pointer}.signout:disabled{opacity:.55}.settings-nav{display:none}@media(max-width:600px){.settings-content{padding:13px 12px 90px}.settings-hero{padding:21px;gap:15px;border-radius:24px}.hero-orb{width:70px;height:70px;border-radius:21px}.hero-orb img{width:49px;height:49px}.settings-hero h1{font-size:42px}.settings-hero p{font-size:12px}.panel{padding:17px;border-radius:21px}.theme-grid{gap:7px}.theme-preview{height:48px}.theme-card{padding:8px}.theme-card small{display:none}.panel-heading h2{font-size:17px}.settings-nav{position:fixed;display:flex;left:10px;right:10px;bottom:10px;height:62px;border:1px solid rgba(222,219,230,.9);border-radius:21px;background:rgba(255,255,255,.88);backdrop-filter:blur(22px);box-shadow:0 15px 40px rgba(36,28,57,.13);z-index:50;padding:5px}.settings-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#8a8790;font-size:9px;font-weight:700;border-radius:16px}.settings-nav a span{font-size:18px}.settings-nav a.active{background:#f0edff;color:#6655dc}}`}</style></main>}
+
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+type Prefs = {
+  theme: "System" | "Light" | "Dark";
+  voice: boolean;
+  autoSpeak: boolean;
+  memory: boolean;
+  notifications: boolean;
+  reducedMotion: boolean;
+  difficulty: "Easy" | "Medium" | "Hard";
+  questions: string;
+  enterToSend: boolean;
+};
+
+const KEY = "mah-buddy-prefs";
+const defaults: Prefs = {
+  theme: "System",
+  voice: true,
+  autoSpeak: false,
+  memory: true,
+  notifications: true,
+  reducedMotion: false,
+  difficulty: "Medium",
+  questions: "10",
+  enterToSend: true,
+};
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return url && key ? createClient(url, key) : null;
+}
+
+function Mark({ size = 38 }: { size?: number }) {
+  return <img src="/mah-buddy-logo.svg" width={size} height={size} alt="Mah Buddy" />;
+}
+
+function Icon({ kind }: { kind: string }) {
+  return (
+    <span className="picon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {kind === "mic" ? <><rect x="8" y="3" width="8" height="12" rx="4"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></> :
+         kind === "monitor" ? <><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></> :
+         kind === "moon" ? <path d="M20.7 15.2A8.7 8.7 0 0 1 8.8 3.3 8.7 8.7 0 1 0 20.7 15.2Z"/> :
+         <path d="m12 3 1.6 6.4L20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>}
+      </svg>
+    </span>
+  );
+}
+
+function Toggle({ on, setOn }: { on: boolean; setOn: (v: boolean) => void }) {
+  return <button type="button" aria-pressed={on} className={on ? "switch on" : "switch"} onClick={() => setOn(!on)}><span /></button>;
+}
+
+function Seg({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
+  return <div className="seg">{options.map(option => <button key={option} type="button" className={value === option ? "selected" : ""} onClick={() => onChange(option)}>{option}</button>)}</div>;
+}
+
+function Row({ kind, title, sub, children }: { kind: string; title: string; sub: string; children: React.ReactNode }) {
+  return <div className="setting-row"><Icon kind={kind}/><div className="row-copy"><strong>{title}</strong><span>{sub}</span></div>{children}</div>;
+}
+
+export default function SettingsPage() {
+  const [prefs, setPrefs] = useState(defaults);
+  const [customQuestions, setCustomQuestions] = useState(25);
+  const [saved, setSaved] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    try {
+      const loaded = { ...defaults, ...JSON.parse(localStorage.getItem(KEY) || "{}") } as Prefs;
+      setPrefs(loaded);
+      if (loaded.questions !== "Custom") setCustomQuestions(Math.max(1, Number(loaded.questions) || 25));
+      applyTheme(loaded.theme);
+    } catch {
+      applyTheme("System");
+    }
+  }, []);
+
+  function applyTheme(theme: string) {
+    document.documentElement.dataset.mbTheme = theme.toLowerCase();
+    window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"));
+  }
+
+  function update(patch: Partial<Prefs>) {
+    const next = { ...prefs, ...patch };
+    setPrefs(next);
+    localStorage.setItem(KEY, JSON.stringify(next));
+    applyTheme(next.theme);
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 900);
+  }
+
+  function clearHistory() {
+    localStorage.removeItem("mah-buddy-chat");
+    localStorage.removeItem("mah-buddy-chats");
+    window.dispatchEvent(new CustomEvent("mah-buddy-chat-cleared"));
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 900);
+  }
+
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      const client = getSupabase();
+      if (client) await client.auth.signOut();
+      localStorage.removeItem("mah-buddy-onboarding-seen");
+      window.location.href = "/";
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
+  return (
+    <main className="settings-app">
+      <div className="ambient a" />
+      <div className="ambient b" />
+
+      <header className="settings-header">
+        <a href="/" className="icon-back" aria-label="Back to Mah Buddy">←</a>
+        <div className="header-title"><Mark size={30}/><div><strong>Settings</strong><span>Mah Buddy</span></div></div>
+        {saved ? <span className="saved" role="status">Saved ✓</span> : <span className="header-dot" />}
+      </header>
+
+      <div className="settings-content">
+        <section className="settings-hero">
+          <div className="hero-orb"><Mark size={62}/></div>
+          <div><span className="eyebrow">PERSONAL CONTROL</span><h1>Make it yours.</h1><p>Fine-tune Mah Buddy so every study session feels natural to you.</p></div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-heading"><div><span>APPEARANCE</span><h2>Look & feel</h2></div><Icon kind="spark"/></div>
+          <div className="theme-grid">
+            {(["Light", "Dark", "System"] as const).map(theme => <button key={theme} type="button" className={prefs.theme === theme ? "theme-card active" : "theme-card"} onClick={() => update({ theme })}>
+              <span className={`theme-preview ${theme.toLowerCase()}`}><i/></span><b>{theme}</b><small>{theme === "Light" ? "Bright & clean" : theme === "Dark" ? "Easy on the eyes" : "Follow device"}</small>
+            </button>)}
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-heading"><div><span>VOICE</span><h2>Conversation</h2></div><Icon kind="mic"/></div>
+          <Row kind="mic" title="Voice responses" sub="Let Mah Buddy speak answers."><Toggle on={prefs.voice} setOn={v => update({ voice: v })}/></Row>
+          <Row kind="spark" title="Auto-speak" sub="Read new answers aloud automatically."><Toggle on={prefs.autoSpeak} setOn={v => update({ autoSpeak: v, voice: v || prefs.voice })}/></Row>
+          <div className="inline-note"><span>Voice language</span><b>British English</b></div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-heading"><div><span>STUDY</span><h2>Learning defaults</h2></div><Icon kind="spark"/></div>
+          <div className="field-block"><label>Difficulty</label><Seg value={prefs.difficulty} options={["Easy", "Medium", "Hard"]} onChange={v => update({ difficulty: v as Prefs["difficulty"] })}/></div>
+          <div className="field-block">
+            <label>Questions per session</label>
+            <Seg value={prefs.questions} options={["5", "10", "20", "Custom"]} onChange={v => { if (v === "Custom") setCustomQuestions(customQuestions || 25); update({ questions: v }); }}/>
+            {prefs.questions === "Custom" && <div className="custom-wrap"><input type="number" min="1" max="100" value={customQuestions} onChange={e => { const n = Math.max(1, Math.min(100, Number(e.target.value) || 1)); setCustomQuestions(n); update({ questions: String(n) }); }}/><span>questions</span></div>}
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-heading"><div><span>BEHAVIOUR</span><h2>How Mah Buddy works</h2></div><Icon kind="monitor"/></div>
+          <Row kind="spark" title="Enter to send" sub="Send messages with the Enter key."><Toggle on={prefs.enterToSend} setOn={v => update({ enterToSend: v })}/></Row>
+          <Row kind="spark" title="Memory" sub="Use your saved study preferences."><Toggle on={prefs.memory} setOn={v => update({ memory: v })}/></Row>
+          <Row kind="monitor" title="Notifications" sub="Receive helpful study reminders."><Toggle on={prefs.notifications} setOn={v => update({ notifications: v })}/></Row>
+          <Row kind="moon" title="Reduced motion" sub="Use gentler animations throughout the app."><Toggle on={prefs.reducedMotion} setOn={v => update({ reducedMotion: v })}/></Row>
+        </section>
+
+        <section className="panel danger-panel">
+          <div className="panel-heading"><div><span>DATA</span><h2>Your data</h2></div></div>
+          <button type="button" className="data-action" onClick={clearHistory}><div><strong>Clear chat history</strong><span>Remove conversations stored on this device.</span></div><b>Clear</b></button>
+        </section>
+
+        <a href="/profile" className="profile-card-link"><span className="profile-avatar"><Mark size={27}/></span><div><strong>Profile</strong><small>Personal details & learning goals</small></div><b>→</b></a>
+        <button type="button" className="signout" onClick={signOut} disabled={signingOut}>{signingOut ? "Signing out…" : "Sign out"}</button>
+      </div>
+    </main>
+  );
+}
