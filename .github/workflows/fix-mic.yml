@@ -1,0 +1,63 @@
+name: Fix Mah Buddy microphone
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-mic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Patch microphone input without changing the UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('components/mah-buddy-v2-home.jsx')
+          text = path.read_text()
+          marker = '/* MB_MIC_FIX_V1 */'
+          changed = False
+
+          if marker not in text:
+              anchor = 'const recognition=useRef(null);'
+              if anchor not in text:
+                  raise SystemExit('Could not find microphone state anchor')
+              text = text.replace(anchor, anchor + 'const recognitionBusy=useRef(false);' + marker, 1)
+
+              note = 'function note(x){setToast(x);setTimeout(()=>setToast(""),1800)}'
+              handler = '''\nfunction toggleVoiceInput(){\n  if(typeof window==="undefined") return;\n  if(listening){try{recognition.current?.stop()}catch{};return;}\n  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;\n  if(!SR){note("Voice input is not supported on this browser.");return;}\n  if(recognitionBusy.current)return;\n  try{\n    recognitionBusy.current=true;\n    const r=new SR();\n    recognition.current=r;\n    r.lang="en-GB";\n    r.interimResults=false;\n    r.continuous=false;\n    r.onstart=()=>{recognitionBusy.current=false;setListening(true)};\n    r.onend=()=>{recognitionBusy.current=false;setListening(false)};\n    r.onerror=()=>{recognitionBusy.current=false;setListening(false);note("Microphone access was unavailable. Please allow it and try again.")};\n    r.onresult=(e)=>{const text=e.results?.[0]?.[0]?.transcript?.trim();if(text){setInput(text);setTimeout(()=>send(text),0)}};\n    r.start();\n  }catch{recognitionBusy.current=false;setListening(false);note("Please allow microphone access and try again.")}\n}\n'''
+              if note not in text:
+                  raise SystemExit('Could not find toast helper')
+              text = text.replace(note, note + handler, 1)
+
+              # Replace the first mic button's click handler while preserving all visual markup.
+              pattern = re.compile(r'(<button\\b[^>]*?)onClick=\\{.*?\\}([^>]*>\\s*<Icon name="mic")', re.S)
+              text2, n = pattern.subn(r'\\1onClick={toggleVoiceInput} aria-label={listening?"Stop voice input":"Start voice input"}\\2', text, count=1)
+              if n == 0:
+                  pattern2 = re.compile(r'(<button\\b[^>]*)(>\\s*<Icon name="mic")', re.S)
+                  text2, n = pattern2.subn(r'\\1 onClick={toggleVoiceInput} aria-label={listening?"Stop voice input":"Start voice input"}\\2', text, count=1)
+              if n == 0:
+                  raise SystemExit('Could not find the chat microphone button')
+              text = text2
+              changed = True
+
+          if changed:
+              path.write_text(text)
+          else:
+              print('Microphone patch already present; nothing to do.')
+          PY
+      - name: Commit microphone fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/mah-buddy-v2-home.jsx
+          git diff --cached --quiet || git commit -m "Fix Mah Buddy microphone input"
+          git push
