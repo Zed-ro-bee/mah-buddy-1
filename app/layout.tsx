@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./mah-buddy-v2.css";
+import "./auth.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 export const metadata: Metadata={title:"Mah Buddy — Your AI Study Companion",description:"A friendly AI study companion for learning, revision, quizzes, and more.",applicationName:"Mah Buddy",appleWebApp:{capable:true,title:"Mah Buddy",statusBarStyle:"black-translucent"}};
