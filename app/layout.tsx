@@ -3,6 +3,7 @@ import "./globals.css";
 import "./mah-buddy-v2.css";
 import "./auth.css";
 import "./premium-ui.css";
+import "./mah-buddy-fixes.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
 import ProfileButtonBridge from "../components/profile-button-bridge";
