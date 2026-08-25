@@ -5,6 +5,7 @@ import "./auth.css";
 import "./premium-ui.css";
 import "./mah-buddy-fixes.css";
 import "./mah-buddy-final-fixes.css";
+import "./profile-polish.css";
 import "./mah-buddy-video-fixes.css";
 import PWARegister from "../components/pwa-register";
 import PreferencesBridge from "../components/preferences-bridge";
