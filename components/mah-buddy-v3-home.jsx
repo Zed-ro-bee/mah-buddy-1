@@ -1,7 +1,23 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-const SYSTEM = "You are Mah Buddy, the AI assistant of the Mah Buddy app. Be helpful, natural and direct. Use clear everyday English. Explain difficult ideas simply and give examples when useful.";
+const SYSTEM = "You are Mah Buddy, the AI assistant of the Mah Buddy app. Be helpful, natural and direct. Use clear everyday English. Adapt explanations to the user's saved learning level and keep study difficulty separate from language level.";
+const PROFILE_KEY = "mah-buddy-profile";
+const PREFS_KEY = "mah-buddy-prefs";
+
+function readStoredProfile() {
+  try {
+    const value = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
+    return value && typeof value === "object" ? value : {};
+  } catch { return {}; }
+}
+
+function readStoredDifficulty() {
+  try {
+    const value = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+    return ["Easy", "Medium", "Hard"].includes(value?.difficulty) ? value.difficulty : "Medium";
+  } catch { return "Medium"; }
+}
 
 function Mark({ size = 34 }) {
   return <svg width={size} height={size} viewBox="0 0 48 48" aria-label="Mah Buddy" role="img"><defs><linearGradient id="mbg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8b7cff"/><stop offset="1" stopColor="#c35cff"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="15" fill="url(#mbg2)"/><path d="M13 31V17.5c0-2 2.6-3 4.1-1.5L24 22.8l6.9-6.8c1.5-1.5 4.1-.5 4.1 1.5V31" fill="none" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="16" cy="34" r="2" fill="white"/><circle cx="24" cy="34" r="2" fill="white"/><circle cx="32" cy="34" r="2" fill="white"/></svg>;
@@ -118,7 +134,11 @@ export default function MahBuddyV3Home() {
     const next = [...messages, user];
     setMessages(next);
     try {
-      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.slice(-30), customInstructions: SYSTEM, memory: "Use the current conversation as context." }) });
+      // Read the current profile and study preferences directly here so the AI request
+      // always contains the user's learning level and selected difficulty.
+      const profile = readStoredProfile();
+      const difficulty = readStoredDifficulty();
+      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.slice(-30), customInstructions: SYSTEM, memory: "Use the current conversation as context.", profile, difficulty }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to respond.");
       setMessages(prev => [...prev, { role: "assistant", content: data.text || "I'm here. What would you like to work on?" }]);
