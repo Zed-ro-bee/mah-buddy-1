@@ -1,0 +1,54 @@
+/* Final UI pass: overrides older premium layers so the fixes are visible. */
+.profile-app > .glow,.settings-app > .glow{display:none!important}
+main.profile-app .profile-content{max-width:720px!important;padding:18px 14px 150px!important}
+main.profile-app .identity-card{padding:20px!important;border-radius:24px!important}
+main.profile-app .avatar-area{margin:12px 0 16px!important;gap:11px!important}
+main.profile-app .avatar{width:48px!important;height:48px!important;min-width:48px!important;flex:0 0 48px!important;border-radius:15px!important}
+main.profile-app .avatar span{font-size:18px!important}
+main.profile-app .avatar i{width:18px!important;height:18px!important;border-radius:6px!important}
+main.profile-app .avatar i img{width:12px!important;height:12px!important}
+main.profile-app .identity-card h1{font-size:clamp(34px,8vw,50px)!important;line-height:.98!important;margin-bottom:8px!important}
+main.profile-app .identity-card p{font-size:12px!important;line-height:1.55!important}
+main.profile-app .profile-panel{padding:18px!important;border-radius:20px!important;margin-top:11px!important}
+main.profile-app .panel-title{margin-bottom:15px!important}
+main.profile-app .field{margin-bottom:14px!important}
+main.profile-app .field-label b{font-size:11px!important;line-height:1.35!important}
+main.profile-app .field-label small{font-size:9px!important;line-height:1.4!important;margin-top:3px!important;margin-bottom:6px!important}
+main.profile-app .input-shell{min-height:50px!important;border-radius:14px!important;padding:4px 9px!important}
+main.profile-app .input-shell input,main.profile-app .input-shell select{font-size:11px!important;padding:8px 2px!important}
+main.profile-app .account-card{margin-top:11px!important;border-radius:18px!important;padding:14px!important}
+main.profile-app .continue{height:50px!important;border-radius:15px!important;margin-top:11px!important}
+main.settings-app .settings-content{max-width:740px!important;padding:16px 14px 155px!important}
+main.settings-app .settings-hero{padding:18px!important;border-radius:24px!important;gap:14px!important}
+main.settings-app .hero-orb{width:58px!important;height:58px!important;min-width:58px!important;border-radius:17px!important}
+main.settings-app .hero-orb img{width:40px!important;height:40px!important}
+main.settings-app .settings-hero h1{font-size:clamp(32px,8vw,48px)!important;margin:5px 0 7px!important}
+main.settings-app .settings-hero p{font-size:11px!important;line-height:1.5!important}
+main.settings-app .panel{padding:17px!important;border-radius:20px!important;margin-top:11px!important}
+main.settings-app .panel-heading{margin-bottom:14px!important}
+main.settings-app .panel-heading h2{font-size:17px!important}
+main.settings-app .theme-grid{gap:8px!important}
+main.settings-app .theme-card{min-height:100px!important;padding:8px!important;border-radius:14px!important}
+main.settings-app .theme-preview{height:44px!important;margin-bottom:7px!important}
+main.settings-app .theme-card b{font-size:10px!important}
+main.settings-app .theme-card small{font-size:8px!important;line-height:1.3!important}
+main.settings-app .setting-row{min-height:68px!important;padding:11px 0!important;gap:12px!important}
+main.settings-app .row-copy{overflow:visible!important}
+main.settings-app .row-copy strong{font-size:11px!important;line-height:1.35!important}
+main.settings-app .row-copy span{font-size:9px!important;line-height:1.45!important;margin-top:3px!important}
+main.settings-app .switch{width:58px!important;min-width:58px!important;height:32px!important}
+main.settings-app .switch-track{inset:0!important;border-radius:999px!important}
+main.settings-app .switch-thumb{width:24px!important;height:24px!important;left:3px!important;top:3px!important}
+main.settings-app .switch.on .switch-thumb{transform:translateX(28px)!important}
+main.settings-app .switch-thumb b{font-size:9px!important;font-weight:900!important}
+main.settings-app .switch:not(.on) .switch-track:after{content:"OFF";position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:6px;font-weight:900;color:#696571;letter-spacing:.04em}
+main.settings-app .switch.on .switch-track:after{content:"ON";position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:6px;font-weight:900;color:#fff;letter-spacing:.04em}
+main.settings-app .inline-note{margin-top:7px!important;padding:10px 11px!important}
+main.settings-app .seg{gap:6px!important}
+main.settings-app .seg button{min-height:38px!important;padding:8px 4px!important;border-radius:10px!important}
+main.settings-app .data-action{min-height:54px!important;border-radius:13px!important}
+main.settings-app .signout{min-height:48px!important;border-radius:13px!important}
+html[data-mb-theme="dark"] main.profile-app,html[data-mb-theme="dark"] main.settings-app{color:#f7f5ff!important}
+html[data-mb-theme="dark"] main.profile-app .field-label b,html[data-mb-theme="dark"] main.profile-app .panel-title h2,html[data-mb-theme="dark"] main.settings-app .panel-heading h2,html[data-mb-theme="dark"] main.settings-app .row-copy strong,html[data-mb-theme="dark"] main.settings-app .field-block label,html[data-mb-theme="dark"] main.settings-app .theme-card b,html[data-mb-theme="dark"] main.settings-app .data-action strong{color:#f7f5ff!important}
+html[data-mb-theme="dark"] main.profile-app .field-label small,html[data-mb-theme="dark"] main.profile-app .identity-card p,html[data-mb-theme="dark"] main.settings-app .row-copy span,html[data-mb-theme="dark"] main.settings-app .settings-hero p,html[data-mb-theme="dark"] main.settings-app .theme-card small{color:#b9b5c6!important}
+@media(max-width:600px){main.profile-app .identity-card{padding:18px!important}main.profile-app .profile-panel{padding:16px!important}main.settings-app .settings-content{padding:12px 11px 150px!important}main.settings-app .settings-hero{align-items:flex-start!important}main.settings-app .theme-grid{grid-template-columns:1fr!important}main.settings-app .theme-card{min-height:70px!important;display:grid!important;grid-template-columns:58px 1fr!important;grid-template-rows:auto auto!important;column-gap:9px!important;align-items:center!important}main.settings-app .theme-preview{grid-row:1/span 2!important;width:58px!important;height:42px!important;margin:0!important}main.settings-app .setting-row{gap:8px!important}main.settings-app .row-copy{padding-right:2px!important}main.settings-app .switch{flex:0 0 58px!important}}
