@@ -1,6 +1,7 @@
 "use client";
 import AuthGate from "../components/auth-gate";
 import MahBuddyV3Home from "../components/mah-buddy-v3-home";
+import ProfileMemory from "../components/profile-memory";
 
 const styles=`
 :root{--vbg:#f7f8fc;--vsurface:#fff;--vink:#171827;--vmuted:#73778a;--vline:#e8e9f0;--vbrand:#6d5dfc;--vsoft:#f0edff;--vshadow:0 18px 60px rgba(31,27,66,.10)}
@@ -16,4 +17,4 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
 .mb-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#171827;color:#fff;padding:10px 15px;border-radius:12px;font-size:12px;z-index:100;box-shadow:0 12px 30px rgba(0,0,0,.2)}html[data-theme="dark"] .mb-toast{background:#fff;color:#171827}html[data-theme="dark"] .mb-intro{background:#0d0e14}
 @media(max-width:700px){.mb-prompts{grid-template-columns:1fr}.mb-hero{padding:48px 0 20px}.mb-chat{padding-top:20px}.mb-msg-body{max-width:88%}.mb-composer-area{bottom:9px}.mb-home{padding-left:12px;padding-right:12px}.mb-settings{border-radius:24px;padding:20px}}
 `;
-export default function Page(){return <AuthGate><style>{styles}</style><MahBuddyV3Home/></AuthGate>}
+export default function Page(){return <AuthGate><style>{styles}</style><ProfileMemory/><MahBuddyV3Home/></AuthGate>}
