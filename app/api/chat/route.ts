@@ -7,8 +7,9 @@ type InputMessage = { role: "user" | "assistant"; content: string; attachment?: 
 type Profile = { preferredName?: string; buddyName?: string; age?: string; learningLevel?: string; goal?: string; educationLevel?: string };
 
 const MAX_ATTACHMENT_CHARS = 8_500_000;
-const MAX_TEXT_CHARS = 50_000;
-const MAX_MESSAGE_CHARS = 12_000;
+const MAX_TEXT_CHARS = 35_000;
+const MAX_MESSAGE_CHARS = 8_000;
+const MAX_HISTORY_MESSAGES = 14;
 
 function imageData(data: string) { const match = data.match(/^data:([^;]+);base64,(.+)$/s); return match ? { mediaType: match[1], data: match[2] } : null; }
 function fileData(data: string, fallbackType: string) { const match = data.match(/^data:([^;]+);base64,(.+)$/s); if (match) return { mediaType: match[1] || fallbackType, data: match[2] }; if (/^[A-Za-z0-9+/\s]+={0,2}$/.test(data) && data.replace(/\s/g, "").length > 32) return { mediaType: fallbackType, data: data.replace(/\s/g, "") }; return null; }
@@ -51,7 +52,8 @@ export async function POST(request: Request) {
     if (!messages.length) return NextResponse.json({ error: "No messages provided." }, { status: 400 });
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) return NextResponse.json({ error: "Mah Buddy AI is not connected yet. Add GOOGLE_GENERATIVE_AI_API_KEY in Vercel Environment Variables." }, { status: 503 });
 
-    const normalized = messages.filter((message: any) => message && (message.role === "user" || message.role === "assistant") && typeof message.content === "string").slice(-30) as InputMessage[];
+    // Keep the prompt payload small so the model spends less time reading old context.
+    const normalized = messages.filter((message: any) => message && (message.role === "user" || message.role === "assistant") && typeof message.content === "string").slice(-MAX_HISTORY_MESSAGES) as InputMessage[];
     const modelMessages = normalized.map((message) => {
       const attachment = message.attachment;
       if (!attachment?.data) return { role: message.role, content: message.content.slice(0, MAX_MESSAGE_CHARS) };
@@ -70,13 +72,19 @@ export async function POST(request: Request) {
     const difficulty = ["Easy", "Medium", "Hard"].includes(requestedDifficulty) ? requestedDifficulty : "";
     const profileParts = [profileName ? `Preferred user name: ${profileName}` : "", buddyName ? `User's chosen name for you: ${buddyName}` : "", profile.age ? `User age: ${String(profile.age).slice(0, 3)}` : "", level ? `Standard learning/language level: ${level} — ${levelGuide}` : "", profile.educationLevel ? `Current studies: ${String(profile.educationLevel).slice(0, 120)}` : "", profile.goal ? `Learning goal: ${String(profile.goal).slice(0, 160)}` : ""].filter(Boolean).join("\n");
 
-    const systemParts = [`You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.\n${MAH_BUDDY_IDENTITY}\nCORE RESPONSE BEHAVIOUR:\n- Understand the user's intent before answering. Do not use one fixed response format for every question.\n- The selected learning level controls LANGUAGE and EXPLANATION DEPTH. It is not merely a label.\n- Foundation = simplest language and smallest steps; Expert = most sophisticated language and deepest technical detail.\n- Keep the chosen level consistent throughout an answer unless the user explicitly asks for another level.\n- Difficulty controls CHALLENGE, not the user's language level. Easy, Medium, and Hard should change how much reasoning is required, not randomly change the user's language standard.\n- If the user asks for a simpler or harder explanation, temporarily adapt to that request.\n- Answer directly. Simple questions should get concise answers; complex questions should get enough detail to understand them.\n- Never make the response unnecessarily long just because the user has an advanced level.\n- Never invent facts.\n- Be friendly, natural, encouraging, age-appropriate, and respectful.\n\nACADEMIC RESPONSE RULES:\n- Give the direct answer first when appropriate, then explanation/working.\n- Match vocabulary, sentence complexity, assumed prior knowledge, examples, and reasoning depth to the learning level.\n- For calculations, give the result and then show working.\n- For definitions, define first, then explain and give an example when useful.\n\nQUIZ / QUESTION RULES:\n- NEVER give the whole quiz at once when the user is taking a quiz.\n- Present exactly ONE question at a time. Wait for the user's answer before giving the next question.\n- Do not reveal the answer before the user answers.\n- After the user answers, say whether it is correct, give a level-appropriate explanation, then move to a NEW question.\n- Do not repeat a question already used in the current quiz. Vary wording, concepts, examples, and question types.\n- Keep the requested difficulty consistent.\n- If a quiz has a requested number of questions, continue until that number is completed.\n\nATTACHMENTS:\n- Inspect attached images/files when supported and use their actual contents.\n- If an attachment cannot be analyzed, clearly explain the limitation instead of pretending.`];
+    const systemParts = [`You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.\n${MAH_BUDDY_IDENTITY}\nRESPONSE BEHAVIOUR:\n- Understand intent and answer directly. Do not use one fixed format for every question.\n- The selected learning level controls language, vocabulary, assumed knowledge, and explanation depth.\n- Difficulty controls challenge, reasoning, and question complexity, not language level.\n- Keep simple questions concise and complex questions appropriately detailed.\n- Never invent facts. Be friendly, natural, encouraging, age-appropriate, and respectful.\n\nACADEMIC RULES:\n- Give the direct answer first when appropriate, then explanation or working.\n- For calculations, show the result and working. For definitions, define first and give an example when useful.\n\nQUIZ RULES:\n- Give exactly ONE question at a time and wait for the user's answer.\n- Do not reveal the answer before the user answers.\n- After the answer, mark/explain it and give a NEW question.\n- Never repeat a question already used in the current quiz; vary concepts, wording, examples, and question types.\n- Keep requested difficulty consistent.\n\nATTACHMENTS:\n- Inspect supported attachments and use their actual contents. Never pretend to have read an unsupported attachment.`];
     if (profileParts) systemParts.push(`\nREMEMBERED USER PROFILE:\n${profileParts}`);
     if (difficulty) systemParts.push(`\nACTIVE QUESTION DIFFICULTY: ${difficulty}\n${DIFFICULTY_GUIDE[difficulty]}`);
-    if (customInstructions) systemParts.push(`\nUSER CUSTOM INSTRUCTIONS:\n${customInstructions.slice(0, 4000)}`);
-    if (memory) systemParts.push(`\nRECENT USER CONTEXT:\n${memory.slice(0, 4000)}`);
+    if (customInstructions) systemParts.push(`\nUSER CUSTOM INSTRUCTIONS:\n${customInstructions.slice(0, 2000)}`);
+    if (memory) systemParts.push(`\nRECENT CONTEXT:\n${memory.slice(0, 2000)}`);
 
-    const result = await generateText({ model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"), system: systemParts.join("\n"), messages: modelMessages as any });
+    const result = await generateText({
+      model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
+      system: systemParts.join("\n"),
+      messages: modelMessages as any,
+      maxOutputTokens: 700,
+      temperature: 0.35,
+    });
     return NextResponse.json({ text: result.text });
   } catch (error) {
     console.error("Mah Buddy chat error:", error);
