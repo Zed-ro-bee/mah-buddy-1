@@ -9,7 +9,7 @@ type Profile = { preferredName?: string; buddyName?: string; age?: string; learn
 const MAX_ATTACHMENT_CHARS = 8_500_000;
 const MAX_TEXT_CHARS = 35_000;
 const MAX_MESSAGE_CHARS = 8_000;
-const MAX_HISTORY_MESSAGES = 14;
+const MAX_HISTORY_MESSAGES = 10;
 
 function imageData(data: string) { const match = data.match(/^data:([^;]+);base64,(.+)$/s); return match ? { mediaType: match[1], data: match[2] } : null; }
 function fileData(data: string, fallbackType: string) { const match = data.match(/^data:([^;]+);base64,(.+)$/s); if (match) return { mediaType: match[1] || fallbackType, data: match[2] }; if (/^[A-Za-z0-9+/\s]+={0,2}$/.test(data) && data.replace(/\s/g, "").length > 32) return { mediaType: fallbackType, data: data.replace(/\s/g, "") }; return null; }
@@ -35,9 +35,9 @@ const LEVEL_GUIDE: Record<string, string> = {
 };
 
 const DIFFICULTY_GUIDE: Record<string, string> = {
-  Easy: "Easy difficulty: test basic recall and understanding, use straightforward wording, familiar examples, and avoid unnecessary tricks.",
-  Medium: "Medium difficulty: test understanding and application, require some reasoning, and include plausible alternatives or multi-step thinking.",
-  Hard: "Hard difficulty: test deeper reasoning, application, analysis, and challenging distinctions; avoid ambiguity and make the challenge academically meaningful.",
+  Easy: "Easy: basic recall and understanding, straightforward wording, familiar examples, and no unnecessary tricks.",
+  Medium: "Medium: understanding and application, some reasoning, plausible alternatives, and moderate multi-step thinking.",
+  Hard: "Hard: deeper reasoning, application, analysis, challenging distinctions, and academically meaningful challenge.",
 };
 
 export async function POST(request: Request) {
@@ -52,7 +52,6 @@ export async function POST(request: Request) {
     if (!messages.length) return NextResponse.json({ error: "No messages provided." }, { status: 400 });
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) return NextResponse.json({ error: "Mah Buddy AI is not connected yet. Add GOOGLE_GENERATIVE_AI_API_KEY in Vercel Environment Variables." }, { status: 503 });
 
-    // Keep the prompt payload small so the model spends less time reading old context.
     const normalized = messages.filter((message: any) => message && (message.role === "user" || message.role === "assistant") && typeof message.content === "string").slice(-MAX_HISTORY_MESSAGES) as InputMessage[];
     const modelMessages = normalized.map((message) => {
       const attachment = message.attachment;
@@ -69,21 +68,21 @@ export async function POST(request: Request) {
     const buddyName = typeof profile.buddyName === "string" ? profile.buddyName.trim() : "Mah Buddy";
     const level = typeof profile.learningLevel === "string" ? profile.learningLevel.trim() : "";
     const levelGuide = LEVEL_GUIDE[level] || LEVEL_GUIDE.Developing;
-    const difficulty = ["Easy", "Medium", "Hard"].includes(requestedDifficulty) ? requestedDifficulty : "";
+    const difficulty = ["Easy", "Medium", "Hard"].includes(requestedDifficulty) ? requestedDifficulty : "Medium";
     const profileParts = [profileName ? `Preferred user name: ${profileName}` : "", buddyName ? `User's chosen name for you: ${buddyName}` : "", profile.age ? `User age: ${String(profile.age).slice(0, 3)}` : "", level ? `Standard learning/language level: ${level} — ${levelGuide}` : "", profile.educationLevel ? `Current studies: ${String(profile.educationLevel).slice(0, 120)}` : "", profile.goal ? `Learning goal: ${String(profile.goal).slice(0, 160)}` : ""].filter(Boolean).join("\n");
 
-    const systemParts = [`You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.\n${MAH_BUDDY_IDENTITY}\nRESPONSE BEHAVIOUR:\n- Understand intent and answer directly. Do not use one fixed format for every question.\n- The selected learning level controls language, vocabulary, assumed knowledge, and explanation depth.\n- Difficulty controls challenge, reasoning, and question complexity, not language level.\n- Keep simple questions concise and complex questions appropriately detailed.\n- Never invent facts. Be friendly, natural, encouraging, age-appropriate, and respectful.\n\nACADEMIC RULES:\n- Give the direct answer first when appropriate, then explanation or working.\n- For calculations, show the result and working. For definitions, define first and give an example when useful.\n\nQUIZ RULES:\n- Give exactly ONE question at a time and wait for the user's answer.\n- Do not reveal the answer before the user answers.\n- After the answer, mark/explain it and give a NEW question.\n- Never repeat a question already used in the current quiz; vary concepts, wording, examples, and question types.\n- Keep requested difficulty consistent.\n\nATTACHMENTS:\n- Inspect supported attachments and use their actual contents. Never pretend to have read an unsupported attachment.`];
+    const systemParts = [`You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.\n${MAH_BUDDY_IDENTITY}\nRESPONSE BEHAVIOUR:\n- Adapt every answer to the user's saved learning level. It controls vocabulary, assumed knowledge, explanation depth, examples, and sentence complexity.\n- Difficulty is separate from learning level: Easy/Medium/Hard controls challenge and reasoning for quizzes and practice.\n- Do not force every response into the same template. Answer naturally and efficiently.\n- Keep simple questions concise; give enough depth for complex questions.\n- Respond quickly: avoid unnecessary preambles, repetition, and filler.\n- Never invent facts. Be friendly, natural, encouraging, age-appropriate, and respectful.\n\nACADEMIC RULES:\n- Give the direct answer first when appropriate, then explanation or working.\n- For calculations, show result and working. For definitions, define first and give an example when useful.\n\nQUIZ AND PRACTICE RULES — IMPORTANT:\n- When the user asks for quiz/practice questions, give ONE question at a time and wait for the user's answer.\n- Never provide the question and its answer together unless the user explicitly asks for the answer.\n- After the user answers, mark/explain that answer briefly, then give a NEW question.\n- Every new question must vary its wording, example, concept, or question type. Never repeat a previous question from the conversation.\n- Never reveal the answer to a new question before the user attempts it.\n- Keep the selected difficulty consistent while adapting language to the user's learning level.\n- If the user asks for multiple questions at once, explain that practice mode presents them one at a time so each answer can be checked before the next question.\n\nATTACHMENTS:\n- Inspect supported attachments and use their actual contents. Never pretend to have read an unsupported attachment.`];
     if (profileParts) systemParts.push(`\nREMEMBERED USER PROFILE:\n${profileParts}`);
-    if (difficulty) systemParts.push(`\nACTIVE QUESTION DIFFICULTY: ${difficulty}\n${DIFFICULTY_GUIDE[difficulty]}`);
+    systemParts.push(`\nACTIVE QUESTION DIFFICULTY: ${difficulty}\n${DIFFICULTY_GUIDE[difficulty]}`);
     if (customInstructions) systemParts.push(`\nUSER CUSTOM INSTRUCTIONS:\n${customInstructions.slice(0, 2000)}`);
-    if (memory) systemParts.push(`\nRECENT CONTEXT:\n${memory.slice(0, 2000)}`);
+    if (memory) systemParts.push(`\nRECENT CONTEXT:\n${memory.slice(0, 2500)}`);
 
     const result = await generateText({
       model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
       system: systemParts.join("\n"),
       messages: modelMessages as any,
-      maxOutputTokens: 700,
-      temperature: 0.35,
+      maxOutputTokens: 600,
+      temperature: 0.25,
     });
     return NextResponse.json({ text: result.text });
   } catch (error) {
