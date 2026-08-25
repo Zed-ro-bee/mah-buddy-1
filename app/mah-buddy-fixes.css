@@ -1,0 +1,527 @@
+/* Mah Buddy UI repair layer
+   Keeps the current visual direction and fixes mobile spacing, theme contrast,
+   controls, profile sizing, settings rows, and fixed navigation overlap. */
+
+:root {
+  --mb-fix-bg: #f7f8fc;
+  --mb-fix-surface: #ffffff;
+  --mb-fix-surface-2: #f3f1f8;
+  --mb-fix-text: #171827;
+  --mb-fix-muted: #73778a;
+  --mb-fix-line: #e5e3eb;
+  --mb-fix-brand: #6d5dfc;
+}
+
+html[data-mb-theme="dark"] {
+  --mb-fix-bg: #0f0e14;
+  --mb-fix-surface: #18171f;
+  --mb-fix-surface-2: #211f2a;
+  --mb-fix-text: #f7f5ff;
+  --mb-fix-muted: #b4afc2;
+  --mb-fix-line: #34313f;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-mb-theme="system"] {
+    --mb-fix-bg: #0f0e14;
+    --mb-fix-surface: #18171f;
+    --mb-fix-surface-2: #211f2a;
+    --mb-fix-text: #f7f5ff;
+    --mb-fix-muted: #b4afc2;
+    --mb-fix-line: #34313f;
+  }
+}
+
+html[data-mb-theme="light"] {
+  color-scheme: light;
+}
+html[data-mb-theme="dark"] {
+  color-scheme: dark;
+}
+html[data-mb-theme="system"] {
+  color-scheme: light dark;
+}
+
+html, body {
+  background: var(--mb-fix-bg);
+  color: var(--mb-fix-text);
+}
+
+body {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Keep every fixed navigation state clear of page content. */
+main,
+.mb-app,
+.profile-app,
+.settings-app {
+  padding-bottom: max(118px, calc(96px + env(safe-area-inset-bottom))) !important;
+}
+
+/* Shared controls: never allow theme changes to make text disappear. */
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mb-input,
+.mb-choice,
+.mb-option,
+.mb-card-actions button,
+.mb-sheet,
+.mb-home-card,
+.mb-top,
+.mb-page {
+  color: var(--mb-fix-text);
+}
+
+.mb-top {
+  background: color-mix(in srgb, var(--mb-fix-surface) 90%, transparent);
+  border-color: var(--mb-fix-line);
+}
+
+.mb-icon-btn,
+.mb-choice,
+.mb-input,
+.mb-card-actions button,
+.mb-option {
+  background: var(--mb-fix-surface);
+  border-color: var(--mb-fix-line);
+}
+
+.mb-input::placeholder,
+.mb-card-face small,
+.mb-progress-text,
+.mb-quiz-top b,
+.mb-home-card p,
+.mb-sheet-heading p,
+.mb-setting-copy span {
+  color: var(--mb-fix-muted);
+}
+
+.mb-home-card {
+  background: var(--mb-fix-surface);
+  border-color: var(--mb-fix-line);
+}
+
+.mb-choice.active,
+.mb-option:hover,
+.mb-option.selected {
+  background: color-mix(in srgb, var(--mb-fix-brand) 12%, var(--mb-fix-surface));
+}
+
+.mb-sheet {
+  background: var(--mb-fix-surface);
+}
+
+.mb-card-face.front {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--mb-fix-brand) 10%, var(--mb-fix-surface)), var(--mb-fix-surface));
+}
+
+.mb-card-actions .mb-card-main {
+  background: #171827;
+  color: #fff;
+}
+
+/* Profile: compact avatar, readable field copy, no browser-looking upload UI. */
+.profile-app {
+  --page-bg: var(--mb-fix-bg) !important;
+  --text: var(--mb-fix-text) !important;
+  --muted: var(--mb-fix-muted) !important;
+  --surface: color-mix(in srgb, var(--mb-fix-surface) 94%, transparent) !important;
+  --line: var(--mb-fix-line) !important;
+  background: var(--page-bg) !important;
+  color: var(--text) !important;
+}
+
+.profile-header {
+  background: color-mix(in srgb, var(--mb-fix-bg) 90%, transparent) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.profile-header .back,
+.profile-header .settings-pill {
+  background: var(--mb-fix-surface) !important;
+  color: var(--mb-fix-text) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.profile-content {
+  padding-bottom: 135px !important;
+}
+
+.identity-card {
+  padding: 24px !important;
+}
+
+.avatar-area {
+  margin: 16px 0 18px !important;
+  gap: 12px !important;
+}
+
+.avatar {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 17px !important;
+  flex: 0 0 54px !important;
+}
+
+.avatar span {
+  font-size: 20px !important;
+}
+
+.avatar-area > div:nth-child(2) > b {
+  color: var(--mb-fix-text) !important;
+}
+
+.avatar-area > div:nth-child(2) > small,
+.avatar-area > div:nth-child(2) > em,
+.identity-card p,
+.field-label small {
+  color: var(--mb-fix-muted) !important;
+}
+
+.profile-panel {
+  background: var(--mb-fix-surface) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.panel-title h2,
+.field-label b,
+.account-card strong,
+.account-card small {
+  color: var(--mb-fix-text) !important;
+}
+
+.input-shell {
+  background: var(--mb-fix-surface-2) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.input-shell:focus-within {
+  background: var(--mb-fix-surface) !important;
+}
+
+.input-shell input,
+.input-shell select {
+  color: var(--mb-fix-text) !important;
+}
+
+.input-shell input::placeholder {
+  color: var(--mb-fix-muted) !important;
+  opacity: .9;
+}
+
+/* Prevent native file chooser UI from becoming a visible part of the design
+   if an older cached profile component is ever rendered. */
+.profile-app input[type="file"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Settings: consistent premium rows and visible ON/OFF states. */
+.settings-app {
+  --page-bg: var(--mb-fix-bg) !important;
+  --text: var(--mb-fix-text) !important;
+  --muted: var(--mb-fix-muted) !important;
+  --surface: color-mix(in srgb, var(--mb-fix-surface) 94%, transparent) !important;
+  --line: var(--mb-fix-line) !important;
+  background: var(--page-bg) !important;
+  color: var(--text) !important;
+}
+
+.settings-header {
+  background: color-mix(in srgb, var(--mb-fix-bg) 90%, transparent) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.settings-header .icon-back {
+  background: var(--mb-fix-surface) !important;
+  color: var(--mb-fix-text) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.settings-content {
+  padding-bottom: 145px !important;
+}
+
+.settings-hero,
+.panel {
+  border-color: var(--mb-fix-line) !important;
+}
+
+.panel,
+.theme-card,
+.seg button,
+.inline-note,
+.custom-wrap input,
+.data-action,
+.signout {
+  color: var(--mb-fix-text) !important;
+}
+
+.panel {
+  background: var(--mb-fix-surface) !important;
+}
+
+.settings-hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mb-fix-brand) 16%, var(--mb-fix-surface)), var(--mb-fix-surface)) !important;
+}
+
+.settings-hero p,
+.row-copy span,
+.theme-card small,
+.inline-note span,
+.custom-wrap span,
+.data-action span {
+  color: var(--mb-fix-muted) !important;
+}
+
+.theme-card,
+.seg button,
+.custom-wrap input,
+.inline-note,
+.signout {
+  background: var(--mb-fix-surface-2) !important;
+  border-color: var(--mb-fix-line) !important;
+}
+
+.theme-card.active,
+.seg button.selected {
+  color: var(--mb-fix-brand) !important;
+}
+
+.setting-row {
+  border-color: var(--mb-fix-line) !important;
+  min-height: 72px !important;
+  padding: 13px 0 !important;
+}
+
+.row-copy {
+  min-width: 0 !important;
+  padding-right: 10px;
+}
+
+.row-copy strong,
+.field-block label,
+.theme-card b,
+.data-action strong {
+  color: var(--mb-fix-text) !important;
+}
+
+.row-copy span {
+  line-height: 1.5 !important;
+}
+
+.switch {
+  width: 52px !important;
+  min-width: 52px !important;
+  height: 30px !important;
+}
+
+.switch-track {
+  background: #c9c6d2 !important;
+}
+
+.switch.on .switch-track {
+  background: linear-gradient(135deg, #5f4fe4, #8b68ff) !important;
+}
+
+.data-action {
+  background: color-mix(in srgb, #c43f58 7%, var(--mb-fix-surface)) !important;
+  border-color: color-mix(in srgb, #c43f58 18%, var(--mb-fix-line)) !important;
+}
+
+/* Fixed bottom nav: make it theme-aware and keep it inside the safe area. */
+.mah-buddy-nav {
+  bottom: max(9px, env(safe-area-inset-bottom)) !important;
+  background: color-mix(in srgb, var(--mb-fix-surface) 90%, transparent) !important;
+  border-color: var(--mb-fix-line) !important;
+  box-shadow: 0 26px 70px rgba(29,24,58,.28), 0 4px 18px rgba(29,24,58,.10), inset 0 1px 0 rgba(255,255,255,.35) !important;
+}
+
+html[data-mb-theme="dark"] .mah-buddy-nav,
+html[data-mb-theme="system"] .mah-buddy-nav {
+  color-scheme: dark;
+}
+
+html[data-mb-theme="dark"] .mah-buddy-nav a,
+html[data-mb-theme="system"] .mah-buddy-nav a {
+  color: #aaa5b7;
+}
+
+/* Make all pages resilient on narrow phones and long translated labels. */
+.profile-content,
+.settings-content,
+.mb-home,
+.mb-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.profile-content *,
+.settings-content *,
+.mb-home *,
+.mb-page * {
+  min-width: 0;
+}
+
+.field-label b,
+.field-label small,
+.row-copy strong,
+.row-copy span,
+.identity-card h1,
+.identity-card p,
+.settings-hero h1,
+.settings-hero p {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (max-width: 600px) {
+  .profile-content {
+    padding: 14px 12px 140px !important;
+  }
+
+  .identity-card,
+  .profile-panel,
+  .account-card {
+    border-radius: 22px !important;
+  }
+
+  .identity-card {
+    padding: 20px !important;
+  }
+
+  .identity-card h1 {
+    font-size: clamp(36px, 12vw, 52px) !important;
+    line-height: .98 !important;
+    letter-spacing: -.055em !important;
+  }
+
+  .profile-panel {
+    padding: 18px !important;
+  }
+
+  .field-label b {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+  }
+
+  .field-label small {
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+  }
+
+  .settings-content {
+    padding: 14px 12px 150px !important;
+  }
+
+  .settings-hero {
+    align-items: flex-start !important;
+    padding: 20px !important;
+    gap: 13px !important;
+  }
+
+  .hero-orb {
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: 20px !important;
+  }
+
+  .hero-orb img {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .settings-hero h1 {
+    font-size: clamp(34px, 11vw, 48px) !important;
+  }
+
+  .panel {
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+
+  .theme-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .theme-card {
+    display: grid !important;
+    grid-template-columns: 64px 1fr !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    align-items: center !important;
+    padding: 9px !important;
+  }
+
+  .theme-preview {
+    grid-row: 1 / span 2 !important;
+    width: 64px !important;
+    height: 46px !important;
+    margin: 0 !important;
+  }
+
+  .setting-row {
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .row-copy strong {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+  }
+
+  .row-copy span {
+    font-size: 10px !important;
+  }
+
+  .seg {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .mah-buddy-nav {
+    width: calc(100% - 16px) !important;
+    height: 66px !important;
+    bottom: max(7px, env(safe-area-inset-bottom)) !important;
+    border-radius: 22px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .identity-card {
+    padding: 17px !important;
+  }
+
+  .profile-panel,
+  .panel {
+    padding: 16px !important;
+  }
+
+  .mah-buddy-nav {
+    width: calc(100% - 10px) !important;
+  }
+}
+
+/* Respect the Reduced Motion preference without breaking layout. */
+html[data-mb-reduced-motion="true"] *,
+html[data-mb-reduced-motion="true"] *::before,
+html[data-mb-reduced-motion="true"] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
