@@ -51,4 +51,66 @@ main.settings-app .signout{min-height:48px!important;border-radius:13px!importan
 html[data-mb-theme="dark"] main.profile-app,html[data-mb-theme="dark"] main.settings-app{color:#f7f5ff!important}
 html[data-mb-theme="dark"] main.profile-app .field-label b,html[data-mb-theme="dark"] main.profile-app .panel-title h2,html[data-mb-theme="dark"] main.settings-app .panel-heading h2,html[data-mb-theme="dark"] main.settings-app .row-copy strong,html[data-mb-theme="dark"] main.settings-app .field-block label,html[data-mb-theme="dark"] main.settings-app .theme-card b,html[data-mb-theme="dark"] main.settings-app .data-action strong{color:#f7f5ff!important}
 html[data-mb-theme="dark"] main.profile-app .field-label small,html[data-mb-theme="dark"] main.profile-app .identity-card p,html[data-mb-theme="dark"] main.settings-app .row-copy span,html[data-mb-theme="dark"] main.settings-app .settings-hero p,html[data-mb-theme="dark"] main.settings-app .theme-card small{color:#b9b5c6!important}
-@media(max-width:600px){main.profile-app .identity-card{padding:18px!important}main.profile-app .profile-panel{padding:16px!important}main.settings-app .settings-content{padding:12px 11px 150px!important}main.settings-app .settings-hero{align-items:flex-start!important}main.settings-app .theme-grid{grid-template-columns:1fr!important}main.settings-app .theme-card{min-height:70px!important;display:grid!important;grid-template-columns:58px 1fr!important;grid-template-rows:auto auto!important;column-gap:9px!important;align-items:center!important}main.settings-app .theme-preview{grid-row:1/span 2!important;width:58px!important;height:42px!important;margin:0!important}main.settings-app .setting-row{gap:8px!important}main.settings-app .row-copy{padding-right:2px!important}main.settings-app .switch{flex:0 0 58px!important}}
+
+/* 25 Aug mobile polish: tighten cards, prevent edge collisions, and keep every control readable. */
+main.profile-app .identity-card,
+main.profile-app .profile-panel,
+main.profile-app .account-card,
+main.settings-app .settings-hero,
+main.settings-app .panel{box-sizing:border-box;overflow:hidden}
+main.profile-app .profile-content,
+main.settings-app .settings-content{width:100%;box-sizing:border-box}
+main.profile-app .avatar-area{align-items:center!important}
+main.profile-app .avatar-area>div:nth-child(2){min-width:0!important;overflow:hidden}
+main.profile-app .avatar-area>div:nth-child(2)>b,
+main.profile-app .avatar-area>div:nth-child(2)>small,
+main.profile-app .avatar-area>div:nth-child(2)>em{display:block;overflow-wrap:anywhere}
+main.profile-app .input-shell input,
+main.profile-app .input-shell select{min-width:0!important;width:100%!important;outline:none!important}
+main.settings-app .setting-row{display:flex!important;width:100%!important;box-sizing:border-box}
+main.settings-app .row-copy{flex:1 1 auto!important;min-width:0!important}
+main.settings-app .row-copy strong,
+main.settings-app .row-copy span{display:block!important;overflow-wrap:anywhere!important}
+main.settings-app .switch{flex:0 0 58px!important;margin-left:auto!important}
+main.settings-app .theme-card{overflow:hidden!important}
+main.settings-app .theme-card small{overflow-wrap:anywhere!important}
+.mah-buddy-nav a{min-width:0!important}
+.mah-buddy-nav svg{flex:0 0 auto!important}
+@media(max-width:600px){
+  main.profile-app .profile-content{padding:12px 10px 142px!important}
+  main.profile-app .identity-card{padding:17px!important;border-radius:20px!important}
+  main.profile-app .identity-card h1{font-size:clamp(30px,9vw,44px)!important}
+  main.profile-app .profile-panel{padding:15px!important;border-radius:18px!important}
+  main.profile-app .account-card{padding:12px!important}
+  main.profile-app .continue{height:48px!important}
+  main.settings-app .settings-content{padding:11px 10px 145px!important}
+  main.settings-app .settings-hero{padding:16px!important;border-radius:20px!important}
+  main.settings-app .hero-orb{width:52px!important;height:52px!important;min-width:52px!important}
+  main.settings-app .hero-orb img{width:36px!important;height:36px!important}
+  main.settings-app .settings-hero h1{font-size:clamp(28px,8.5vw,42px)!important}
+  main.settings-app .panel{padding:15px!important;border-radius:18px!important}
+  main.settings-app .setting-row{min-height:64px!important;padding:10px 0!important}
+  main.settings-app .row-copy strong{font-size:11px!important}
+  main.settings-app .row-copy span{font-size:9px!important;line-height:1.4!important}
+  main.settings-app .switch{width:56px!important;min-width:56px!important;height:30px!important}
+  main.settings-app .switch-thumb{width:22px!important;height:22px!important}
+  main.settings-app .switch.on .switch-thumb{transform:translateX(26px)!important}
+  main.settings-app .switch:not(.on) .switch-track:after{right:6px!important}
+  main.settings-app .switch.on .switch-track:after{left:6px!important}
+  .mah-buddy-nav{width:calc(100% - 14px)!important;max-width:520px!important;left:50%!important;transform:translateX(-50%)!important}
+}
+@media(max-width:380px){
+  main.profile-app .profile-content,main.settings-app .settings-content{padding-left:8px!important;padding-right:8px!important}
+  main.profile-app .identity-card{padding:15px!important}
+  main.profile-app .avatar{width:44px!important;height:44px!important;min-width:44px!important;flex-basis:44px!important}
+  main.settings-app .settings-hero{gap:10px!important}
+  main.settings-app .hero-orb{width:48px!important;height:48px!important;min-width:48px!important}
+  main.settings-app .hero-orb img{width:32px!important;height:32px!important}
+}
+
+/* Guarantee readable text in system-dark mode too. */
+@media(prefers-color-scheme:dark){
+  html[data-mb-theme="system"] main.profile-app,html[data-mb-theme="system"] main.settings-app{color:#f7f5ff!important}
+  html[data-mb-theme="system"] main.profile-app .field-label b,html[data-mb-theme="system"] main.profile-app .panel-title h2,html[data-mb-theme="system"] main.settings-app .panel-heading h2,html[data-mb-theme="system"] main.settings-app .row-copy strong,html[data-mb-theme="system"] main.settings-app .field-block label,html[data-mb-theme="system"] main.settings-app .theme-card b,html[data-mb-theme="system"] main.settings-app .data-action strong{color:#f7f5ff!important}
+  html[data-mb-theme="system"] main.profile-app .field-label small,html[data-mb-theme="system"] main.profile-app .identity-card p,html[data-mb-theme="system"] main.settings-app .row-copy span,html[data-mb-theme="system"] main.settings-app .settings-hero p,html[data-mb-theme="system"] main.settings-app .theme-card small{color:#b9b5c6!important}
+}
