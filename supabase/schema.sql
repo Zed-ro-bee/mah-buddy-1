@@ -6,10 +6,23 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
+  preferred_name text,
+  buddy_name text default 'Mah Buddy',
+  age text,
+  learning_level text,
+  goal text,
+  education_level text,
   avatar_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles add column if not exists preferred_name text;
+alter table public.profiles add column if not exists buddy_name text default 'Mah Buddy';
+alter table public.profiles add column if not exists age text;
+alter table public.profiles add column if not exists learning_level text;
+alter table public.profiles add column if not exists goal text;
+alter table public.profiles add column if not exists education_level text;
 
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -93,8 +106,8 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', new.email))
+  insert into public.profiles (id, display_name, preferred_name, buddy_name)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', new.email), coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''), 'Mah Buddy')
   on conflict (id) do nothing;
   insert into public.user_settings (user_id) values (new.id)
   on conflict (user_id) do nothing;
