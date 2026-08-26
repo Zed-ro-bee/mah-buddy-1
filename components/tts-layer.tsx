@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { speakMahBuddy, stopMahBuddyVoice } from "../lib/voice";
+import { cleanSpeechText, speakMahBuddy, stopMahBuddyVoice } from "../lib/voice";
 
 const STYLE_ID = "mah-buddy-tts-style";
 const SETTING_ID = "mah-buddy-tts-setting";
@@ -47,11 +47,13 @@ function injectSettingsControl() {
 }
 
 async function playServerVoice(text: string, button: HTMLButtonElement, stop: () => void) {
+  const speechText = cleanSpeechText(text);
+  if (!speechText) { stop(); return; }
   try {
     const response = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text: speechText }),
     });
     if (!response.ok) throw new Error("TTS unavailable");
     const blob = await response.blob();
@@ -63,7 +65,7 @@ async function playServerVoice(text: string, button: HTMLButtonElement, stop: ()
     audio.onerror = stop;
     await audio.play();
   } catch {
-    const ok = speakMahBuddy(text, { enabled: true, rate: 1, pitch: 1 });
+    const ok = speakMahBuddy(speechText, { enabled: true, rate: 1, pitch: 1 });
     if (!ok) stop();
     else {
       window.speechSynthesis?.addEventListener?.("end", stop, { once: true });

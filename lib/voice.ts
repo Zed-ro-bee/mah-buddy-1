@@ -5,6 +5,15 @@ export type VoiceSettings = {
   pitch?: number;
 };
 
+export function cleanSpeechText(text: string) {
+  return text
+    .replace(/Mah\s+Buddy/gi, "")
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
+    .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function getSpeechVoices(): SpeechSynthesisVoice[] {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
   return window.speechSynthesis.getVoices();
@@ -12,8 +21,10 @@ export function getSpeechVoices(): SpeechSynthesisVoice[] {
 
 export function speakMahBuddy(text: string, settings: VoiceSettings = { enabled: true }) {
   if (!settings.enabled || typeof window === "undefined" || !("speechSynthesis" in window)) return false;
+  const speechText = cleanSpeechText(text);
+  if (!speechText) return false;
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(speechText);
   utterance.rate = settings.rate ?? 1;
   utterance.pitch = settings.pitch ?? 1;
   const voices = getSpeechVoices();
