@@ -10,6 +10,10 @@ export function cleanSpeechText(text: string) {
     .replace(/Mah\s+Buddy/gi, "")
     .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
     .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "")
+    // Symbols such as '?' are not spoken as their names by normal TTS engines;
+    // keep sentence punctuation so questions still receive natural intonation.
+    .replace(/\s+([,.!?;:])/g, "$1")
+    .replace(/([.!?]){2,}/g, "$1")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
