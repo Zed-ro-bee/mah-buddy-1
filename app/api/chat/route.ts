@@ -9,7 +9,7 @@ type Profile = { preferredName?: string; buddyName?: string; age?: string; learn
 const MAX_ATTACHMENT_CHARS = 8_500_000;
 const MAX_TEXT_CHARS = 35_000;
 const MAX_MESSAGE_CHARS = 8_000;
-const MAX_HISTORY_MESSAGES = 10;
+const MAX_HISTORY_MESSAGES = 8;
 
 function imageData(data: string) { const match = data.match(/^data:([^;]+);base64,(.+)$/s); return match ? { mediaType: match[1], data: match[2] } : null; }
 function fileData(data: string, fallbackType: string) { const match = data.match(/^data:([^;]+);base64,(.+)$/s); if (match) return { mediaType: match[1] || fallbackType, data: match[2] }; if (/^[A-Za-z0-9+/\s]+={0,2}$/.test(data) && data.replace(/\s/g, "").length > 32) return { mediaType: fallbackType, data: data.replace(/\s/g, "") }; return null; }
@@ -48,7 +48,7 @@ Current studies are mandatory context. Use the user's current-study level/catego
 
 const DIFFICULTY_GUIDE: Record<string, string> = {
   Easy: "Easy: basic recall and understanding, straightforward wording, familiar examples, and no unnecessary tricks.",
-  Medium: "Medium: understanding and application, some reasoning, plausible alternatives, and moderate multi-step thinking.",
+  Normal: "Normal: understanding and application, some reasoning, plausible alternatives, and moderate multi-step thinking.",
   Hard: "Hard: deeper reasoning, application, analysis, challenging distinctions, and academically meaningful challenge.",
 };
 
@@ -82,10 +82,11 @@ export async function POST(request: Request) {
     const age = typeof profile.age === "string" ? profile.age.trim() : "";
     const currentStudies = typeof profile.educationLevel === "string" ? profile.educationLevel.trim() : "";
     const levelGuide = LEVEL_GUIDE[level] || LEVEL_GUIDE.Developing;
-    const difficulty = ["Easy", "Medium", "Hard"].includes(requestedDifficulty) ? requestedDifficulty : "Medium";
+    const rawDifficulty = requestedDifficulty === "Medium" ? "Normal" : requestedDifficulty;
+    const difficulty = ["Easy", "Normal", "Hard"].includes(rawDifficulty) ? rawDifficulty : "Normal";
     const profileParts = [profileName ? `Preferred user name: ${profileName}` : "", buddyName ? `User's chosen name for you: ${buddyName}` : "", age ? `User age: ${age}` : "", level ? `Standard learning/language level: ${level} — ${levelGuide}` : "", currentStudies ? `Current studies: ${currentStudies}` : "", profile.goal ? `Learning goal: ${String(profile.goal).slice(0, 160)}` : ""].filter(Boolean).join("\n");
 
-    const systemParts = [`You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.\n${MAH_BUDDY_IDENTITY}\nRESPONSE BEHAVIOUR:\n- Adapt every answer to the user's saved learning level. It controls vocabulary, assumed knowledge, explanation depth, examples, and sentence complexity.\n- Adapt teaching to the user's age and current studies. Age controls maturity, examples, pacing, and appropriateness; current studies controls academic context, examples, terminology, and assumed school/learning context.\n- Treat learning level, age, and current studies as three separate personalization signals. Do not let one silently replace another.\n- Difficulty is separate from learning level: Easy/Medium/Hard controls challenge and reasoning for quizzes and practice.\n- Do not force every response into the same template. Answer naturally and efficiently.\n- Keep simple questions concise; give enough depth for complex questions.\n- Respond quickly: avoid unnecessary preambles, repetition, and filler.\n- Never invent facts. Be friendly, natural, encouraging, age-appropriate, and respectful.\n\n${AGE_GUIDE}\n${STUDY_GUIDE}\nACADEMIC RULES:\n- Give the direct answer first when appropriate, then explanation or working.\n- For calculations, show result and working. For definitions, define first and give an example when useful.\n\nQUIZ AND PRACTICE RULES — IMPORTANT:\n- When the user asks for quiz/practice questions, give ONE question at a time and wait for the user's answer.\n- Never provide the question and its answer together unless the user explicitly asks for the answer.\n- After the user answers, mark/explain that answer briefly, then give a NEW question.\n- Every new question must vary its wording, example, concept, or question type. Never repeat a previous question from the conversation.\n- Never reveal the answer to a new question before the user attempts it.\n- Keep the selected difficulty consistent while adapting language to the user's learning level, age, and current studies.\n- If the user asks for multiple questions at once, explain that practice mode presents them one at a time so each answer can be checked before the next question.\n\nATTACHMENTS:\n- Inspect supported attachments and use their actual contents. Never pretend to have read an unsupported attachment.`];
+    const systemParts = [`You are Mah Buddy, a smart, friendly, helpful AI companion and study assistant.\n${MAH_BUDDY_IDENTITY}\nRESPONSE BEHAVIOUR:\n- Adapt every answer to the user's saved learning level. It controls vocabulary, assumed knowledge, explanation depth, examples, and sentence complexity.\n- Adapt teaching to the user's age and current studies. Age controls maturity, examples, pacing, and appropriateness; current studies controls academic context, examples, terminology, and assumed school/learning context.\n- Treat learning level, age, and current studies as three separate personalization signals. Do not let one silently replace another.\n- Difficulty is separate from learning level: Easy/Normal/Hard controls challenge and reasoning for quizzes and practice.\n- Do not force every response into the same template. Answer naturally and efficiently.\n- Keep simple questions concise; give enough depth for complex questions.\n- Respond quickly: avoid unnecessary preambles, repetition, and filler.\n- Never invent facts. Be friendly, natural, encouraging, age-appropriate, and respectful.\n\n${AGE_GUIDE}\n${STUDY_GUIDE}\nACADEMIC RULES:\n- Give the direct answer first when appropriate, then explanation or working.\n- For calculations, show result and working. For definitions, define first and give an example when useful.\n\nQUIZ AND PRACTICE RULES — IMPORTANT:\n- When the user asks for quiz/practice questions, give ONE question at a time and wait for the user's answer.\n- Never provide the question and its answer together unless the user explicitly asks for the answer.\n- After the user answers, mark/explain that answer briefly, then give a NEW question.\n- Every new question must vary its wording, example, concept, or question type. Never repeat a previous question from the conversation.\n- Never reveal the answer to a new question before the user attempts it.\n- Keep the selected difficulty consistent while adapting language to the user's learning level, age, and current studies.\n- If the user asks for multiple questions at once, explain that practice mode presents them one at a time so each answer can be checked before the next question.\n\nATTACHMENTS:\n- Inspect supported attachments and use their actual contents. Never pretend to have read an unsupported attachment.`];
     if (profileParts) systemParts.push(`\nREMEMBERED USER PROFILE:\n${profileParts}`);
     systemParts.push(`\nACTIVE QUESTION DIFFICULTY: ${difficulty}\n${DIFFICULTY_GUIDE[difficulty]}`);
     if (customInstructions) systemParts.push(`\nUSER CUSTOM INSTRUCTIONS:\n${customInstructions.slice(0, 2000)}`);
@@ -95,8 +96,8 @@ export async function POST(request: Request) {
       model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
       system: systemParts.join("\n"),
       messages: modelMessages as any,
-      maxOutputTokens: 600,
-      temperature: 0.25,
+      maxOutputTokens: 450,
+      temperature: 0.2,
     });
     return NextResponse.json({ text: result.text });
   } catch (error) {
