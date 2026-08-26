@@ -14,8 +14,10 @@ function getAnswerText(message: Element) {
   const body = message.querySelector(".mb-msg-body");
   if (!body) return "";
   const copy = body.cloneNode(true) as HTMLElement;
-  copy.querySelectorAll("button, svg, .mb-tts-button").forEach((el) => el.remove());
-  return copy.textContent?.trim() || "";
+  // TTS must never read the UI label, speaker controls, icons, the user's name,
+  // or the question itself. Only the actual assistant answer is spoken.
+  copy.querySelectorAll("button, svg, .mb-tts-button, .mb-msg-label, .mb-question-label, [aria-hidden='true']").forEach((el) => el.remove());
+  return cleanSpeechText(copy.textContent?.trim() || "");
 }
 
 function injectSettingsControl() {
