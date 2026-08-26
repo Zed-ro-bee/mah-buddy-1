@@ -46,12 +46,13 @@ export async function POST(request: Request) {
     const topic = String(body.topic || "General study").slice(0, 180);
     const difficulty = normalizeDifficulty(body.difficulty);
     const learningLevel = LEVELS[body.learningLevel] ? String(body.learningLevel) : "Developing";
+    const age = String(body.age || "").slice(0, 20);
+    const currentStudies = String(body.currentStudies || "").slice(0, 160);
+    const goal = String(body.goal || "").slice(0, 160);
     const count = Math.max(1, Math.min(100, Number(body.count) || 10));
     const previous = Array.isArray(body.previousQuestions) ? body.previousQuestions.slice(-100).map(String) : [];
 
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      return NextResponse.json({ error: "Mah Buddy AI is not connected yet." }, { status: 503 });
-    }
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) return NextResponse.json({ error: "Mah Buddy AI is not connected yet." }, { status: 503 });
 
     const collected: { q: string; a: string }[] = [];
     const seen = new Set([...previous, ...collected].map(normalizeQuestion));
@@ -64,12 +65,15 @@ export async function POST(request: Request) {
       const prompt = `Create exactly ${remaining} DIFFERENT flashcards about: ${topic}.
 Difficulty: ${difficulty} — ${DIFFICULTIES[difficulty]}.
 Learning/language level: ${learningLevel} — ${LEVELS[learningLevel]}.
-The flashcard question and answer must both be appropriate for that learning level.
+Learner age: ${age || "not provided"}.
+Current studies: ${currentStudies || "not provided"}.
+Learning goal: ${goal || "not provided"}.
+Use learning level to control language, vocabulary, assumed knowledge, and explanation depth. Use age to control maturity, examples, pacing, and appropriateness. Use current studies and goal to make academic examples and terminology relevant where possible. Do not invent a specific grade, curriculum, syllabus, or subject that was not supplied.
 Do not repeat, paraphrase, or reuse any question in the excluded list.
 Excluded questions: ${JSON.stringify([...seen].slice(-100))}
 Return ONLY valid JSON with no markdown, exactly in this shape:
 [{"q":"question","a":"answer"}]
-Rules: exactly ${remaining} cards; each question must test a different concept, fact, process, example, or useful distinction; answers must be accurate and concise; do not put multiple questions in one card; never reveal a different card's answer in the question.`;
+Rules: exactly ${remaining} cards; each question must test a different concept, fact, process, example, or useful distinction; answers must be accurate and concise; do not put multiple questions in one card; never reveal a different card's answer in the question; keep wording age-appropriate and matched to the selected learning level and current studies.`;
 
       const result = await generateText({
         model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
