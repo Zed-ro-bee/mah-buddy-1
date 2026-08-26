@@ -46,6 +46,9 @@ export async function POST(request: Request) {
     const topic = String(body.topic || "General study").slice(0, 180);
     const difficulty = normalizeDifficulty(body.difficulty);
     const learningLevel = LEVELS[body.learningLevel] ? String(body.learningLevel) : "Developing";
+    const age = String(body.age || "").slice(0, 20);
+    const currentStudies = String(body.currentStudies || "").slice(0, 160);
+    const goal = String(body.goal || "").slice(0, 160);
     const count = Math.max(1, Math.min(100, Number(body.count) || 10));
     const previous = Array.isArray(body.previousQuestions) ? body.previousQuestions.slice(-100).map(String) : [];
 
@@ -62,12 +65,16 @@ export async function POST(request: Request) {
       const prompt = `Create exactly ${remaining} DIFFERENT multiple-choice questions about: ${topic}.
 Difficulty: ${difficulty} — ${DIFFICULTIES[difficulty]}.
 Learning/language level: ${learningLevel} — ${LEVELS[learningLevel]}.
-The question wording, vocabulary, assumed knowledge, and reasoning depth must match the learning level. Difficulty must change the intellectual challenge, not merely the wording.
+Learner age: ${age || "not provided"}.
+Current studies: ${currentStudies || "not provided"}.
+Learning goal: ${goal || "not provided"}.
+Use learning level to control language, vocabulary, assumed knowledge, and explanation depth. Use age to control maturity, examples, and appropriateness. Use current studies and goal to make the academic context and examples relevant where possible. Do not invent a specific grade, curriculum, syllabus, or subject that was not supplied.
+Difficulty must change the intellectual challenge, not merely the wording.
 Do not repeat or paraphrase any excluded question.
 Excluded questions: ${JSON.stringify([...seen].slice(-100))}
 Return ONLY valid JSON, with no markdown, exactly in this shape:
 [{"q":"question","a":["option A","option B","option C","option D"],"c":0}]
-Rules: exactly ${remaining} questions; exactly four options per question; c is the zero-based correct option; one unambiguous correct answer; test different concepts, angles, or applications; never reveal the answer in the question; keep all wording appropriate for the selected learning level.`;
+Rules: exactly ${remaining} questions; exactly four options per question; c is the zero-based correct option; one unambiguous correct answer; test different concepts, angles, or applications; never reveal the answer in the question; keep all wording age-appropriate and matched to the selected learning level and current studies.`;
 
       const result = await generateText({
         model: google(process.env.GEMINI_MODEL || "gemini-3.5-flash-lite"),
