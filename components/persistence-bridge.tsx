@@ -22,12 +22,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
   const write=(key:string,value:any)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch{}};
   const clearActiveLocal=()=>{for(const key of USER_LOCAL_KEYS)localStorage.removeItem(key)};
   const saveLocalSnapshot=()=>{for(const key of USER_LOCAL_KEYS){const value=localStorage.getItem(key);if(value!==null)localStorage.setItem(scoped(key),value)}};
-  const restoreLocalSnapshot=()=>{
-   for(const key of USER_LOCAL_KEYS){
-    const saved=localStorage.getItem(scoped(key));
-    if(saved!==null)localStorage.setItem(key,saved);
-   }
-  };
+  const restoreLocalSnapshot=()=>{for(const key of USER_LOCAL_KEYS){const saved=localStorage.getItem(scoped(key));if(saved!==null)localStorage.setItem(key,saved)}};
   const readChats=():StoredChat[]=>{
    try{
     const raw=localStorage.getItem(CHAT_KEY);
@@ -35,18 +30,15 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     const legacy=JSON.parse(localStorage.getItem(LEGACY_CHAT_KEY)||"[]");
     if(!Array.isArray(legacy)||!legacy.length)return[];
     const chat:StoredChat={id:crypto.randomUUID(),title:"New chat",messages:legacy.filter((m:any)=>m?.role&&m?.content).map((m:any)=>({role:m.role,content:String(m.content)})),updatedAt:Date.now()};
-    write(CHAT_KEY,[chat]);
-    return[chat];
+    write(CHAT_KEY,[chat]);return[chat];
    }catch{return[]}
   };
   const readProfile=():StoredProfile=>{try{return {...defaultProfile,...readJSON(PROFILE_KEY,{})}}catch{return defaultProfile}};
-
   const persist=async()=>{
    if(!active||!hydrated)return;
    try{
     saveLocalSnapshot();
-    const chats=readChats();
-    const ids=new Set(chats.map(c=>c.id));
+    const chats=readChats();const ids=new Set(chats.map(c=>c.id));
     const{data:remote}=await client.from("conversations").select("id").eq("user_id",userId);
     const removed=(remote||[]).map(r=>r.id).filter(id=>!ids.has(id));
     if(removed.length)await client.from("conversations").delete().eq("user_id",userId).in("id",removed);
@@ -61,12 +53,9 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
   const persistProfile=async()=>{try{const p=readProfile();await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,updated_at:new Date().toISOString()})}catch{}};
   const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()})}catch{}};
   const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs()},600)};
-
   const hydrate=async()=>{
    try{
-    // Never let the previous account's unscoped browser cache become the new account's data.
-    clearActiveLocal();
-    restoreLocalSnapshot();
+    clearActiveLocal();restoreLocalSnapshot();
     const[{data:cs,error},{data:settings},{data:remoteProfile}]=await Promise.all([
      client.from("conversations").select("id,title,updated_at").eq("user_id",userId).order("updated_at",{ascending:false}),
      client.from("user_settings").select("theme,voice_enabled,tts_enabled,notifications_enabled,memory_enabled").eq("user_id",userId).maybeSingle(),
@@ -75,38 +64,25 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     if(error||!active){hydrated=true;return}
     if(cs?.length){
      const{data:ms}=await client.from("messages").select("conversation_id,role,content,created_at").eq("user_id",userId).order("created_at",{ascending:true});
-     const map=new Map<string,StoredMessage[]>();
-     for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}
+     const map=new Map<string,StoredMessage[]>();for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}
      write(CHAT_KEY,cs.map(c=>({id:c.id,title:c.title||"New chat",messages:map.get(c.id)||[],updatedAt:new Date(c.updated_at).getTime()})));
     }
     if(settings)write(PREFS_KEY,{theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false,instructions:""});
-    if(remoteProfile){
-     const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};
-     write(PROFILE_KEY,profile);
-     window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));
-    }
-    // Save the restored/remote state into this account's private local namespace.
-    saveLocalSnapshot();
-    hydrated=true;
-    schedule();
+    if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};write(PROFILE_KEY,profile);window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}
+    saveLocalSnapshot();hydrated=true;schedule();
    }catch{hydrated=true}
   };
-
-  const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};
-  window.addEventListener("storage",onStorage);
-  const original=localStorage.setItem.bind(localStorage);
-  localStorage.setItem=(key:string,value:string)=>{original(key,value);if(USER_LOCAL_KEYS.includes(key))schedule()};
-
+  const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};window.addEventListener("storage",onStorage);
+  const original=localStorage.setItem.bind(localStorage);localStorage.setItem=(key:string,value:string)=>{original(key,value);if(USER_LOCAL_KEYS.includes(key))schedule()};
   void hydrate();
-
   const signOut=async()=>{
    if(!active)return;
-   active=false;
    if(timer)clearTimeout(timer);
    try{
-    // Keep the account's data recoverable, but remove it from the active browser state.
-    saveLocalSnapshot();
+    // Flush current account data before ending its session.
     await persist();
+    saveLocalSnapshot();
+    active=false;
     await client.auth.signOut({scope:"local"});
     clearActiveLocal();
     sessionStorage.removeItem("mah-buddy-hydrated");
@@ -114,14 +90,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     onSignOut?.();
    }catch(e){console.error("Mah Buddy sign out failed",e)}
   };
-
-  const observer=new MutationObserver(()=>{
-   const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>(".danger"));
-   const b=buttons.find(button=>/sign\s*out/i.test(button.textContent||""))||buttons[0];
-   if(b&&!b.dataset.mahBuddySignout){b.dataset.mahBuddySignout="true";b.addEventListener("click",signOut)}
-  });
-  observer.observe(document.body,{childList:true,subtree:true});
-
+  const observer=new MutationObserver(()=>{const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>(".danger"));const b=buttons.find(button=>/sign\s*out/i.test(button.textContent||""))||buttons[0];if(b&&!b.dataset.mahBuddySignout){b.dataset.mahBuddySignout="true";b.addEventListener("click",signOut)}});observer.observe(document.body,{childList:true,subtree:true});
   return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);localStorage.setItem=original;observer.disconnect()};
  },[userId,onSignOut]);
  return null;
