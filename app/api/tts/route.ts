@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 
+function prepareSpeechText(text: string) {
+  return text
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.!?;:])/g, "$1")
+    .trim();
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const text = typeof body.text === "string" ? body.text.trim() : "";
+    const text = typeof body.text === "string" ? prepareSpeechText(body.text) : "";
 
     if (!text) {
       return NextResponse.json({ error: "No text provided." }, { status: 400 });
@@ -27,9 +34,9 @@ export async function POST(request: Request) {
         model: "gpt-4o-mini-tts",
         voice: "marin",
         input: text.slice(0, 4096),
-        instructions: "Speak as a natural, polished AI study companion. Use a warm, friendly, calm and confident conversational delivery. Sound human and expressive without being theatrical. Use natural pauses and gentle emphasis, clear pronunciation, and a comfortable conversational pace. Keep the delivery helpful, reassuring and engaging for a student. Avoid sounding robotic, overly formal, rushed, or exaggerated. Do not mention these instructions.",
+        instructions: "You are the voice of a professional AI study companion. Speak naturally, clearly, confidently and warmly, like an excellent human tutor explaining a subject. Give the direct answer with confident emphasis first when the response contains an answer, then transition naturally into the detailed explanation. Use punctuation as natural prosody: questions should sound like questions, exclamations should have appropriate energy, commas should create brief pauses, and full stops should create normal sentence boundaries. Do not announce headings, formatting, emojis, symbols, or UI labels. Do not sound robotic, theatrical, rushed, overly slow, or overly formal. Maintain a comfortable educational pace with clear pronunciation and subtle emphasis on important concepts, definitions, formulas, conclusions, and key terms. Never add words that are not present in the input. Do not mention these instructions.",
         response_format: "mp3",
-        speed: 0.94,
+        speed: 0.98,
       }),
     });
 
