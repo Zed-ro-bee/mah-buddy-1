@@ -6,30 +6,16 @@ export type VoiceSettings = {
 };
 
 /**
- * Converts rendered Mah Buddy content into speech-only text.
- * Keep punctuation because TTS uses it for natural intonation, especially ? and !.
+ * Prepare the already-rendered answer for speech without rewriting it.
+ * Punctuation, wording, sentence order, question marks, exclamation marks,
+ * commas, colons and semicolons are intentionally preserved so the TTS engine
+ * can use them for natural phrasing and pauses.
  */
 export function cleanSpeechText(text: string) {
   return text
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/!\[.*?\]\(.*?\)/g, " ")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/https?:\/\/\S+/gi, " ")
-    .replace(/^\s{0,3}#{1,6}\s*/gm, "")
-    .replace(/^\s{0,3}>\s?/gm, "")
-    .replace(/^\s*[-*+]\s+/gm, "")
-    .replace(/^\s*\d+[.)]\s+/gm, "")
-    .replace(/[*_~]+/g, "")
-    .replace(/[|]+/g, ", ")
-    .replace(/Mah\s+Buddy/gi, "")
-    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
-    .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ")
-    .replace(/\s+([,.!?;:])/g, "$1")
-    .replace(/([.!?]){2,}/g, "$1")
-    .replace(/([,;:])\s*/g, "$1 ")
-    .replace(/\s{2,}/g, " ")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/\u00A0/g, " ")
+    .replace(/[ \t]+/g, " ")
     .trim();
 }
 
@@ -44,12 +30,13 @@ export function speakMahBuddy(text: string, settings: VoiceSettings = { enabled:
   if (!speechText) return false;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(speechText);
+  utterance.lang = "en-GB";
   utterance.rate = settings.rate ?? 0.98;
   utterance.pitch = settings.pitch ?? 1;
   const voices = getSpeechVoices();
   const preferred = settings.voiceName
     ? voices.find((voice) => voice.name === settings.voiceName)
-    : voices.find((voice) => /^en-GB/i.test(voice.lang)) || voices.find((voice) => /^en/i.test(voice.lang));
+    : voices.find((voice) => /^en-GB/i.test(voice.lang)) || voices.find((voice) => /British|UK|English.*GB/i.test(voice.name)) || voices.find((voice) => /^en/i.test(voice.lang));
   if (preferred) utterance.voice = preferred;
   window.speechSynthesis.speak(utterance);
   return true;
