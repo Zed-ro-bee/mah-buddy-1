@@ -1,20 +1,128 @@
 "use client";
 import {useEffect} from "react";
 import {supabase} from "../lib/supabase";
+
 type StoredMessage={role:"user"|"assistant"|"system";content:string};
 type StoredChat={id:string;title:string;messages:StoredMessage[];updatedAt:number};
 type StoredProfile={preferredName:string;buddyName:string;age:string;learningLevel:string;goal:string;educationLevel?:string};
+
 const CHAT_KEY="mah-buddy-chats", LEGACY_CHAT_KEY="mah-buddy-chat", PREFS_KEY="mah-buddy-prefs", PROFILE_KEY="mah-buddy-profile";
+const QUIZ_HISTORY_KEY="mah-buddy-quiz-history", QUIZ_CONFIG_KEY="mah-buddy-quiz-config";
+const FLASH_HISTORY_KEY="mah-buddy-flashcard-history", FLASH_CONFIG_KEY="mah-buddy-flashcard-config";
+const USER_LOCAL_KEYS=[CHAT_KEY,LEGACY_CHAT_KEY,PREFS_KEY,PROFILE_KEY,QUIZ_HISTORY_KEY,QUIZ_CONFIG_KEY,FLASH_HISTORY_KEY,FLASH_CONFIG_KEY];
 const defaultProfile:StoredProfile={preferredName:"",buddyName:"Mah Buddy",age:"",learningLevel:"",goal:"",educationLevel:""};
-export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSignOut?:()=>void}){useEffect(()=>{if(!supabase||!userId)return;const client=supabase;let active=true,timer:ReturnType<typeof setTimeout>|null=null,hydrated=false;
-const readChats=():StoredChat[]=>{try{const raw=localStorage.getItem(CHAT_KEY);if(raw)return JSON.parse(raw);const legacy=JSON.parse(localStorage.getItem(LEGACY_CHAT_KEY)||"[]");if(!Array.isArray(legacy)||!legacy.length)return[];const chat:StoredChat={id:crypto.randomUUID(),title:"New chat",messages:legacy.filter((m:any)=>m?.role&&m?.content).map((m:any)=>({role:m.role,content:String(m.content)})),updatedAt:Date.now()};localStorage.setItem(CHAT_KEY,JSON.stringify([chat]));return[chat]}catch{return[]}};
-const readProfile=():StoredProfile=>{try{return {...defaultProfile,...JSON.parse(localStorage.getItem(PROFILE_KEY)||"{}")}}catch{return defaultProfile}};
-const persist=async()=>{if(!active||!hydrated)return;try{const chats=readChats();const ids=new Set(chats.map(c=>c.id));const{data:remote}=await client.from("conversations").select("id").eq("user_id",userId);const removed=(remote||[]).map(r=>r.id).filter(id=>!ids.has(id));if(removed.length)await client.from("conversations").delete().eq("user_id",userId).in("id",removed);for(const chat of chats){const{error}=await client.from("conversations").upsert({id:chat.id,user_id:userId,title:chat.title||"New chat",updated_at:new Date(chat.updatedAt||Date.now()).toISOString()});if(error)continue;await client.from("messages").delete().eq("conversation_id",chat.id).eq("user_id",userId);if(chat.messages.length)await client.from("messages").insert(chat.messages.map(m=>({conversation_id:chat.id,user_id:userId,role:m.role,content:m.content})));}}catch{}}
-const persistProfile=async()=>{try{const p=readProfile();await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,updated_at:new Date().toISOString()})}catch{}}
-const persistPrefs=async()=>{try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");const theme=p.theme|| (p.dark?"dark":"system");await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()})}catch{}}
-const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs()},600)};
-const hydrate=async()=>{try{const[{data:cs,error},{data:settings},{data:remoteProfile}]=await Promise.all([client.from("conversations").select("id,title,updated_at").eq("user_id",userId).order("updated_at",{ascending:false}),client.from("user_settings").select("theme,voice_enabled,tts_enabled,notifications_enabled,memory_enabled").eq("user_id",userId).maybeSingle(),client.from("profiles").select("preferred_name,buddy_name,age,learning_level,goal,education_level,display_name").eq("id",userId).maybeSingle()]);if(error||!active){hydrated=true;return}if(cs?.length){const{data:ms}=await client.from("messages").select("conversation_id,role,content,created_at").eq("user_id",userId).order("created_at",{ascending:true});const map=new Map<string,StoredMessage[]>();for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}localStorage.setItem(CHAT_KEY,JSON.stringify(cs.map(c=>({id:c.id,title:c.title||"New chat",messages:map.get(c.id)||[],updatedAt:new Date(c.updated_at).getTime()}))))}if(settings)localStorage.setItem(PREFS_KEY,JSON.stringify({theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false,instructions:""}));if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}hydrated=true;schedule()}catch{hydrated=true}};
-const onStorage=(e:StorageEvent)=>{if(e.key===CHAT_KEY||e.key===LEGACY_CHAT_KEY||e.key===PREFS_KEY||e.key===PROFILE_KEY)schedule()};window.addEventListener("storage",onStorage);const original=localStorage.setItem.bind(localStorage);localStorage.setItem=(key:string,value:string)=>{original(key,value);if(key===CHAT_KEY||key===LEGACY_CHAT_KEY||key===PREFS_KEY||key===PROFILE_KEY)schedule()};void hydrate();
-const signOut=async()=>{try{await client.auth.signOut();onSignOut?.();localStorage.removeItem(CHAT_KEY);localStorage.removeItem(LEGACY_CHAT_KEY);localStorage.removeItem(PREFS_KEY);localStorage.removeItem(PROFILE_KEY);sessionStorage.removeItem("mah-buddy-hydrated")}catch(e){console.error("Mah Buddy sign out failed",e)}};
-const observer=new MutationObserver(()=>{const b=document.querySelector<HTMLButtonElement>(".danger");if(b&&!b.dataset.mahBuddySignout){b.dataset.mahBuddySignout="true";b.addEventListener("click",signOut)}});observer.observe(document.body,{childList:true,subtree:true});
-return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);localStorage.setItem=original;observer.disconnect()};},[userId,onSignOut]);return null}
+
+export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSignOut?:()=>void}){
+ useEffect(()=>{
+  if(!supabase||!userId)return;
+  const client=supabase;
+  let active=true,timer:ReturnType<typeof setTimeout>|null=null,hydrated=false;
+  const scoped=(key:string)=>`mah-buddy:user:${userId}:${key}`;
+  const readJSON=(key:string,fallback:any)=>{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch{return fallback}};
+  const write=(key:string,value:any)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch{}};
+  const clearActiveLocal=()=>{for(const key of USER_LOCAL_KEYS)localStorage.removeItem(key)};
+  const saveLocalSnapshot=()=>{for(const key of USER_LOCAL_KEYS){const value=localStorage.getItem(key);if(value!==null)localStorage.setItem(scoped(key),value)}};
+  const restoreLocalSnapshot=()=>{
+   for(const key of USER_LOCAL_KEYS){
+    const saved=localStorage.getItem(scoped(key));
+    if(saved!==null)localStorage.setItem(key,saved);
+   }
+  };
+  const readChats=():StoredChat[]=>{
+   try{
+    const raw=localStorage.getItem(CHAT_KEY);
+    if(raw)return JSON.parse(raw);
+    const legacy=JSON.parse(localStorage.getItem(LEGACY_CHAT_KEY)||"[]");
+    if(!Array.isArray(legacy)||!legacy.length)return[];
+    const chat:StoredChat={id:crypto.randomUUID(),title:"New chat",messages:legacy.filter((m:any)=>m?.role&&m?.content).map((m:any)=>({role:m.role,content:String(m.content)})),updatedAt:Date.now()};
+    write(CHAT_KEY,[chat]);
+    return[chat];
+   }catch{return[]}
+  };
+  const readProfile=():StoredProfile=>{try{return {...defaultProfile,...readJSON(PROFILE_KEY,{})}}catch{return defaultProfile}};
+
+  const persist=async()=>{
+   if(!active||!hydrated)return;
+   try{
+    saveLocalSnapshot();
+    const chats=readChats();
+    const ids=new Set(chats.map(c=>c.id));
+    const{data:remote}=await client.from("conversations").select("id").eq("user_id",userId);
+    const removed=(remote||[]).map(r=>r.id).filter(id=>!ids.has(id));
+    if(removed.length)await client.from("conversations").delete().eq("user_id",userId).in("id",removed);
+    for(const chat of chats){
+     const{error}=await client.from("conversations").upsert({id:chat.id,user_id:userId,title:chat.title||"New chat",updated_at:new Date(chat.updatedAt||Date.now()).toISOString()});
+     if(error)continue;
+     await client.from("messages").delete().eq("conversation_id",chat.id).eq("user_id",userId);
+     if(chat.messages.length)await client.from("messages").insert(chat.messages.map(m=>({conversation_id:chat.id,user_id:userId,role:m.role,content:m.content})));
+    }
+   }catch{}
+  };
+  const persistProfile=async()=>{try{const p=readProfile();await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,updated_at:new Date().toISOString()})}catch{}};
+  const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()})}catch{}};
+  const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs()},600)};
+
+  const hydrate=async()=>{
+   try{
+    // Never let the previous account's unscoped browser cache become the new account's data.
+    clearActiveLocal();
+    restoreLocalSnapshot();
+    const[{data:cs,error},{data:settings},{data:remoteProfile}]=await Promise.all([
+     client.from("conversations").select("id,title,updated_at").eq("user_id",userId).order("updated_at",{ascending:false}),
+     client.from("user_settings").select("theme,voice_enabled,tts_enabled,notifications_enabled,memory_enabled").eq("user_id",userId).maybeSingle(),
+     client.from("profiles").select("preferred_name,buddy_name,age,learning_level,goal,education_level,display_name").eq("id",userId).maybeSingle()
+    ]);
+    if(error||!active){hydrated=true;return}
+    if(cs?.length){
+     const{data:ms}=await client.from("messages").select("conversation_id,role,content,created_at").eq("user_id",userId).order("created_at",{ascending:true});
+     const map=new Map<string,StoredMessage[]>();
+     for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}
+     write(CHAT_KEY,cs.map(c=>({id:c.id,title:c.title||"New chat",messages:map.get(c.id)||[],updatedAt:new Date(c.updated_at).getTime()})));
+    }
+    if(settings)write(PREFS_KEY,{theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false,instructions:""});
+    if(remoteProfile){
+     const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};
+     write(PROFILE_KEY,profile);
+     window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));
+    }
+    // Save the restored/remote state into this account's private local namespace.
+    saveLocalSnapshot();
+    hydrated=true;
+    schedule();
+   }catch{hydrated=true}
+  };
+
+  const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};
+  window.addEventListener("storage",onStorage);
+  const original=localStorage.setItem.bind(localStorage);
+  localStorage.setItem=(key:string,value:string)=>{original(key,value);if(USER_LOCAL_KEYS.includes(key))schedule()};
+
+  void hydrate();
+
+  const signOut=async()=>{
+   if(!active)return;
+   active=false;
+   if(timer)clearTimeout(timer);
+   try{
+    // Keep the account's data recoverable, but remove it from the active browser state.
+    saveLocalSnapshot();
+    await persist();
+    await client.auth.signOut({scope:"local"});
+    clearActiveLocal();
+    sessionStorage.removeItem("mah-buddy-hydrated");
+    window.dispatchEvent(new CustomEvent("mah-buddy-account-cleared"));
+    onSignOut?.();
+   }catch(e){console.error("Mah Buddy sign out failed",e)}
+  };
+
+  const observer=new MutationObserver(()=>{
+   const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>(".danger"));
+   const b=buttons.find(button=>/sign\s*out/i.test(button.textContent||""))||buttons[0];
+   if(b&&!b.dataset.mahBuddySignout){b.dataset.mahBuddySignout="true";b.addEventListener("click",signOut)}
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+
+  return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);localStorage.setItem=original;observer.disconnect()};
+ },[userId,onSignOut]);
+ return null;
+}
