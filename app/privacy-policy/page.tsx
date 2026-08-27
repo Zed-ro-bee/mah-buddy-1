@@ -51,7 +51,10 @@ export default function PrivacyPolicyPage() {
         <h2>18. Changes to This Privacy Policy</h2>
         <p>We may update this Privacy Policy from time to time. When significant changes are made, we may provide notice through the Service or another appropriate method. The Last Updated date indicates when the policy was most recently updated.</p>
         <h2>19. Contact and Privacy Requests</h2>
-        <p>For privacy questions or requests concerning your information, use the contact/privacy mechanism provided within Mah Buddy. Mah Buddy is operated by ZED_RO Corp.</p>
+        <p>For privacy questions, data deletion requests, or other privacy requests, contact Mah Buddy / ZED_RO Corp:</p>
+        <p><strong>Email:</strong> zee.asa.co@gmail.com</p>
+        <p><strong>WhatsApp:</strong> +234 901 165 8814</p>
+        <p>Mah Buddy is operated by ZED_RO Corp.</p>
         <h2>20. Acceptance</h2>
         <p>By using Mah Buddy, you acknowledge that you have had an opportunity to review this Privacy Policy. If you do not agree with it, please discontinue use of the Service.</p>
         <p><strong>© 2026 ZED_RO Corp. All rights reserved.</strong></p>
