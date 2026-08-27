@@ -19,7 +19,27 @@ export default function SettingsPage(){
  useEffect(()=>{try{const stored=localStorage.getItem(KEY);if(stored){const raw=JSON.parse(stored) as Partial<Prefs> & {difficulty?:string};const migratedDifficulty:Difficulty=raw.difficulty==="Easy"||raw.difficulty==="Hard"?raw.difficulty:raw.difficulty==="Normal"||raw.difficulty==="Medium"?"Normal":"Normal";const next={...defaults,...raw,difficulty:migratedDifficulty};setPrefs(next);if(next.questions!=="Custom")setCustomQuestions(Math.max(1,Number(next.questions)||25));setTheme(next.theme)}}catch{}},[]);
  function update(patch:Partial<Prefs>){const next={...prefs,...patch,difficulty:patch.difficulty||prefs.difficulty};setPrefs(next);localStorage.setItem(KEY,JSON.stringify(next));setTheme(next.theme);localStorage.setItem("mb-voice",String(next.voice));localStorage.setItem("mb-auto-speak",String(next.autoSpeak));localStorage.setItem("mb-enter",String(next.enterToSend));window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"));setSaved(true);window.setTimeout(()=>setSaved(false),900)}
  function clearHistory(){localStorage.removeItem("mah-buddy-history");localStorage.removeItem("mah-buddy-chat");localStorage.removeItem("mah-buddy-chats");window.dispatchEvent(new CustomEvent("mah-buddy-chat-cleared"));setSaved(true);window.setTimeout(()=>setSaved(false),900)}
- async function signOut(){if(signingOut)return;setSigningOut(true);try{const client=supabaseClient();if(client)await client.auth.signOut();window.location.href="/"}finally{setSigningOut(false)}}
+ async function signOut(){
+   if(signingOut)return;
+   setSigningOut(true);
+   try{
+     const client=supabaseClient();
+     if(client){
+       const {error}=await client.auth.signOut({scope:"global"});
+       if(error) console.error("Mah Buddy sign-out error:",error);
+     }
+     // Remove Supabase's persisted browser session so a refresh cannot restore the old account.
+     Object.keys(localStorage).filter(key=>key.startsWith("sb-")&&key.includes("auth-token")).forEach(key=>localStorage.removeItem(key));
+     sessionStorage.clear();
+     window.dispatchEvent(new CustomEvent("mah-buddy-signed-out"));
+     // The auth gate owns the sign-in/sign-up screen. A hard navigation forces it
+     // to re-check the now-cleared session instead of leaving the settings UI mounted.
+     window.location.replace("/?auth=signin");
+   }catch(error){
+     console.error("Mah Buddy sign-out error:",error);
+     window.location.replace("/?auth=signin");
+   }
+ }
  return <main className="settings-app"><header className="settings-header"><a href="/" className="icon-back" aria-label="Back">←</a><div className="header-title"><Logo size={30}/><div><strong>Settings</strong><span>Mah Buddy</span></div></div><span className="saved">{saved?"Saved ✓":""}</span></header><div className="settings-content">
  <section className="settings-hero"><div className="hero-orb"><Logo size={48}/></div><div><span className="eyebrow">PERSONAL CONTROL</span><h1>Make it <em>yours.</em></h1><p>Fine-tune Mah Buddy so every study session feels natural to you.</p></div></section>
  <section className="panel"><div className="panel-heading"><div><span>APPEARANCE</span><h2>Look & feel</h2></div><b>01</b></div><div className="theme-grid">{(["Light","Dark","System"] as Theme[]).map(theme=><button key={theme} type="button" className={prefs.theme===theme?"theme-card active":"theme-card"} onClick={()=>update({theme})}><span className={`theme-preview ${theme.toLowerCase()}`}><i/></span><b>{theme}</b><small>{theme==="System"?"Follow device":theme==="Dark"?"Easy on the eyes":"Bright & clean"}</small></button>)}</div></section>
