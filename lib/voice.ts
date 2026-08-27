@@ -5,15 +5,30 @@ export type VoiceSettings = {
   pitch?: number;
 };
 
+/**
+ * Converts rendered Mah Buddy content into speech-only text.
+ * Keep punctuation because TTS uses it for natural intonation, especially ? and !.
+ */
 export function cleanSpeechText(text: string) {
   return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[.*?\]\(.*?\)/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/^\s{0,3}#{1,6}\s*/gm, "")
+    .replace(/^\s{0,3}>\s?/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/^\s*\d+[.)]\s+/gm, "")
+    .replace(/[*_~]+/g, "")
+    .replace(/[|]+/g, ", ")
     .replace(/Mah\s+Buddy/gi, "")
     .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
     .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "")
-    // Symbols such as '?' are not spoken as their names by normal TTS engines;
-    // keep sentence punctuation so questions still receive natural intonation.
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ")
     .replace(/\s+([,.!?;:])/g, "$1")
     .replace(/([.!?]){2,}/g, "$1")
+    .replace(/([,;:])\s*/g, "$1 ")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -29,7 +44,7 @@ export function speakMahBuddy(text: string, settings: VoiceSettings = { enabled:
   if (!speechText) return false;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(speechText);
-  utterance.rate = settings.rate ?? 1;
+  utterance.rate = settings.rate ?? 0.98;
   utterance.pitch = settings.pitch ?? 1;
   const voices = getSpeechVoices();
   const preferred = settings.voiceName
