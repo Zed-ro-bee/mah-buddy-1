@@ -14,8 +14,7 @@ function getAnswerText(message: Element) {
   const body = message.querySelector(".mb-msg-body");
   if (!body) return "";
   const copy = body.cloneNode(true) as HTMLElement;
-  // TTS must never read the UI label, speaker controls, icons, the user's name,
-  // or the question itself. Only the actual assistant answer is spoken.
+  // Speak only the actual assistant answer. UI controls and labels are not part of the answer.
   copy.querySelectorAll("button, svg, .mb-tts-button, .mb-msg-label, .mb-question-label, [aria-hidden='true']").forEach((el) => el.remove());
   return cleanSpeechText(copy.textContent?.trim() || "");
 }
@@ -48,32 +47,21 @@ function injectSettingsControl() {
   section.appendChild(card);
 }
 
-async function playServerVoice(text: string, button: HTMLButtonElement, stop: () => void) {
+function playBritishVoice(text: string, stop: () => void) {
   const speechText = cleanSpeechText(text);
   if (!speechText) { stop(); return; }
-  try {
-    const response = await fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: speechText }),
-    });
-    if (!response.ok) throw new Error("TTS unavailable");
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    (button as HTMLButtonElement & { _mbAudio?: HTMLAudioElement; _mbAudioUrl?: string })._mbAudio = audio;
-    (button as HTMLButtonElement & { _mbAudio?: HTMLAudioElement; _mbAudioUrl?: string })._mbAudioUrl = url;
-    audio.onended = stop;
-    audio.onerror = stop;
-    await audio.play();
-  } catch {
-    const ok = speakMahBuddy(speechText, { enabled: true, rate: 1, pitch: 1 });
-    if (!ok) stop();
-    else {
-      window.speechSynthesis?.addEventListener?.("end", stop, { once: true });
-      window.speechSynthesis?.addEventListener?.("error", stop, { once: true });
-    }
+
+  // Use the browser speech engine directly so the exact answer text reaches the
+  // speech engine unchanged and the device's en-GB voice can be selected.
+  const ok = speakMahBuddy(speechText, { enabled: true, rate: 0.98, pitch: 1 });
+  if (!ok) {
+    stop();
+    return;
   }
+
+  const onEnd = () => stop();
+  window.speechSynthesis.addEventListener("end", onEnd, { once: true });
+  window.speechSynthesis.addEventListener("error", onEnd, { once: true });
 }
 
 export default function TtsLayer({ children }: { children: React.ReactNode }) {
@@ -94,7 +82,7 @@ export default function TtsLayer({ children }: { children: React.ReactNode }) {
       if (!body) return;
       const text = getAnswerText(message);
       if (!text) return;
-      const button = document.createElement("button") as HTMLButtonElement & { _mbAudio?: HTMLAudioElement; _mbAudioUrl?: string };
+      const button = document.createElement("button") as HTMLButtonElement;
       button.type = "button";
       button.className = "mb-tts-button";
       button.setAttribute("aria-label", "Listen to Mah Buddy response");
@@ -103,24 +91,20 @@ export default function TtsLayer({ children }: { children: React.ReactNode }) {
       button.innerHTML = speakerSvg();
       let speaking = false;
       const stop = () => {
-        try { button._mbAudio?.pause(); } catch {}
-        if (button._mbAudioUrl) URL.revokeObjectURL(button._mbAudioUrl);
-        button._mbAudio = undefined;
-        button._mbAudioUrl = undefined;
         stopMahBuddyVoice();
         speaking = false;
         button.classList.remove("is-speaking");
         button.setAttribute("aria-pressed", "false");
         button.innerHTML = speakerSvg();
       };
-      button.addEventListener("click", async () => {
+      button.addEventListener("click", () => {
         if (speaking) { stop(); return; }
         document.querySelectorAll<HTMLButtonElement>(".mb-tts-button.is-speaking").forEach((other) => { if (other !== button) other.click(); });
         speaking = true;
         button.classList.add("is-speaking");
         button.setAttribute("aria-pressed", "true");
         button.innerHTML = speakerSvg();
-        await playServerVoice(text, button, stop);
+        playBritishVoice(text, stop);
       });
       body.appendChild(button);
       if (autoSpeak) button.click();
@@ -143,7 +127,7 @@ export default function TtsLayer({ children }: { children: React.ReactNode }) {
     });
     observer.observe(root, { childList: true, subtree: true });
     window.addEventListener("mah-buddy-tts-preference-changed", injectSettingsControl);
-    return () => { observer.disconnect(); window.removeEventListener("mah-buddy-tts-preference-changed", injectSettingsControl); document.getElementById(STYLE_ID)?.remove(); };
+    return () => { observer.disconnect(); window.removeEventListener("mah-buddy-tts-preference-changed", injectSettingsControl); document.getElementById(STYLE_ID)?.remove(); stopMahBuddyVoice(); };
   }, []);
 
   return <>{children}</>;
