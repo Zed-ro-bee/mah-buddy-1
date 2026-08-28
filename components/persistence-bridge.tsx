@@ -65,7 +65,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
      client.from("user_settings").select("theme,voice_enabled,tts_enabled,notifications_enabled,memory_enabled").eq("user_id",userId).maybeSingle(),
      client.from("profiles").select("preferred_name,buddy_name,age,learning_level,goal,education_level,display_name").eq("id",userId).maybeSingle()
     ]);
-    if(error||!active){hydrated=true;return}
+    if(error||!active){hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));return}
     if(cs?.length){
      const{data:ms}=await client.from("messages").select("conversation_id,role,content,created_at").eq("user_id",userId).order("created_at",{ascending:true});
      const map=new Map<string,StoredMessage[]>();for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}
@@ -78,8 +78,8 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     }
     if(settings)write(PREFS_KEY,{...readJSON(PREFS_KEY,{}),theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false});
     if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};write(PROFILE_KEY,profile);window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}
-    saveLocalSnapshot();hydrated=true;schedule();
-   }catch{hydrated=true}
+    saveLocalSnapshot();hydrated=true;schedule();window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));
+   }catch{hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"))}
   };
   const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};window.addEventListener("storage",onStorage);
   const original=localStorage.setItem.bind(localStorage);localStorage.setItem=(key:string,value:string)=>{original(key,value);if(USER_LOCAL_KEYS.includes(key))schedule()};
