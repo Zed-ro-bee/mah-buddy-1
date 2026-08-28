@@ -6,10 +6,10 @@ type StoredMessage={role:"user"|"assistant"|"system";content:string};
 type StoredChat={id:string;title:string;messages:StoredMessage[];updatedAt:number};
 type StoredProfile={preferredName:string;buddyName:string;age:string;learningLevel:string;goal:string;educationLevel?:string};
 
-const CHAT_KEY="mah-buddy-chats", LEGACY_CHAT_KEY="mah-buddy-chat", PREFS_KEY="mah-buddy-prefs", PROFILE_KEY="mah-buddy-profile";
+const CHAT_KEY="mah-buddy-chats", LEGACY_CHAT_KEY="mah-buddy-chat", V3_HISTORY_KEY="mah-buddy-history", V3_CURRENT_KEY="mah-buddy-current", PREFS_KEY="mah-buddy-prefs", PROFILE_KEY="mah-buddy-profile";
 const QUIZ_HISTORY_KEY="mah-buddy-quiz-history", QUIZ_CONFIG_KEY="mah-buddy-quiz-config";
 const FLASH_HISTORY_KEY="mah-buddy-flashcard-history", FLASH_CONFIG_KEY="mah-buddy-flashcard-config";
-const USER_LOCAL_KEYS=[CHAT_KEY,LEGACY_CHAT_KEY,PREFS_KEY,PROFILE_KEY,QUIZ_HISTORY_KEY,QUIZ_CONFIG_KEY,FLASH_HISTORY_KEY,FLASH_CONFIG_KEY];
+const USER_LOCAL_KEYS=[CHAT_KEY,LEGACY_CHAT_KEY,V3_HISTORY_KEY,V3_CURRENT_KEY,PREFS_KEY,PROFILE_KEY,QUIZ_HISTORY_KEY,QUIZ_CONFIG_KEY,FLASH_HISTORY_KEY,FLASH_CONFIG_KEY];
 const defaultProfile:StoredProfile={preferredName:"",buddyName:"Mah Buddy",age:"",learningLevel:"",goal:"",educationLevel:""};
 
 export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSignOut?:()=>void}){
@@ -26,7 +26,9 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
   const readChats=():StoredChat[]=>{
    try{
     const raw=localStorage.getItem(CHAT_KEY);
-    if(raw)return JSON.parse(raw);
+    if(raw){const parsed=JSON.parse(raw);if(Array.isArray(parsed))return parsed;}
+    const v3=JSON.parse(localStorage.getItem(V3_HISTORY_KEY)||"[]");
+    if(Array.isArray(v3)&&v3.length){write(CHAT_KEY,v3);return v3;}
     const legacy=JSON.parse(localStorage.getItem(LEGACY_CHAT_KEY)||"[]");
     if(!Array.isArray(legacy)||!legacy.length)return[];
     const chat:StoredChat={id:crypto.randomUUID(),title:"New chat",messages:legacy.filter((m:any)=>m?.role&&m?.content).map((m:any)=>({role:m.role,content:String(m.content)})),updatedAt:Date.now()};
@@ -38,7 +40,9 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
    if(!active||!hydrated)return;
    try{
     saveLocalSnapshot();
-    const chats=readChats();const ids=new Set(chats.map(c=>c.id));
+    const chats=readChats();
+    if(chats.length)write(V3_HISTORY_KEY,chats);
+    const ids=new Set(chats.map(c=>c.id));
     const{data:remote}=await client.from("conversations").select("id").eq("user_id",userId);
     const removed=(remote||[]).map(r=>r.id).filter(id=>!ids.has(id));
     if(removed.length)await client.from("conversations").delete().eq("user_id",userId).in("id",removed);
@@ -51,7 +55,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
    }catch{}
   };
   const persistProfile=async()=>{try{const p=readProfile();await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,updated_at:new Date().toISOString()})}catch{}};
-  const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()})}catch{}};
+  const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");await client.from("user_settings").upsert({user_id:userId,theme,learning_level:p.learningLevel||null,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()})}catch{}};
   const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs()},600)};
   const hydrate=async()=>{
    try{
@@ -65,9 +69,14 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     if(cs?.length){
      const{data:ms}=await client.from("messages").select("conversation_id,role,content,created_at").eq("user_id",userId).order("created_at",{ascending:true});
      const map=new Map<string,StoredMessage[]>();for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}
-     write(CHAT_KEY,cs.map(c=>({id:c.id,title:c.title||"New chat",messages:map.get(c.id)||[],updatedAt:new Date(c.updated_at).getTime()})));
+     const chats=cs.map(c=>({id:c.id,title:c.title||"New chat",messages:map.get(c.id)||[],updatedAt:new Date(c.updated_at).getTime()}));
+     write(CHAT_KEY,chats);write(V3_HISTORY_KEY,chats);
+     if(!localStorage.getItem(V3_CURRENT_KEY)&&chats[0])localStorage.setItem(V3_CURRENT_KEY,chats[0].id);
+    } else {
+     const localChats=readChats();
+     if(localChats.length)write(V3_HISTORY_KEY,localChats);
     }
-    if(settings)write(PREFS_KEY,{theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false,instructions:""});
+    if(settings)write(PREFS_KEY,{...readJSON(PREFS_KEY,{}),theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false});
     if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};write(PROFILE_KEY,profile);window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}
     saveLocalSnapshot();hydrated=true;schedule();
    }catch{hydrated=true}
@@ -79,7 +88,6 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
    if(!active)return;
    if(timer)clearTimeout(timer);
    try{
-    // Flush current account data before ending its session.
     await persist();
     saveLocalSnapshot();
     active=false;
