@@ -12,7 +12,7 @@ import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
     private WebView webView;
-    private static final String APP_URL = "https://mah-buddy-1.vercel.app/";
+    private static final String APP_URL = "https://mah-buddy.vercel.app/";
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
