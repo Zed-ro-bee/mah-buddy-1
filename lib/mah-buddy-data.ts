@@ -1,5 +1,16 @@
 import { supabase } from "./supabase";
 
+const MAX_TITLE_LENGTH = 120;
+const MAX_MESSAGE_LENGTH = 100_000;
+
+function cleanTitle(title: string) {
+  return String(title ?? "New chat").trim().slice(0, MAX_TITLE_LENGTH) || "New chat";
+}
+
+function cleanMessage(content: string) {
+  return String(content ?? "").slice(0, MAX_MESSAGE_LENGTH);
+}
+
 export async function getCurrentUser() {
   if (!supabase) return null;
   const { data } = await supabase.auth.getUser();
@@ -12,7 +23,7 @@ export async function ensureConversation(title = "New chat") {
   if (!user) return null;
   const { data, error } = await supabase
     .from("conversations")
-    .insert({ user_id: user.id, title })
+    .insert({ user_id: user.id, title: cleanTitle(title) })
     .select("id,title,created_at,updated_at")
     .single();
   if (error) throw error;
@@ -20,12 +31,14 @@ export async function ensureConversation(title = "New chat") {
 }
 
 export async function saveMessage(conversationId: string, role: "user" | "assistant" | "system", content: string) {
-  if (!supabase) return null;
+  if (!supabase || !conversationId) return null;
   const user = await getCurrentUser();
   if (!user) return null;
+  const safeContent = cleanMessage(content);
+  if (!safeContent) return null;
   const { data, error } = await supabase
     .from("messages")
-    .insert({ conversation_id: conversationId, user_id: user.id, role, content })
+    .insert({ conversation_id: conversationId, user_id: user.id, role, content: safeContent })
     .select("id,conversation_id,role,content,created_at")
     .single();
   if (error) throw error;
@@ -46,7 +59,7 @@ export async function listConversations() {
 }
 
 export async function listMessages(conversationId: string) {
-  if (!supabase) return [];
+  if (!supabase || !conversationId) return [];
   const user = await getCurrentUser();
   if (!user) return [];
   const { data, error } = await supabase
@@ -60,12 +73,12 @@ export async function listMessages(conversationId: string) {
 }
 
 export async function updateConversationTitle(conversationId: string, title: string) {
-  if (!supabase) return null;
+  if (!supabase || !conversationId) return null;
   const user = await getCurrentUser();
   if (!user) return null;
   const { error } = await supabase
     .from("conversations")
-    .update({ title, updated_at: new Date().toISOString() })
+    .update({ title: cleanTitle(title), updated_at: new Date().toISOString() })
     .eq("id", conversationId)
     .eq("user_id", user.id);
   if (error) throw error;
