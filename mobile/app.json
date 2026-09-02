@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Mah Buddy",
+    "slug": "mah-buddy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "extra": {
+      "eas": {
+        "projectId": "8b159ee1-24ef-42b1-bda2-8d055c44e512"
+      }
+    },
+    "android": {
+      "package": "com.zedro.mahbuddy",
+      "versionCode": 1,
+      "permissions": ["RECORD_AUDIO"]
+    },
+    "ios": {
+      "bundleIdentifier": "com.zedro.mahbuddy"
+    }
+  }
+}
