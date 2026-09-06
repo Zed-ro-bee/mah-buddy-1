@@ -3,6 +3,11 @@
 <p align="center">
   <strong>Built by ZEDRO Corp</strong>
 </p>
+<p align="center">
+  <a href="https://mah-buddy.vercel.app">
+    <strong>🚀 Try Mah Buddy</strong>
+  </a>
+</p>
 Your AI-powered learning companion.
 
 Mah Buddy is an AI-powered learning and conversational application built to make studying, asking questions, and practising knowledge more interactive and personalized.
