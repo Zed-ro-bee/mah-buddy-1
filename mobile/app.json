@@ -19,7 +19,9 @@
       ]
     },
     "extra": {
-      "apiBaseUrl": "https://mah-buddy.vercel.app"
+      "apiBaseUrl": "https://mah-buddy.vercel.app",
+      "supabaseUrl": "${SUPABASE_URL}",
+      "supabasePublishableKey": "${SUPABASE_PUBLISHABLE_KEY}"
     }
   }
 }
