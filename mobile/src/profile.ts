@@ -7,6 +7,9 @@ export type BuddyProfile = {
   buddyName: string;
   age: string;
   difficulty: LearningDifficulty;
+  learningLevel?: string;
+  goal?: string;
+  educationLevel?: string;
 };
 
 const profileKey = (userId: string) => `mah-buddy.profile.v1.${userId}`;
@@ -16,6 +19,9 @@ export const DEFAULT_PROFILE: BuddyProfile = {
   buddyName: 'Mah Buddy',
   age: '',
   difficulty: 'normal',
+  learningLevel: '',
+  goal: '',
+  educationLevel: '',
 };
 
 export async function loadProfile(userId: string): Promise<BuddyProfile> {
