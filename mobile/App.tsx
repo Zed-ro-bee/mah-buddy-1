@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, Session } from '@supabase/supabase-js';
@@ -35,6 +35,8 @@ export default function App() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<BuddyProfile>(DEFAULT_PROFILE);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [draftProfile, setDraftProfile] = useState<BuddyProfile>(DEFAULT_PROFILE);
 
   useEffect(() => {
     if (!supabase) { setBooting(false); return; }
@@ -43,15 +45,16 @@ export default function App() {
       if (!mounted) return;
       setSession(data.session);
       if (data.session) {
-        const p = await loadProfile();
+        const p = await loadProfile(data.session.user.id);
         setProfile(p);
+        setDraftProfile(p);
         setMessages(await readHistory(data.session.user.id, p));
       }
       setBooting(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
-      if (!next) { setMessages([]); setProfile(DEFAULT_PROFILE); }
+      if (!next) { setMessages([]); setProfile(DEFAULT_PROFILE); setDraftProfile(DEFAULT_PROFILE); }
     });
     return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
@@ -87,20 +90,29 @@ export default function App() {
     if (supabase) await supabase.auth.signOut();
     setMessages([]);
     setProfile(DEFAULT_PROFILE);
+    setDraftProfile(DEFAULT_PROFILE);
+    setProfileOpen(false);
   }
 
-  async function editProfile() {
+  function openProfile() {
+    setDraftProfile(profile);
+    setProfileOpen(true);
+  }
+
+  async function saveDraftProfile() {
+    if (!session) return;
     const next: BuddyProfile = {
-      ...profile,
-      preferredName: profile.preferredName,
-      buddyName: profile.buddyName || 'Mah Buddy',
-      age: profile.age,
-      difficulty: profile.difficulty,
+      preferredName: draftProfile.preferredName.trim(),
+      buddyName: draftProfile.buddyName.trim() || 'Mah Buddy',
+      age: draftProfile.age.trim(),
+      difficulty: draftProfile.difficulty,
     };
-    await saveProfile(next);
+    await saveProfile(session.user.id, next);
     setProfile(next);
+    setDraftProfile(next);
+    setProfileOpen(false);
     setMessages((current) => current.length === 1 && current[0].id === 'welcome' ? [{ id: 'welcome', role: 'assistant', content: welcome(next) }] : current);
-    Alert.alert('Profile saved', 'Your learning preferences are saved on this device.');
+    Alert.alert('Profile saved', 'Your learning preferences are saved for this account on this device.');
   }
 
   async function sendMessage() {
@@ -112,7 +124,18 @@ export default function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages.map(({ role, content }) => ({ role, content })) }),
+        body: JSON.stringify({
+          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          profile: {
+            preferredName: profile.preferredName,
+            buddyName: profile.buddyName,
+            age: profile.age,
+            learningLevel: profile.learningLevel,
+            goal: profile.goal,
+            educationLevel: profile.educationLevel,
+          },
+          difficulty: profile.difficulty,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || 'Mah Buddy could not respond right now.');
@@ -140,12 +163,37 @@ export default function App() {
     </SafeAreaView>
   );
 
+  if (profileOpen) return (
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.header}>
+          <View><Text style={styles.title}>Profile</Text><Text style={styles.subtitle}>Personalise how Mah Buddy teaches you</Text></View>
+          <Pressable onPress={() => setProfileOpen(false)}><Text style={styles.action}>Close</Text></Pressable>
+        </View>
+        <ScrollView contentContainerStyle={styles.profileContent} keyboardShouldPersistTaps="handled">
+          <Text style={styles.label}>Preferred name</Text>
+          <TextInput value={draftProfile.preferredName} onChangeText={(v) => setDraftProfile((p) => ({ ...p, preferredName: v }))} placeholder="What should Mah Buddy call you?" placeholderTextColor="#8a8f98" style={styles.authInput} />
+          <Text style={styles.label}>Your name for Mah Buddy</Text>
+          <TextInput value={draftProfile.buddyName} onChangeText={(v) => setDraftProfile((p) => ({ ...p, buddyName: v }))} placeholder="Mah Buddy" placeholderTextColor="#8a8f98" style={styles.authInput} />
+          <Text style={styles.label}>Age</Text>
+          <TextInput value={draftProfile.age} onChangeText={(v) => setDraftProfile((p) => ({ ...p, age: v.replace(/[^0-9]/g, '').slice(0, 3) }))} placeholder="Age" keyboardType="number-pad" placeholderTextColor="#8a8f98" style={styles.authInput} />
+          <Text style={styles.label}>Learning difficulty</Text>
+          <View style={styles.choiceRow}>
+            {(['easy', 'normal', 'hard'] as const).map((value) => <Pressable key={value} onPress={() => setDraftProfile((p) => ({ ...p, difficulty: value }))} style={[styles.choice, draftProfile.difficulty === value && styles.choiceActive]}><Text style={[styles.choiceText, draftProfile.difficulty === value && styles.choiceTextActive]}>{value[0].toUpperCase() + value.slice(1)}</Text></Pressable>)}
+          </View>
+          <Text style={styles.profileNote}>These settings are kept separately for each signed-in account on this device and are sent to Mah Buddy to personalise responses.</Text>
+          <Pressable onPress={saveDraftProfile} style={styles.primary}><Text style={styles.primaryText}>Save profile</Text></Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
           <View><Text style={styles.title}>{profile.buddyName || 'Mah Buddy'}</Text><Text style={styles.subtitle}>{profile.preferredName ? `Ready to help, ${profile.preferredName}` : 'Your AI study buddy'}</Text></View>
-          <View style={styles.headerActions}><Pressable onPress={editProfile}><Text style={styles.action}>Profile</Text></Pressable><Pressable onPress={signOut}><Text style={styles.signOut}>Sign out</Text></Pressable></View>
+          <View style={styles.headerActions}><Pressable onPress={openProfile}><Text style={styles.action}>Profile</Text></Pressable><Pressable onPress={signOut}><Text style={styles.signOut}>Sign out</Text></Pressable></View>
         </View>
         <FlatList style={styles.list} contentContainerStyle={styles.messages} data={messages} keyExtractor={(item) => item.id} renderItem={({ item }) => (
           <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.assistantBubble]}><Text style={[styles.bubbleText, item.role === 'user' && styles.userText]}>{item.content}</Text></View>
@@ -167,10 +215,11 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#d9dce1', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff' },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 14 }, action: { color: '#17181b', fontSize: 13, fontWeight: '600' },
   title: { fontSize: 20, fontWeight: '700', color: '#17181b' }, subtitle: { marginTop: 2, fontSize: 12, color: '#70757d' }, signOut: { color: '#60656d', fontSize: 13 },
-  authInput: { height: 48, borderWidth: 1, borderColor: '#d7d9de', borderRadius: 13, paddingHorizontal: 14, marginTop: 12, color: '#17181b', backgroundColor: '#fff' },
+  authInput: { height: 48, borderWidth: 1, borderColor: '#d7d9de', borderRadius: 13, paddingHorizontal: 14, marginTop: 8, color: '#17181b', backgroundColor: '#fff' },
   primary: { marginTop: 16, height: 48, borderRadius: 14, backgroundColor: '#17181b', alignItems: 'center', justifyContent: 'center' }, primaryText: { color: '#fff', fontWeight: '700' },
   secondary: { marginTop: 10, height: 46, borderRadius: 14, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center' }, secondaryText: { color: '#17181b', fontWeight: '600' }, setup: { marginTop: 14, color: '#8a8f98', fontSize: 12, textAlign: 'center' },
   list: { flex: 1 }, messages: { padding: 16, gap: 10 }, bubble: { maxWidth: '88%', paddingHorizontal: 14, paddingVertical: 11, borderRadius: 17 }, assistantBubble: { alignSelf: 'flex-start', backgroundColor: '#fff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#e0e2e6' }, userBubble: { alignSelf: 'flex-end', backgroundColor: '#17181b' }, bubbleText: { fontSize: 15, lineHeight: 22, color: '#24262b' }, userText: { color: '#fff' },
   typing: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingBottom: 8 }, typingText: { fontSize: 12, color: '#70757d' }, muted: { fontSize: 13, color: '#70757d' },
-  composer: { margin: 12, padding: 8, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: '#d7d9de', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'flex-end' }, input: { flex: 1, minHeight: 42, maxHeight: 120, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 8, fontSize: 15, color: '#17181b' }, send: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#17181b' }, sendDisabled: { opacity: 0.35 }, sendText: { color: '#fff', fontSize: 23, lineHeight: 25, fontWeight: '700' }
+  composer: { margin: 12, padding: 8, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: '#d7d9de', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'flex-end' }, input: { flex: 1, minHeight: 42, maxHeight: 120, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 8, fontSize: 15, color: '#17181b' }, send: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#17181b' }, sendDisabled: { opacity: 0.35 }, sendText: { color: '#fff', fontSize: 23, lineHeight: 25, fontWeight: '700' },
+  profileContent: { padding: 18, paddingBottom: 32 }, label: { marginTop: 14, marginBottom: 2, fontSize: 13, fontWeight: '600', color: '#40434a' }, choiceRow: { flexDirection: 'row', gap: 8, marginTop: 10 }, choice: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }, choiceActive: { backgroundColor: '#17181b', borderColor: '#17181b' }, choiceText: { color: '#40434a', fontWeight: '600' }, choiceTextActive: { color: '#fff' }, profileNote: { marginTop: 18, color: '#70757d', fontSize: 12, lineHeight: 18 }
 });
