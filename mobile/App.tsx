@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Constants from 'expo-constants';
+import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, Session } from '@supabase/supabase-js';
 import { DEFAULT_PROFILE, BuddyProfile, loadProfile, saveProfile } from './src/profile';
 
-type Message = { id: string; role: 'user' | 'assistant'; content: string };
+type Attachment = { name: string; type: string; data: string };
+type Message = { id: string; role: 'user' | 'assistant'; content: string; attachment?: Pick<Attachment, 'name' | 'type'> };
 const extra = (Constants.expoConfig?.extra || {}) as Record<string, string | undefined>;
 const API_BASE_URL = String(extra.apiBaseUrl || 'https://mah-buddy.vercel.app').replace(/\/$/, '');
 const SUPABASE_URL = String(extra.supabaseUrl || '');
@@ -15,211 +18,66 @@ const historyKey = (userId: string) => `mah-buddy.native.history.v1.${userId}`;
 const welcome = (profile: BuddyProfile) => `Hi${profile.preferredName ? ` ${profile.preferredName}` : ''}, I’m ${profile.buddyName || 'Mah Buddy'}. What would you like to learn or work on?`;
 
 async function readHistory(userId: string, profile: BuddyProfile): Promise<Message[]> {
-  try {
-    const raw = await AsyncStorage.getItem(historyKey(userId));
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
-    }
-  } catch {}
+  try { const raw = await AsyncStorage.getItem(historyKey(userId)); if (raw) { const parsed = JSON.parse(raw); if (Array.isArray(parsed) && parsed.length) return parsed; } } catch {}
   return [{ id: 'welcome', role: 'assistant', content: welcome(profile) }];
 }
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [booting, setBooting] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [authBusy, setAuthBusy] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<BuddyProfile>(DEFAULT_PROFILE);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [draftProfile, setDraftProfile] = useState<BuddyProfile>(DEFAULT_PROFILE);
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [authBusy, setAuthBusy] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]); const [input, setInput] = useState(''); const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<BuddyProfile>(DEFAULT_PROFILE); const [profileOpen, setProfileOpen] = useState(false); const [draftProfile, setDraftProfile] = useState<BuddyProfile>(DEFAULT_PROFILE);
+  const [attachment, setAttachment] = useState<Attachment | null>(null); const [picking, setPicking] = useState(false);
 
   useEffect(() => {
-    if (!supabase) { setBooting(false); return; }
-    let mounted = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      if (data.session) {
-        const p = await loadProfile(data.session.user.id);
-        setProfile(p);
-        setDraftProfile(p);
-        setMessages(await readHistory(data.session.user.id, p));
-      }
-      setBooting(false);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      if (!next) { setMessages([]); setProfile(DEFAULT_PROFILE); setDraftProfile(DEFAULT_PROFILE); }
-    });
+    if (!supabase) { setBooting(false); return; } let mounted = true;
+    supabase.auth.getSession().then(async ({ data }) => { if (!mounted) return; setSession(data.session); if (data.session) { const p = await loadProfile(data.session.user.id); setProfile(p); setDraftProfile(p); setMessages(await readHistory(data.session.user.id, p)); } setBooting(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); if (!next) { setMessages([]); setProfile(DEFAULT_PROFILE); setDraftProfile(DEFAULT_PROFILE); setAttachment(null); } });
     return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
+  useEffect(() => { if (session) void AsyncStorage.setItem(historyKey(session.user.id), JSON.stringify(messages)); }, [messages, session]);
+  const canSend = useMemo(() => (input.trim().length > 0 || !!attachment) && !loading, [input, attachment, loading]);
 
-  useEffect(() => {
-    if (!session) return;
-    void AsyncStorage.setItem(historyKey(session.user.id), JSON.stringify(messages));
-  }, [messages, session]);
-
-  const canSend = useMemo(() => input.trim().length > 0 && !loading, [input, loading]);
-
-  async function signIn() {
-    if (!supabase) return Alert.alert('Setup needed', 'The native app needs the Supabase URL and publishable key in its environment configuration.');
-    if (!email.trim() || !password) return Alert.alert('Missing details', 'Enter your email and password.');
-    setAuthBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setAuthBusy(false);
-    if (error) Alert.alert('Sign in failed', error.message);
-  }
-
-  async function signUp() {
-    if (!supabase) return Alert.alert('Setup needed', 'The native app needs the Supabase URL and publishable key in its environment configuration.');
-    if (!email.trim() || !password) return Alert.alert('Missing details', 'Enter your email and password.');
-    if (password.length < 6) return Alert.alert('Password too short', 'Use at least 6 characters.');
-    setAuthBusy(true);
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
-    setAuthBusy(false);
-    if (error) return Alert.alert('Sign up failed', error.message);
-    if (!data.session) Alert.alert('Check your email', 'Your account was created. Complete email verification if your project requires it, then sign in.');
-  }
-
-  async function signOut() {
-    if (supabase) await supabase.auth.signOut();
-    setMessages([]);
-    setProfile(DEFAULT_PROFILE);
-    setDraftProfile(DEFAULT_PROFILE);
-    setProfileOpen(false);
-  }
-
-  function openProfile() {
-    setDraftProfile(profile);
-    setProfileOpen(true);
-  }
+  async function signIn() { if (!supabase) return Alert.alert('Setup needed', 'The native app needs the Supabase URL and publishable key in its environment configuration.'); if (!email.trim() || !password) return Alert.alert('Missing details', 'Enter your email and password.'); setAuthBusy(true); const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password }); setAuthBusy(false); if (error) Alert.alert('Sign in failed', error.message); }
+  async function signUp() { if (!supabase) return Alert.alert('Setup needed', 'The native app needs the Supabase URL and publishable key in its environment configuration.'); if (!email.trim() || !password) return Alert.alert('Missing details', 'Enter your email and password.'); if (password.length < 6) return Alert.alert('Password too short', 'Use at least 6 characters.'); setAuthBusy(true); const { data, error } = await supabase.auth.signUp({ email: email.trim(), password }); setAuthBusy(false); if (error) return Alert.alert('Sign up failed', error.message); if (!data.session) Alert.alert('Check your email', 'Your account was created. Complete email verification if required, then sign in.'); }
+  async function signOut() { if (supabase) await supabase.auth.signOut(); setMessages([]); setProfile(DEFAULT_PROFILE); setDraftProfile(DEFAULT_PROFILE); setProfileOpen(false); setAttachment(null); }
+  function openProfile() { setDraftProfile(profile); setProfileOpen(true); }
 
   async function saveDraftProfile() {
-    if (!session) return;
-    const next: BuddyProfile = {
-      preferredName: draftProfile.preferredName.trim(),
-      buddyName: draftProfile.buddyName.trim() || 'Mah Buddy',
-      age: draftProfile.age.trim(),
-      difficulty: draftProfile.difficulty,
-    };
-    await saveProfile(session.user.id, next);
-    setProfile(next);
-    setDraftProfile(next);
-    setProfileOpen(false);
-    setMessages((current) => current.length === 1 && current[0].id === 'welcome' ? [{ id: 'welcome', role: 'assistant', content: welcome(next) }] : current);
-    Alert.alert('Profile saved', 'Your learning preferences are saved for this account on this device.');
+    if (!session) return; const next: BuddyProfile = { preferredName: draftProfile.preferredName.trim(), buddyName: draftProfile.buddyName.trim() || 'Mah Buddy', age: draftProfile.age.trim(), difficulty: draftProfile.difficulty, learningLevel: draftProfile.learningLevel?.trim() || '', goal: draftProfile.goal?.trim() || '', educationLevel: draftProfile.educationLevel?.trim() || '' };
+    await saveProfile(session.user.id, next); setProfile(next); setDraftProfile(next); setProfileOpen(false); setMessages(current => current.length === 1 && current[0].id === 'welcome' ? [{ id: 'welcome', role: 'assistant', content: welcome(next) }] : current); Alert.alert('Profile saved', 'Your learning preferences are saved for this account on this device.');
+  }
+
+  async function pickAttachment() {
+    if (picking || loading) return; setPicking(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: ['image/*', 'application/pdf', 'text/plain', 'text/markdown', 'text/csv', 'application/json', 'text/html'], copyToCacheDirectory: true, multiple: false });
+      if (result.canceled || !result.assets?.[0]) return; const asset = result.assets[0]; const file = new File(asset.uri); const info = file.info();
+      if (info.exists && typeof info.size === 'number' && info.size > 6 * 1024 * 1024) { Alert.alert('File too large', 'Please choose a file smaller than 6 MB.'); return; }
+      const mime = asset.mimeType || 'application/octet-stream'; const isText = mime.startsWith('text/') || mime === 'application/json'; const data = isText ? await file.text() : `data:${mime};base64,${await file.base64()}`;
+      if (data.length > 8500000) { Alert.alert('File too large', 'This file is too large to send to Mah Buddy.'); return; }
+      setAttachment({ name: asset.name || 'attachment', type: mime, data });
+    } catch (error) { Alert.alert('Attachment failed', error instanceof Error ? error.message : 'Could not read that file.'); } finally { setPicking(false); }
   }
 
   async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading || !session) return;
-    const userMessage: Message = { id: `${Date.now()}-u`, role: 'user', content: text };
-    const nextMessages = [...messages, userMessage];
-    setMessages(nextMessages); setInput(''); setLoading(true);
+    const text = input.trim(); if ((!text && !attachment) || loading || !session) return; const outgoingAttachment = attachment ? { ...attachment } : undefined;
+    const userMessage: Message = { id: `${Date.now()}-u`, role: 'user', content: text || `Please analyse ${outgoingAttachment?.name || 'this file'}.`, attachment: outgoingAttachment && { name: outgoingAttachment.name, type: outgoingAttachment.type } };
+    const nextMessages = [...messages, userMessage]; setMessages(nextMessages); setInput(''); setAttachment(null); setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: nextMessages.map(({ role, content }) => ({ role, content })),
-          profile: {
-            preferredName: profile.preferredName,
-            buddyName: profile.buddyName,
-            age: profile.age,
-            learningLevel: profile.learningLevel,
-            goal: profile.goal,
-            educationLevel: profile.educationLevel,
-          },
-          difficulty: profile.difficulty,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Mah Buddy could not respond right now.');
-      setMessages((current) => [...current, { id: `${Date.now()}-a`, role: 'assistant', content: String(data.text || '') }]);
-    } catch (error) {
-      setMessages((current) => [...current, { id: `${Date.now()}-e`, role: 'assistant', content: error instanceof Error ? error.message : 'Connection error. Please try again.' }]);
-    } finally { setLoading(false); }
+      const apiMessages = nextMessages.map((message, index) => { const result: Record<string, unknown> = { role: message.role, content: message.content }; if (index === nextMessages.length - 1 && outgoingAttachment) result.attachment = outgoingAttachment; return result; });
+      const response = await fetch(`${API_BASE_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: apiMessages, profile: { preferredName: profile.preferredName, buddyName: profile.buddyName, age: profile.age, learningLevel: profile.learningLevel, goal: profile.goal, educationLevel: profile.educationLevel }, difficulty: profile.difficulty }) });
+      const data = await response.json(); if (!response.ok) throw new Error(data?.error || 'Mah Buddy could not respond right now.'); setMessages(current => [...current, { id: `${Date.now()}-a`, role: 'assistant', content: String(data.text || '') }]);
+    } catch (error) { setMessages(current => [...current, { id: `${Date.now()}-e`, role: 'assistant', content: error instanceof Error ? error.message : 'Connection error. Please try again.' }]); } finally { setLoading(false); }
   }
 
   if (booting) return <SafeAreaView style={styles.safe}><View style={styles.center}><ActivityIndicator /><Text style={styles.muted}>Starting Mah Buddy…</Text></View></SafeAreaView>;
-
-  if (!session) return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView style={styles.authContainer} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.authCard}>
-          <Text style={styles.title}>Mah Buddy</Text>
-          <Text style={styles.subtitle}>Your AI study buddy</Text>
-          <TextInput autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="Email" placeholderTextColor="#8a8f98" style={styles.authInput} />
-          <TextInput secureTextEntry value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor="#8a8f98" style={styles.authInput} />
-          <Pressable disabled={authBusy} onPress={signIn} style={styles.primary}><Text style={styles.primaryText}>{authBusy ? 'Please wait…' : 'Sign in'}</Text></Pressable>
-          <Pressable disabled={authBusy} onPress={signUp} style={styles.secondary}><Text style={styles.secondaryText}>Create account</Text></Pressable>
-          {!supabase && <Text style={styles.setup}>Native authentication is awaiting Supabase environment configuration.</Text>}
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-
-  if (profileOpen) return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
-          <View><Text style={styles.title}>Profile</Text><Text style={styles.subtitle}>Personalise how Mah Buddy teaches you</Text></View>
-          <Pressable onPress={() => setProfileOpen(false)}><Text style={styles.action}>Close</Text></Pressable>
-        </View>
-        <ScrollView contentContainerStyle={styles.profileContent} keyboardShouldPersistTaps="handled">
-          <Text style={styles.label}>Preferred name</Text>
-          <TextInput value={draftProfile.preferredName} onChangeText={(v) => setDraftProfile((p) => ({ ...p, preferredName: v }))} placeholder="What should Mah Buddy call you?" placeholderTextColor="#8a8f98" style={styles.authInput} />
-          <Text style={styles.label}>Your name for Mah Buddy</Text>
-          <TextInput value={draftProfile.buddyName} onChangeText={(v) => setDraftProfile((p) => ({ ...p, buddyName: v }))} placeholder="Mah Buddy" placeholderTextColor="#8a8f98" style={styles.authInput} />
-          <Text style={styles.label}>Age</Text>
-          <TextInput value={draftProfile.age} onChangeText={(v) => setDraftProfile((p) => ({ ...p, age: v.replace(/[^0-9]/g, '').slice(0, 3) }))} placeholder="Age" keyboardType="number-pad" placeholderTextColor="#8a8f98" style={styles.authInput} />
-          <Text style={styles.label}>Learning difficulty</Text>
-          <View style={styles.choiceRow}>
-            {(['easy', 'normal', 'hard'] as const).map((value) => <Pressable key={value} onPress={() => setDraftProfile((p) => ({ ...p, difficulty: value }))} style={[styles.choice, draftProfile.difficulty === value && styles.choiceActive]}><Text style={[styles.choiceText, draftProfile.difficulty === value && styles.choiceTextActive]}>{value[0].toUpperCase() + value.slice(1)}</Text></Pressable>)}
-          </View>
-          <Text style={styles.profileNote}>These settings are kept separately for each signed-in account on this device and are sent to Mah Buddy to personalise responses.</Text>
-          <Pressable onPress={saveDraftProfile} style={styles.primary}><Text style={styles.primaryText}>Save profile</Text></Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-
-  return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
-          <View><Text style={styles.title}>{profile.buddyName || 'Mah Buddy'}</Text><Text style={styles.subtitle}>{profile.preferredName ? `Ready to help, ${profile.preferredName}` : 'Your AI study buddy'}</Text></View>
-          <View style={styles.headerActions}><Pressable onPress={openProfile}><Text style={styles.action}>Profile</Text></Pressable><Pressable onPress={signOut}><Text style={styles.signOut}>Sign out</Text></Pressable></View>
-        </View>
-        <FlatList style={styles.list} contentContainerStyle={styles.messages} data={messages} keyExtractor={(item) => item.id} renderItem={({ item }) => (
-          <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.assistantBubble]}><Text style={[styles.bubbleText, item.role === 'user' && styles.userText]}>{item.content}</Text></View>
-        )} />
-        {loading && <View style={styles.typing}><ActivityIndicator size="small" /><Text style={styles.typingText}>Mah Buddy is thinking…</Text></View>}
-        <View style={styles.composer}>
-          <TextInput value={input} onChangeText={setInput} placeholder="Ask Mah Buddy anything…" placeholderTextColor="#8a8f98" style={styles.input} multiline maxLength={8000} />
-          <Pressable onPress={sendMessage} disabled={!canSend} style={[styles.send, !canSend && styles.sendDisabled]}><Text style={styles.sendText}>↑</Text></Pressable>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+  if (!session) return <SafeAreaView style={styles.safe}><KeyboardAvoidingView style={styles.authContainer} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={styles.authCard}><Text style={styles.title}>Mah Buddy</Text><Text style={styles.subtitle}>Your AI study buddy</Text><TextInput autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="Email" placeholderTextColor="#8a8f98" style={styles.authInput} /><TextInput secureTextEntry value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor="#8a8f98" style={styles.authInput} /><Pressable disabled={authBusy} onPress={signIn} style={styles.primary}><Text style={styles.primaryText}>{authBusy ? 'Please wait…' : 'Sign in'}</Text></Pressable><Pressable disabled={authBusy} onPress={signUp} style={styles.secondary}><Text style={styles.secondaryText}>Create account</Text></Pressable>{!supabase && <Text style={styles.setup}>Native authentication is awaiting Supabase environment configuration.</Text>}</View></KeyboardAvoidingView></SafeAreaView>;
+  if (profileOpen) return <SafeAreaView style={styles.safe}><KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={styles.header}><View><Text style={styles.title}>Profile</Text><Text style={styles.subtitle}>Personalise how Mah Buddy teaches you</Text></View><Pressable onPress={() => setProfileOpen(false)}><Text style={styles.action}>Close</Text></Pressable></View><ScrollView contentContainerStyle={styles.profileContent} keyboardShouldPersistTaps="handled"><Text style={styles.label}>Preferred name</Text><TextInput value={draftProfile.preferredName} onChangeText={v => setDraftProfile(p => ({ ...p, preferredName: v }))} placeholder="What should Mah Buddy call you?" placeholderTextColor="#8a8f98" style={styles.authInput} /><Text style={styles.label}>Your name for Mah Buddy</Text><TextInput value={draftProfile.buddyName} onChangeText={v => setDraftProfile(p => ({ ...p, buddyName: v }))} placeholder="Mah Buddy" placeholderTextColor="#8a8f98" style={styles.authInput} /><Text style={styles.label}>Age</Text><TextInput value={draftProfile.age} onChangeText={v => setDraftProfile(p => ({ ...p, age: v.replace(/[^0-9]/g, '').slice(0, 3) }))} placeholder="Age" keyboardType="number-pad" placeholderTextColor="#8a8f98" style={styles.authInput} /><Text style={styles.label}>Learning level</Text><TextInput value={draftProfile.learningLevel || ''} onChangeText={v => setDraftProfile(p => ({ ...p, learningLevel: v }))} placeholder="e.g. beginner, intermediate, advanced" placeholderTextColor="#8a8f98" style={styles.authInput} /><Text style={styles.label}>Current studies</Text><TextInput value={draftProfile.educationLevel || ''} onChangeText={v => setDraftProfile(p => ({ ...p, educationLevel: v }))} placeholder="What are you currently studying?" placeholderTextColor="#8a8f98" style={styles.authInput} /><Text style={styles.label}>Learning goal</Text><TextInput value={draftProfile.goal || ''} onChangeText={v => setDraftProfile(p => ({ ...p, goal: v }))} placeholder="What do you want to achieve?" placeholderTextColor="#8a8f98" style={styles.authInput} multiline /><Text style={styles.label}>Learning difficulty</Text><View style={styles.choiceRow}>{(['easy', 'normal', 'hard'] as const).map(value => <Pressable key={value} onPress={() => setDraftProfile(p => ({ ...p, difficulty: value }))} style={[styles.choice, draftProfile.difficulty === value && styles.choiceActive]}><Text style={[styles.choiceText, draftProfile.difficulty === value && styles.choiceTextActive]}>{value[0].toUpperCase() + value.slice(1)}</Text></Pressable>)}</View><Text style={styles.profileNote}>These settings are stored separately for each signed-in account and used to personalise Mah Buddy.</Text><Pressable onPress={saveDraftProfile} style={styles.primary}><Text style={styles.primaryText}>Save profile</Text></Pressable></ScrollView></KeyboardAvoidingView></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><View style={styles.header}><View><Text style={styles.title}>{profile.buddyName || 'Mah Buddy'}</Text><Text style={styles.subtitle}>{profile.preferredName ? `Ready to help, ${profile.preferredName}` : 'Your AI study buddy'}</Text></View><View style={styles.headerActions}><Pressable onPress={openProfile}><Text style={styles.action}>Profile</Text></Pressable><Pressable onPress={signOut}><Text style={styles.signOut}>Sign out</Text></Pressable></View></View><FlatList style={styles.list} contentContainerStyle={styles.messages} data={messages} keyExtractor={item => item.id} renderItem={({ item }) => <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.assistantBubble]}><Text style={[styles.bubbleText, item.role === 'user' && styles.userText]}>{item.content}</Text>{item.attachment && <Text style={styles.attachmentLabel}>📎 {item.attachment.name}</Text>}</View>} />{loading && <View style={styles.typing}><ActivityIndicator size="small" /><Text style={styles.typingText}>Mah Buddy is thinking…</Text></View>}{attachment && <View style={styles.attachmentPreview}><Text style={styles.attachmentText}>📎 {attachment.name}</Text><Pressable onPress={() => setAttachment(null)}><Text style={styles.remove}>Remove</Text></Pressable></View>}<View style={styles.composer}><Pressable onPress={pickAttachment} disabled={picking || loading} style={styles.attach}><Text style={styles.attachText}>{picking ? '…' : '+'}</Text></Pressable><TextInput value={input} onChangeText={setInput} placeholder="Ask Mah Buddy anything…" placeholderTextColor="#8a8f98" style={styles.input} multiline maxLength={8000} /><Pressable onPress={sendMessage} disabled={!canSend} style={[styles.send, !canSend && styles.sendDisabled]}><Text style={styles.sendText}>↑</Text></Pressable></View></KeyboardAvoidingView></SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f7f7f8' }, container: { flex: 1 },
-  authContainer: { flex: 1, justifyContent: 'center', padding: 20 }, authCard: { backgroundColor: '#fff', borderRadius: 22, padding: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: '#e0e2e6' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  header: { paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#d9dce1', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff' },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 14 }, action: { color: '#17181b', fontSize: 13, fontWeight: '600' },
-  title: { fontSize: 20, fontWeight: '700', color: '#17181b' }, subtitle: { marginTop: 2, fontSize: 12, color: '#70757d' }, signOut: { color: '#60656d', fontSize: 13 },
-  authInput: { height: 48, borderWidth: 1, borderColor: '#d7d9de', borderRadius: 13, paddingHorizontal: 14, marginTop: 8, color: '#17181b', backgroundColor: '#fff' },
-  primary: { marginTop: 16, height: 48, borderRadius: 14, backgroundColor: '#17181b', alignItems: 'center', justifyContent: 'center' }, primaryText: { color: '#fff', fontWeight: '700' },
-  secondary: { marginTop: 10, height: 46, borderRadius: 14, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center' }, secondaryText: { color: '#17181b', fontWeight: '600' }, setup: { marginTop: 14, color: '#8a8f98', fontSize: 12, textAlign: 'center' },
-  list: { flex: 1 }, messages: { padding: 16, gap: 10 }, bubble: { maxWidth: '88%', paddingHorizontal: 14, paddingVertical: 11, borderRadius: 17 }, assistantBubble: { alignSelf: 'flex-start', backgroundColor: '#fff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#e0e2e6' }, userBubble: { alignSelf: 'flex-end', backgroundColor: '#17181b' }, bubbleText: { fontSize: 15, lineHeight: 22, color: '#24262b' }, userText: { color: '#fff' },
-  typing: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingBottom: 8 }, typingText: { fontSize: 12, color: '#70757d' }, muted: { fontSize: 13, color: '#70757d' },
-  composer: { margin: 12, padding: 8, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: '#d7d9de', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'flex-end' }, input: { flex: 1, minHeight: 42, maxHeight: 120, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 8, fontSize: 15, color: '#17181b' }, send: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#17181b' }, sendDisabled: { opacity: 0.35 }, sendText: { color: '#fff', fontSize: 23, lineHeight: 25, fontWeight: '700' },
-  profileContent: { padding: 18, paddingBottom: 32 }, label: { marginTop: 14, marginBottom: 2, fontSize: 13, fontWeight: '600', color: '#40434a' }, choiceRow: { flexDirection: 'row', gap: 8, marginTop: 10 }, choice: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }, choiceActive: { backgroundColor: '#17181b', borderColor: '#17181b' }, choiceText: { color: '#40434a', fontWeight: '600' }, choiceTextActive: { color: '#fff' }, profileNote: { marginTop: 18, color: '#70757d', fontSize: 12, lineHeight: 18 }
+  safe: { flex: 1, backgroundColor: '#f7f7f8' }, container: { flex: 1 }, authContainer: { flex: 1, justifyContent: 'center', padding: 20 }, authCard: { backgroundColor: '#fff', borderRadius: 22, padding: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: '#e0e2e6' }, center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 }, header: { paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#d9dce1', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff' }, headerActions: { flexDirection: 'row', alignItems: 'center', gap: 14 }, action: { color: '#17181b', fontSize: 13, fontWeight: '600' }, title: { fontSize: 20, fontWeight: '700', color: '#17181b' }, subtitle: { marginTop: 2, fontSize: 12, color: '#70757d' }, signOut: { color: '#60656d', fontSize: 13 }, authInput: { minHeight: 48, borderWidth: 1, borderColor: '#d7d9de', borderRadius: 13, paddingHorizontal: 14, marginTop: 8, color: '#17181b', backgroundColor: '#fff' }, primary: { marginTop: 16, height: 48, borderRadius: 14, backgroundColor: '#17181b', alignItems: 'center', justifyContent: 'center' }, primaryText: { color: '#fff', fontWeight: '700' }, secondary: { marginTop: 10, height: 46, borderRadius: 14, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center' }, secondaryText: { color: '#17181b', fontWeight: '600' }, setup: { marginTop: 14, color: '#8a8f98', fontSize: 12, textAlign: 'center' }, list: { flex: 1 }, messages: { padding: 16, gap: 10 }, bubble: { maxWidth: '88%', paddingHorizontal: 14, paddingVertical: 11, borderRadius: 17 }, assistantBubble: { alignSelf: 'flex-start', backgroundColor: '#fff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#e0e2e6' }, userBubble: { alignSelf: 'flex-end', backgroundColor: '#17181b' }, bubbleText: { fontSize: 15, lineHeight: 22, color: '#24262b' }, userText: { color: '#fff' }, attachmentLabel: { marginTop: 8, fontSize: 12, color: '#70757d' }, typing: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingBottom: 8 }, typingText: { fontSize: 12, color: '#70757d' }, muted: { fontSize: 13, color: '#70757d' }, composer: { margin: 12, padding: 8, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: '#d7d9de', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'flex-end' }, input: { flex: 1, minHeight: 42, maxHeight: 120, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 8, color: '#17181b' }, send: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#17181b', alignItems: 'center', justifyContent: 'center' }, sendDisabled: { opacity: 0.35 }, sendText: { color: '#fff', fontSize: 20, fontWeight: '700' }, attach: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center' }, attachText: { fontSize: 24, color: '#17181b', lineHeight: 28 }, attachmentPreview: { marginHorizontal: 12, marginBottom: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: '#fff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#d7d9de', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, attachmentText: { flex: 1, color: '#40434a', fontSize: 12 }, remove: { color: '#60656d', fontSize: 12, fontWeight: '600' }, profileContent: { padding: 18, paddingBottom: 36 }, label: { marginTop: 14, color: '#40434a', fontSize: 13, fontWeight: '600' }, choiceRow: { flexDirection: 'row', gap: 8, marginTop: 8 }, choice: { flex: 1, height: 42, borderRadius: 12, borderWidth: 1, borderColor: '#d7d9de', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }, choiceActive: { backgroundColor: '#17181b', borderColor: '#17181b' }, choiceText: { color: '#40434a', fontSize: 13, fontWeight: '600' }, choiceTextActive: { color: '#fff' }, profileNote: { marginTop: 16, color: '#70757d', fontSize: 12, lineHeight: 18 },
 });
