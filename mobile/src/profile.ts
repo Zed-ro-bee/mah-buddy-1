@@ -9,7 +9,7 @@ export type BuddyProfile = {
   difficulty: LearningDifficulty;
 };
 
-const PROFILE_KEY = 'mah-buddy.profile.v1';
+const profileKey = (userId: string) => `mah-buddy.profile.v1.${userId}`;
 
 export const DEFAULT_PROFILE: BuddyProfile = {
   preferredName: '',
@@ -18,9 +18,9 @@ export const DEFAULT_PROFILE: BuddyProfile = {
   difficulty: 'normal',
 };
 
-export async function loadProfile(): Promise<BuddyProfile> {
+export async function loadProfile(userId: string): Promise<BuddyProfile> {
   try {
-    const raw = await AsyncStorage.getItem(PROFILE_KEY);
+    const raw = await AsyncStorage.getItem(profileKey(userId));
     if (!raw) return DEFAULT_PROFILE;
     return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
   } catch {
@@ -28,6 +28,6 @@ export async function loadProfile(): Promise<BuddyProfile> {
   }
 }
 
-export async function saveProfile(profile: BuddyProfile) {
-  await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+export async function saveProfile(userId: string, profile: BuddyProfile) {
+  await AsyncStorage.setItem(profileKey(userId), JSON.stringify(profile));
 }
