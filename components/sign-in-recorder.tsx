@@ -5,7 +5,8 @@ import { supabase } from "../lib/supabase";
 export default function SignInRecorder(){
   useEffect(()=>{
     const auth=supabase;
-    if(!auth) return;
+    if (auth === null) return;
+
     const record=async()=>{
       const {data:{session}}=await auth.auth.getSession();
       if(!session?.user) return;
