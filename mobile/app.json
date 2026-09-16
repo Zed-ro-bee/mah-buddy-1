@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Mah Buddy",
+    "slug": "mah-buddy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/mah-buddy-logo.svg",
+    "android": {
+      "package": "com.mahbuddy.app",
+      "versionCode": 1,
+      "icon": "./assets/mah-buddy-logo.svg",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/mah-buddy-logo.svg",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": ["RECORD_AUDIO"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "mahbuddy" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "extra": {
+      "apiBaseUrl": "https://mah-buddy.vercel.app",
+      "supabaseUrl": "${SUPABASE_URL}",
+      "supabasePublishableKey": "${SUPABASE_PUBLISHABLE_KEY}"
+    }
+  }
+}
