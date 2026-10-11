@@ -34,3 +34,14 @@ html[data-theme="dark"]{color-scheme:dark}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+
+/* Intelligence in Motion — four-destination navigation */
+.mb-nav-four{position:fixed;z-index:80;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(540px,calc(100% - 24px));min-height:68px;display:flex;align-items:stretch;gap:5px;padding:7px;border:1px solid var(--mb-border-strong,#514778);border-radius:23px;background:rgba(27,26,48,.92);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 18px 48px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.05)}
+.mb-nav-four button,.mb-nav-four a{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:0;border-radius:16px;background:transparent;color:var(--mb-muted,#B8B6D2);text-decoration:none;font-size:11px;font-weight:650;transition:background .18s ease,color .18s ease,transform .18s ease}
+.mb-nav-four button:hover,.mb-nav-four a:hover{background:rgba(128,102,255,.12);color:var(--mb-cloud,#F5F4FA)}
+.mb-nav-four button.active,.mb-nav-four a.active{color:#fff;background:linear-gradient(135deg,var(--mb-violet,#8066FF),#6550DB);box-shadow:0 7px 20px rgba(128,102,255,.25)}
+.mb-nav-four svg{width:21px;height:21px}
+.mb-nav-four small,.mb-nav-four span{font-size:10px;line-height:1.1}
+.mb-shell,.mb-home{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+@media(min-width:760px){.mb-nav-four{bottom:18px;min-height:72px}.mb-nav-four button,.mb-nav-four a{flex-direction:row;gap:9px}.mb-nav-four small,.mb-nav-four span{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.mb-nav-four button,.mb-nav-four a{transition:none}}
