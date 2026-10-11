@@ -58,12 +58,12 @@ function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
   return <div className="mb-history-overlay" onClick={onClose}><aside className="mb-history" onClick={e => e.stopPropagation()}><div className="mb-history-head"><strong>Mah Buddy</strong><button className="mb-icon-btn" onClick={onClose} aria-label="Close navigation"><Icon name="close"/></button></div><nav className="mb-side-navigation" aria-label="Main navigation"><button className="mb-side-link active" onClick={onNew}><Icon name="spark" size={18}/> AI Tutor</button><a className="mb-side-link" href="/flashcards"><Icon name="history" size={18}/> Study Tools</a><a className="mb-side-link" href="/quiz"><Icon name="spark" size={18}/> Quizzes & Practice</a><a className="mb-side-link" href="/profile"><Icon name="settings" size={18}/> Profile</a></nav><div className="mb-history-section-title">Recent chats</div><div className="mb-history-list">{history.length === 0 ? <p className="mb-history-empty">Your conversations will appear here.</p> : history.map(h => <button className="mb-history-item" key={h.id} onClick={() => onSelect(h.id)}><Icon name="history" size={17}/><span>{h.title || "New conversation"}<small>{new Date(h.updatedAt).toLocaleDateString()}</small></span></button>)}</div><button className="mb-settings-nav" onClick={onSettings}><Icon name="settings" size={18}/><span>Settings</span><small>Preferences & appearance</small></button></aside></div>;
 }
 
-function SettingsPanel({ theme, onToggleTheme, onClose }) {
+function SettingsPanel({ onClose }) {
   const [voice, setVoice] = useState(true);
   const [enter, setEnter] = useState(true);
   useEffect(() => { setVoice(localStorage.getItem("mb-voice") !== "false"); setEnter(localStorage.getItem("mb-enter") !== "false"); }, []);
   const toggle = (key, setter, value) => { setter(value); localStorage.setItem(key, value ? "true" : "false"); };
-  return <div className="mb-settings-overlay" onClick={onClose}><section className="mb-settings" onClick={e => e.stopPropagation()}><header><div><span className="mb-settings-eyebrow">MAH BUDDY</span><h2>Settings</h2><p>Make Mah Buddy feel exactly right for you.</p></div><button className="mb-icon-btn" onClick={onClose}><Icon name="close"/></button></header><div className="mb-settings-section"><h3>Appearance</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name={theme === "dark" ? "moon" : "sun"}/></div><div className="mb-setting-copy"><strong>Theme</strong><span>{theme === "dark" ? "Dark mode" : "Light mode"}</span></div><button className="mb-theme-switch" onClick={onToggleTheme} aria-label="Toggle theme"><span className={theme === "dark" ? "on" : ""}/></button></div></div><div className="mb-settings-section"><h3>Conversation</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="mic"/></div><div className="mb-setting-copy"><strong>Voice input</strong><span>Use your microphone in chat</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-voice", setVoice, !voice)}><span className={voice ? "on" : ""}/></button></div><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="send"/></div><div className="mb-setting-copy"><strong>Enter to send</strong><span>Press Enter to send messages</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-enter", setEnter, !enter)}><span className={enter ? "on" : ""}/></button></div></div><div className="mb-settings-footer"><Mark size={30}/><span>Mah Buddy • Your intelligent study companion</span></div></section></div>;
+  return <div className="mb-settings-overlay" onClick={onClose}><section className="mb-settings" onClick={e => e.stopPropagation()}><header><div><span className="mb-settings-eyebrow">MAH BUDDY</span><h2>Settings</h2><p>Make Mah Buddy feel exactly right for you.</p></div><button className="mb-icon-btn" onClick={onClose}><Icon name="close"/></button></header><div className="mb-settings-section"><h3>Conversation</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="mic"/></div><div className="mb-setting-copy"><strong>Voice input</strong><span>Use your microphone in chat</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-voice", setVoice, !voice)}><span className={voice ? "on" : ""}/></button></div><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="send"/></div><div className="mb-setting-copy"><strong>Enter to send</strong><span>Press Enter to send messages</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-enter", setEnter, !enter)}><span className={enter ? "on" : ""}/></button></div></div><div className="mb-settings-footer"><Mark size={30}/><span>Mah Buddy • Your intelligent study companion</span></div></section></div>;
 }
 
 export default function MahBuddyV3Home() {
@@ -77,7 +77,7 @@ export default function MahBuddyV3Home() {
   const [drawer, setDrawer] = useState(false);
   const [settings, setSettings] = useState(false);
   const [attachment, setAttachment] = useState(null);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   const [toast, setToast] = useState("");
   const recognition = useRef(null);
   const fileRef = useRef(null);
@@ -91,9 +91,10 @@ export default function MahBuddyV3Home() {
       const id = localStorage.getItem("mah-buddy-current");
       const active = saved.find(x => x.id === id) || saved[0];
       if (active) { setCurrentId(active.id); setMessages(active.messages || []); }
-      const savedTheme = (localStorage.getItem("mb-theme") || "Light").toLowerCase();
-      setTheme(savedTheme);
-      document.documentElement.dataset.theme = savedTheme;
+      // Minimal Studio is intentionally dark-first: charcoal, deep green and ice blue.
+      localStorage.setItem("mb-theme", "Dark");
+      setTheme("dark");
+      document.documentElement.dataset.theme = "dark";
     } catch {}
     return () => clearTimeout(timer);
   }, []);
@@ -126,7 +127,6 @@ export default function MahBuddyV3Home() {
   function explainMore(text) { send("Please explain this answer in more detail, using a simple example:\\n\\n" + String(text || "")); }
   function newChat() { const id = crypto.randomUUID(); const item = { id, title: "New conversation", messages: [], updatedAt: Date.now() }; setHistory(h => [item, ...h]); setCurrentId(id); setMessages([]); setInput(""); setAttachment(null); setDrawer(false); }
   function selectChat(id) { const item = history.find(h => h.id === id); if (!item) return; setCurrentId(id); setMessages(item.messages || []); setAttachment(null); setDrawer(false); }
-  function toggleTheme() { const value = theme === "dark" ? "light" : "dark"; setTheme(value); localStorage.setItem("mb-theme", value === "dark" ? "Dark" : "Light"); document.documentElement.dataset.theme = value; }
 
   async function chooseFile(event) {
     const file = event.target.files?.[0];
@@ -189,6 +189,6 @@ export default function MahBuddyV3Home() {
       <div className="mb-composer-area"><input ref={fileRef} type="file" hidden accept="image/*,.pdf,.txt,.md,.csv,.json,.html,audio/*,video/*" onChange={chooseFile}/>{attachment && <div className="mb-attachment-preview"><span>📎</span><div><strong>{attachment.name}</strong><small>{Math.max(1, Math.round(attachment.size / 1024))} KB · ready to attach</small></div><button onClick={() => setAttachment(null)}><Icon name="close" size={16}/></button></div>}<div className={listening ? "mb-composer listening" : "mb-composer"}><button className="mb-composer-btn" onClick={() => fileRef.current?.click()} aria-label="Attach file"><Icon name="plus"/></button><textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && localStorage.getItem("mb-enter") !== "false") { e.preventDefault(); send(); } }} placeholder="Message Mah Buddy…" rows={1}/>{!input.trim() && <button className={listening ? "mb-composer-btn active" : "mb-composer-btn"} onClick={mic} aria-label="Voice input"><Icon name="mic"/></button>}{(input.trim() || attachment) && <button className="mb-send" onClick={() => send()} disabled={busy} aria-label="Send message"><Icon name="send" size={18}/></button>}</div><small>Mah Buddy can make mistakes. Check important information.</small></div>
       <nav className="mb-mobile-nav mb-nav-four" aria-label="Main navigation"><button className="active" onClick={newChat} aria-current="page"><Icon name="message" size={19}/><span>Chat</span></button><a href="/flashcards"><Icon name="book" size={19}/><span>Study</span></a><button onClick={() => setDrawer(true)}><Icon name="library" size={19}/><span>Library</span></button><a href="/profile"><Icon name="user" size={19}/><span>Profile</span></a></nav>
     </div></div>
-    {drawer && <HistoryDrawer history={history} onSelect={selectChat} onNew={newChat} onClose={() => setDrawer(false)} onSettings={() => { setDrawer(false); setSettings(true); }}/>} {settings && <SettingsPanel theme={theme} onToggleTheme={toggleTheme} onClose={() => setSettings(false)}/>} {toast && <div className="mb-toast">{toast}</div>}
+    {drawer && <HistoryDrawer history={history} onSelect={selectChat} onNew={newChat} onClose={() => setDrawer(false)} onSettings={() => { setDrawer(false); setSettings(true); }}/>} {settings && <SettingsPanel onClose={() => setSettings(false)}/>} {toast && <div className="mb-toast">{toast}</div>}
   </>;
 }
