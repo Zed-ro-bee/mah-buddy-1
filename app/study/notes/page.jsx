@@ -24,7 +24,7 @@ export default function StudyNotesPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    try { const data = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(data)) setSaved(data); } catch {}
+    try { const data = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(data)) { setSaved(data); const wanted=sessionStorage.getItem("mah-buddy-library-open-note"); if(wanted){const found=data.find(item=>String(item.id)===wanted);if(found){setTopic(found.title);setNotes(found.content)}sessionStorage.removeItem("mah-buddy-library-open-note");} } } catch {}
   }, []);
 
   async function generate() {
