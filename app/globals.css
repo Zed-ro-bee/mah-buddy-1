@@ -45,3 +45,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-shell,.mb-home{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 @media(min-width:760px){.mb-nav-four{bottom:18px;min-height:72px}.mb-nav-four button,.mb-nav-four a{flex-direction:row;gap:9px}.mb-nav-four small,.mb-nav-four span{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.mb-nav-four button,.mb-nav-four a{transition:none}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
