@@ -64,6 +64,7 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
 .mb-chat .mb-msg.assistant{gap:11px!important;max-width:100%;align-items:flex-start}
 .mb-chat .mb-msg-body{min-width:0}
 .mb-chat .mb-msg.assistant .mb-msg-label{font-size:11px!important;letter-spacing:.02em!important;margin:2px 0 9px!important}
+.mb-chat .mb-msg.user .mb-msg-body{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}.mb-chat .mb-msg.user .mb-msg-label{display:block!important;text-align:right!important;margin:0 3px 6px!important}.mb-user-bubble{display:inline-block;max-width:100%}
 .mb-answer-card{background:var(--vsurface);border:1px solid var(--vline);border-radius:5px 20px 20px 20px;padding:16px 17px;box-shadow:0 8px 24px rgba(31,27,66,.045)}
 .mb-answer-card p{font-size:15px!important;line-height:1.8!important;overflow-wrap:anywhere}
 .mb-user-bubble{background:var(--vsoft);border:1px solid color-mix(in srgb,var(--vbrand) 12%,var(--vline));padding:13px 16px;border-radius:20px 20px 5px 20px}
