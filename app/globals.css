@@ -111,3 +111,5 @@ html,body{background:#141916!important;color:#F0F4F0}
 @media(min-width:760px){.mb-home{padding-left:26px;padding-right:26px}.mb-hero{min-height:60vh}.mb-composer-area{bottom:18px;padding-bottom:0}.mb-shell,.mb-home{padding-bottom:105px}.mb-nav-four{width:min(540px,calc(100% - 52px))}}
 @media(max-width:420px){.mb-home{padding-left:14px;padding-right:14px}.mb-header{min-height:58px}.mb-chat{gap:19px}.mb-composer-area{padding-top:8px}.mb-composer{border-radius:16px}}
 @media(prefers-reduced-motion:reduce){.mb-thinking i{animation:none}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
