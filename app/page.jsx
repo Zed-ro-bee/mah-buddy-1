@@ -18,5 +18,65 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
 .mb-settings{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 28px));max-height:min(720px,90vh);overflow:auto;background:var(--vsurface);border:1px solid var(--vline);border-radius:28px;padding:24px;box-shadow:0 30px 100px rgba(0,0,0,.25);animation:mbSettingsIn .2s ease}.mb-settings header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:25px}.mb-settings-eyebrow{font-size:9px;letter-spacing:.18em;color:var(--vbrand);font-weight:900}.mb-settings h2{font-family:Manrope,sans-serif;font-size:28px;letter-spacing:-1px;margin:5px 0}.mb-settings header p{margin:0;color:var(--vmuted);font-size:12px}.mb-settings-section{margin-top:22px}.mb-settings-section h3{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--vmuted);margin:0 0 9px 4px}.mb-setting-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--vline);background:color-mix(in srgb,var(--vsurface) 94%,var(--vsoft));border-radius:17px;margin-top:7px}.mb-setting-icon{width:38px;height:38px;border-radius:12px;background:var(--vsoft);color:var(--vbrand);display:grid;place-items:center}.mb-setting-copy{flex:1;min-width:0}.mb-setting-copy strong,.mb-setting-copy span{display:block}.mb-setting-copy strong{font-size:13px}.mb-setting-copy span{font-size:10px;color:var(--vmuted);margin-top:3px}.mb-theme-switch{width:43px;height:25px;border:0;border-radius:99px;background:#c9cad3;padding:3px;transition:.2s}.mb-theme-switch span{display:block;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.18)}.mb-theme-switch span.on{transform:translateX(18px);background:#fff}.mb-theme-switch:has(span.on){background:var(--vbrand)}.mb-settings-footer{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--vmuted);font-size:10px;margin-top:28px;padding-top:18px;border-top:1px solid var(--vline)}@keyframes mbSettingsIn{from{opacity:0;transform:translate(-50%,-47%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .mb-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#171827;color:#fff;padding:10px 15px;border-radius:12px;font-size:12px;z-index:100;box-shadow:0 12px 30px rgba(0,0,0,.2)}html[data-theme="dark"] .mb-toast{background:#fff;color:#171827}html[data-theme="dark"] .mb-intro{background:#0d0e14}
 @media(max-width:700px){.mb-prompts{grid-template-columns:1fr}.mb-hero{padding:48px 0 20px}.mb-chat{padding-top:20px}.mb-msg-body{max-width:88%}.mb-composer-area{bottom:9px}.mb-home{padding-left:12px;padding-right:12px}.mb-settings{border-radius:24px;padding:20px}}
+/* Dashboard redesign v1 — scoped visual layer; preserves the existing Mah Buddy mark and app behaviour. */
+.mb-home{max-width:1120px!important;padding:0 24px 138px!important}
+.mb-header{grid-template-columns:48px 1fr 48px!important;border-bottom-color:color-mix(in srgb,var(--vline) 70%,transparent)!important}
+.mb-content{max-width:1040px!important;margin:0 auto!important;padding:34px 24px 180px!important}
+.mb-hero{position:relative;isolation:isolate;overflow:hidden;text-align:left!important;max-width:none!important;min-height:0!important;padding:clamp(28px,5vw,56px)!important;margin:12px 0 0!important;border:1px solid var(--vline);border-radius:32px;background:linear-gradient(135deg,color-mix(in srgb,var(--vsurface) 94%,var(--vsoft)),var(--vsurface) 65%);box-shadow:var(--vshadow)}
+.mb-hero:before{content:"";position:absolute;z-index:-1;right:-90px;top:-135px;width:330px;height:330px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--vbrand) 19%,transparent),transparent 70%);pointer-events:none}
+.mb-hero:after{content:"";position:absolute;z-index:-1;right:7%;bottom:-145px;width:260px;height:260px;border-radius:50%;border:1px solid color-mix(in srgb,var(--vbrand) 14%,transparent);box-shadow:0 0 0 28px color-mix(in srgb,var(--vbrand) 3%,transparent),0 0 0 58px color-mix(in srgb,var(--vbrand) 2%,transparent);pointer-events:none}
+.mb-hero-mark{place-items:start!important;margin:0 0 24px!important;filter:drop-shadow(0 10px 18px rgba(109,93,252,.2))!important}
+.mb-kicker{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid color-mix(in srgb,var(--vbrand) 20%,var(--vline));border-radius:999px;background:var(--vsoft);font-size:10px!important;letter-spacing:.12em!important}
+.mb-hero h1{max-width:700px;font-size:clamp(38px,6.3vw,68px)!important;line-height:1.02!important;letter-spacing:-.055em!important;margin:18px 0 14px!important;text-wrap:balance}
+.mb-hero p{max-width:580px!important;font-size:clamp(14px,1.8vw,16px)!important;line-height:1.75!important;margin:0!important}
+.mb-prompts{position:relative;z-index:1;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important;margin-top:34px!important}
+.mb-prompts button{min-height:164px!important;padding:21px!important;border-radius:23px!important;gap:9px!important;background:color-mix(in srgb,var(--vsurface) 95%,var(--vsoft))!important;box-shadow:0 8px 24px rgba(31,27,66,.045)!important}
+.mb-prompts button:focus-visible,.mb-icon-btn:focus-visible,.mb-composer button:focus-visible{outline:3px solid color-mix(in srgb,var(--vbrand) 60%,white);outline-offset:3px}
+.mb-prompts button svg{width:42px;height:42px;padding:10px;border-radius:14px;background:var(--vsoft);margin:0 0 9px!important}
+.mb-prompts strong{font-size:14px!important;letter-spacing:-.01em}
+.mb-prompts span{font-size:12px!important;line-height:1.55!important}
+.mb-composer-area{width:min(820px,calc(100% - 32px))!important;bottom:18px!important}
+.mb-composer{border-radius:24px!important;box-shadow:0 18px 55px rgba(20,18,40,.13),0 2px 8px rgba(20,18,40,.04)!important}
+.mb-chat{max-width:820px!important;padding-top:28px!important}
+.mb-msg{margin:26px 0!important}
+.mb-msg p{line-height:1.75!important}
+.mb-history,.mb-settings{backdrop-filter:blur(24px)}
+@media(max-width:700px){
+ .mb-home{padding-left:12px!important;padding-right:12px!important}
+ .mb-header{height:66px!important}
+ .mb-content{padding:18px 2px 176px!important}
+ .mb-hero{padding:25px 20px 22px!important;border-radius:25px!important;margin-top:4px!important}
+ .mb-hero-mark{margin-bottom:20px!important}
+ .mb-hero-mark svg{width:60px;height:60px}
+ .mb-hero h1{font-size:clamp(36px,10vw,48px)!important;letter-spacing:-.05em!important;margin:16px 0 12px!important}
+ .mb-hero p{font-size:14px!important}
+ .mb-prompts{grid-template-columns:1fr!important;gap:10px!important;margin-top:24px!important}
+ .mb-prompts button{min-height:unset!important;display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;grid-template-rows:auto auto;column-gap:13px!important;row-gap:4px!important;padding:15px!important;border-radius:18px!important}
+ .mb-prompts button svg{grid-column:1;grid-row:1/3;width:42px;height:42px;margin:0!important;align-self:center}
+ .mb-prompts strong{grid-column:2;align-self:end}
+ .mb-prompts span{grid-column:2;align-self:start}
+ .mb-composer-area{bottom:10px!important;width:calc(100% - 22px)!important}
+ .mb-chat{padding-top:16px!important}
+ .mb-msg{gap:8px!important;margin:20px 0!important}
+}
+@media(prefers-reduced-motion:reduce){.mb-prompts button,.mb-icon-btn,.mb-composer{transition:none!important}}
+/* Premium chat interface: clear speaker alignment, answer cards and practical response actions. */
+.mb-chat .mb-msg.assistant{gap:11px!important;max-width:100%;align-items:flex-start}
+.mb-chat .mb-msg-body{min-width:0}
+.mb-chat .mb-msg.assistant .mb-msg-label{font-size:11px!important;letter-spacing:.02em!important;margin:2px 0 9px!important}
+.mb-chat .mb-msg.user .mb-msg-body{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}.mb-chat .mb-msg.user .mb-msg-label{display:block!important;text-align:right!important;margin:0 3px 6px!important}.mb-user-bubble{display:inline-block;max-width:100%}
+.mb-answer-card{background:var(--vsurface);border:1px solid var(--vline);border-radius:5px 20px 20px 20px;padding:16px 17px;box-shadow:0 8px 24px rgba(31,27,66,.045)}
+.mb-answer-card p{font-size:15px!important;line-height:1.8!important;overflow-wrap:anywhere}
+.mb-user-bubble{background:var(--vsoft);border:1px solid color-mix(in srgb,var(--vbrand) 12%,var(--vline));padding:13px 16px;border-radius:20px 20px 5px 20px}
+.mb-user-bubble p{font-size:14px!important;line-height:1.7!important;overflow-wrap:anywhere}
+.mb-answer-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:10px}
+.mb-answer-actions button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--vline);background:var(--vsurface);color:var(--vmuted);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:650;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.mb-answer-actions button:hover{background:var(--vsoft);border-color:color-mix(in srgb,var(--vbrand) 35%,var(--vline));color:var(--vbrand)}
+.mb-answer-actions button:disabled{opacity:.45;cursor:wait}
+.mb-chat .mb-msg.assistant .mb-msg-body{max-width:min(760px,calc(100% - 42px))}
+.mb-chat .mb-msg.user .mb-msg-body{max-width:min(650px,88%)}
+@media(max-width:700px){.mb-answer-card{padding:14px;border-radius:5px 17px 17px 17px}.mb-answer-card p{font-size:14px!important}.mb-answer-actions{gap:6px}.mb-answer-actions button{padding:7px 9px;font-size:10px}.mb-chat .mb-msg.assistant .mb-msg-body{max-width:calc(100% - 40px)}}
+
+
 `;
 export default function Page(){return <AuthGate><PlatformGate><style>{styles}</style><ProfileMemory/><TtsLayer><MahBuddyV3Home/></TtsLayer></PlatformGate></AuthGate>}
