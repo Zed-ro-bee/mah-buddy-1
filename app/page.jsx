@@ -20,7 +20,7 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
 @media(max-width:700px){.mb-prompts{grid-template-columns:1fr}.mb-hero{padding:48px 0 20px}.mb-chat{padding-top:20px}.mb-msg-body{max-width:88%}.mb-composer-area{bottom:9px}.mb-home{padding-left:12px;padding-right:12px}.mb-settings{border-radius:24px;padding:20px}}
 /* Dashboard redesign v1 — scoped visual layer; preserves the existing Mah Buddy mark and app behaviour. */
 .mb-home{max-width:1120px!important;padding:0 24px 138px!important}
-.mb-header{grid-template-columns:48px 1fr 48px!important;border-bottom-color:color-mix(in srgb,var(--vline) 70%,transparent)!important}
+.mb-header{grid-template-columns:44px minmax(0,1fr) 42px 42px!important;gap:7px!important;border-bottom-color:color-mix(in srgb,var(--vline) 70%,transparent)!important}.mb-header .mb-brand{min-width:0}.mb-header .mb-brand strong{font-size:15px}.mb-header .mb-icon-btn{width:40px;height:40px}
 .mb-content{max-width:1040px!important;margin:0 auto!important;padding:34px 24px 180px!important}
 .mb-hero{position:relative;isolation:isolate;overflow:hidden;text-align:left!important;max-width:none!important;min-height:0!important;padding:clamp(28px,5vw,56px)!important;margin:12px 0 0!important;border:1px solid var(--vline);border-radius:32px;background:linear-gradient(135deg,color-mix(in srgb,var(--vsurface) 94%,var(--vsoft)),var(--vsurface) 65%);box-shadow:var(--vshadow)}
 .mb-hero:before{content:"";position:absolute;z-index:-1;right:-90px;top:-135px;width:330px;height:330px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--vbrand) 19%,transparent),transparent 70%);pointer-events:none}
@@ -82,6 +82,30 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
 .mb-history-section-title{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--vmuted);padding:2px 5px 6px}
 .mb-mobile-nav{display:none}
 @media(max-width:700px){.mb-mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));left:0;right:0;bottom:0;height:62px;padding:5px 8px max(5px,env(safe-area-inset-bottom));background:color-mix(in srgb,var(--vsurface) 95%,transparent);border-top:1px solid var(--vline);backdrop-filter:blur(18px);z-index:35}.mb-mobile-nav button,.mb-mobile-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;border-radius:12px;background:transparent;color:var(--vmuted);text-decoration:none;font:600 10px Manrope,sans-serif}.mb-mobile-nav button.active,.mb-mobile-nav a:hover{background:var(--vsoft);color:var(--vbrand)}.mb-mobile-nav svg{width:19px;height:19px}.mb-composer-area{bottom:68px}.mb-home{padding-bottom:150px}.mb-history{padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
+
+
+/* Final chat polish: consistent header controls, accessible spacing, and safe-area aware navigation. */
+.mb-header{gap:7px!important}
+.mb-header .mb-brand{min-width:0;white-space:nowrap}
+.mb-header .mb-brand strong{font-size:15px}
+.mb-header .mb-icon-btn{width:40px;height:40px}
+.mb-mobile-nav{box-sizing:border-box;height:calc(62px + env(safe-area-inset-bottom));padding:5px 8px calc(5px + env(safe-area-inset-bottom))}
+.mb-mobile-nav button,.mb-mobile-nav a{min-width:0;min-height:44px}
+.mb-composer-area{bottom:calc(68px + env(safe-area-inset-bottom))}
+.mb-home{padding-bottom:calc(158px + env(safe-area-inset-bottom))!important}
+.mb-content{scroll-padding-bottom:190px}
+.mb-composer textarea{font:500 14px/1.5 Manrope,sans-serif}
+.mb-answer-card{overflow-wrap:anywhere}
+.mb-mobile-nav button:focus-visible,.mb-mobile-nav a:focus-visible{outline:2px solid var(--vbrand);outline-offset:-2px}
+@media(max-width:700px){
+ .mb-header{grid-template-columns:38px minmax(0,1fr) 36px 36px!important;gap:5px!important}
+ .mb-header .mb-icon-btn{width:35px;height:35px;border-radius:11px}
+ .mb-brand{gap:5px!important}
+ .mb-brand svg{width:26px;height:26px}
+ .mb-brand strong{font-size:13px!important}
+ .mb-composer-area{bottom:calc(66px + env(safe-area-inset-bottom))!important}
+ .mb-home{padding-bottom:calc(154px + env(safe-area-inset-bottom))!important}
+}
 
 
 
