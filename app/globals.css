@@ -32,3 +32,5 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit}
 html[data-theme="dark"]{color-scheme:dark}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
