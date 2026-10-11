@@ -10,6 +10,8 @@ const tools = [
   { title: "Learn from files", description: "Upload study material and ask Mah Buddy to explain it.", detail: "YOUR MATERIAL", href: "/study/files", icon: "notes" },
   { title: "Study planner", description: "Plan sessions, set study goals and track what you finish.", detail: "STAY ON TRACK", href: "/study/planner", icon: "practice" },
   { title: "Learning progress", description: "Review quiz scores and find topics to practise next.", detail: "SEE YOUR GROWTH", href: "/study/progress", icon: "quiz" },
+  { title: "Smart revision", description: "Review cards at spaced intervals to help information stick.", detail: "REMEMBER MORE", href: "/study/revision", icon: "cards" },
+  { title: "Privacy & data", description: "Export or clear study information saved on this device.", detail: "YOUR DATA", href: "/settings/privacy", icon: "library" },
   { title: "Exam preparation", description: "Start focused revision for JAMB, WAEC or NECO.", detail: "EXAM MODE", href: "/quiz?topic=JAMB%20exam%20preparation", icon: "practice" },
 ];
 
