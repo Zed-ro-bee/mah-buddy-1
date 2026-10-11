@@ -60,6 +60,22 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
  .mb-msg{gap:8px!important;margin:20px 0!important}
 }
 @media(prefers-reduced-motion:reduce){.mb-prompts button,.mb-icon-btn,.mb-composer{transition:none!important}}
+/* Premium chat interface: clear speaker alignment, answer cards and practical response actions. */
+.mb-chat .mb-msg.assistant{gap:11px!important;max-width:100%;align-items:flex-start}
+.mb-chat .mb-msg-body{min-width:0}
+.mb-chat .mb-msg.assistant .mb-msg-label{font-size:11px!important;letter-spacing:.02em!important;margin:2px 0 9px!important}
+.mb-answer-card{background:var(--vsurface);border:1px solid var(--vline);border-radius:5px 20px 20px 20px;padding:16px 17px;box-shadow:0 8px 24px rgba(31,27,66,.045)}
+.mb-answer-card p{font-size:15px!important;line-height:1.8!important;overflow-wrap:anywhere}
+.mb-user-bubble{background:var(--vsoft);border:1px solid color-mix(in srgb,var(--vbrand) 12%,var(--vline));padding:13px 16px;border-radius:20px 20px 5px 20px}
+.mb-user-bubble p{font-size:14px!important;line-height:1.7!important;overflow-wrap:anywhere}
+.mb-answer-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:10px}
+.mb-answer-actions button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--vline);background:var(--vsurface);color:var(--vmuted);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:650;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.mb-answer-actions button:hover{background:var(--vsoft);border-color:color-mix(in srgb,var(--vbrand) 35%,var(--vline));color:var(--vbrand)}
+.mb-answer-actions button:disabled{opacity:.45;cursor:wait}
+.mb-chat .mb-msg.assistant .mb-msg-body{max-width:min(760px,calc(100% - 42px))}
+.mb-chat .mb-msg.user .mb-msg-body{max-width:min(650px,88%)}
+@media(max-width:700px){.mb-answer-card{padding:14px;border-radius:5px 17px 17px 17px}.mb-answer-card p{font-size:14px!important}.mb-answer-actions{gap:6px}.mb-answer-actions button{padding:7px 9px;font-size:10px}.mb-chat .mb-msg.assistant .mb-msg-body{max-width:calc(100% - 40px)}}
+
 
 `;
 export default function Page(){return <AuthGate><PlatformGate><style>{styles}</style><ProfileMemory/><TtsLayer><MahBuddyV3Home/></TtsLayer></PlatformGate></AuthGate>}
