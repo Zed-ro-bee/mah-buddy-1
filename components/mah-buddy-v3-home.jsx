@@ -19,9 +19,7 @@ function readStoredDifficulty() {
   } catch { return "Medium"; }
 }
 
-function Mark({ size = 34 }) {
-  return <svg width={size} height={size} viewBox="0 0 48 48" aria-label="Mah Buddy" role="img"><defs><linearGradient id="mbg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8b7cff"/><stop offset="1" stopColor="#c35cff"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="15" fill="url(#mbg2)"/><path d="M13 31V17.5c0-2 2.6-3 4.1-1.5L24 22.8l6.9-6.8c1.5-1.5 4.1-.5 4.1 1.5V31" fill="none" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="16" cy="34" r="2" fill="white"/><circle cx="24" cy="34" r="2" fill="white"/><circle cx="32" cy="34" r="2" fill="white"/></svg>;
-}
+function Mark() { return null; }
 
 function Icon({ name, size = 20 }) {
   const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
