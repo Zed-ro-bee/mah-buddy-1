@@ -76,6 +76,13 @@ html,body{background:var(--vbg)!important;color:var(--vink)!important;transition
 .mb-chat .mb-msg.assistant .mb-msg-body{max-width:min(760px,calc(100% - 42px))}
 .mb-chat .mb-msg.user .mb-msg-body{max-width:min(650px,88%)}
 @media(max-width:700px){.mb-answer-card{padding:14px;border-radius:5px 17px 17px 17px}.mb-answer-card p{font-size:14px!important}.mb-answer-actions{gap:6px}.mb-answer-actions button{padding:7px 9px;font-size:10px}.mb-chat .mb-msg.assistant .mb-msg-body{max-width:calc(100% - 40px)}}
+.mb-side-navigation{display:flex;flex-direction:column;gap:5px;margin:2px 0 18px}
+.mb-side-link{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:11px 12px;border:1px solid transparent;border-radius:13px;background:transparent;color:var(--vink);text-decoration:none;text-align:left;font:600 13px Manrope,sans-serif;cursor:pointer}
+.mb-side-link:hover,.mb-side-link.active{background:var(--vsoft);color:var(--vbrand);border-color:color-mix(in srgb,var(--vbrand) 15%,var(--vline))}
+.mb-history-section-title{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--vmuted);padding:2px 5px 6px}
+.mb-mobile-nav{display:none}
+@media(max-width:700px){.mb-mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));left:0;right:0;bottom:0;height:62px;padding:5px 8px max(5px,env(safe-area-inset-bottom));background:color-mix(in srgb,var(--vsurface) 95%,transparent);border-top:1px solid var(--vline);backdrop-filter:blur(18px);z-index:35}.mb-mobile-nav button,.mb-mobile-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;border-radius:12px;background:transparent;color:var(--vmuted);text-decoration:none;font:600 10px Manrope,sans-serif}.mb-mobile-nav button.active,.mb-mobile-nav a:hover{background:var(--vsoft);color:var(--vbrand)}.mb-mobile-nav svg{width:19px;height:19px}.mb-composer-area{bottom:68px}.mb-home{padding-bottom:150px}.mb-history{padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
+
 
 
 `;
