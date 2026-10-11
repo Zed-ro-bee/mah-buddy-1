@@ -7,6 +7,10 @@ const tools = [
   { title: "Quizzes", description: "Check your understanding and learn from each answer.", detail: "TEST YOURSELF", href: "/quiz", icon: "quiz" },
   { title: "Study notes", description: "Turn a topic into clear, organised notes you can revisit.", detail: "UNDERSTAND", href: "/study/notes", icon: "notes" },
   { title: "Practice questions", description: "Build confidence with subject-based practice questions.", detail: "GET PRACTICE", href: "/quiz?mode=practice", icon: "practice" },
+  { title: "Learn from files", description: "Upload study material and ask Mah Buddy to explain it.", detail: "YOUR MATERIAL", href: "/study/files", icon: "notes" },
+  { title: "Study planner", description: "Plan sessions, set study goals and track what you finish.", detail: "STAY ON TRACK", href: "/study/planner", icon: "practice" },
+  { title: "Learning progress", description: "Review quiz scores and find topics to practise next.", detail: "SEE YOUR GROWTH", href: "/study/progress", icon: "quiz" },
+  { title: "Exam preparation", description: "Start focused revision for JAMB, WAEC or NECO.", detail: "EXAM MODE", href: "/quiz?topic=JAMB%20exam%20preparation", icon: "practice" },
 ];
 
 function Icon({ name }) {
@@ -60,7 +64,7 @@ export default function StudyPage() {
     <nav className="hub-nav" aria-label="Main navigation">
       <a href="/"><Icon name="message"/><span>Chat</span></a>
       <a href="/study" className="active" aria-current="page"><Icon name="cards"/><span>Study</span></a>
-      <a href="/study/notes"><Icon name="library"/><span>Library</span></a>
+      <a href="/library"><Icon name="library"/><span>Library</span></a>
       <a href="/profile"><Icon name="user"/><span>Profile</span></a>
     </nav>
     <style jsx>{`
