@@ -155,3 +155,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .continue{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2px;padding:15px 17px;border:1px solid #9BE8F4;border-radius:14px;background:#9BE8F4;color:#142126;text-decoration:none;font-size:12px;font-weight:800;transition:background .18s}.continue:hover{background:#C7F3FA}
 @media(min-width:620px){.profile-content{margin-top:28px;gap:16px}.identity-card{padding:27px}.profile-panel{padding:21px}.profile-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.95fr);align-items:center;gap:18px}.profile-field>span{align-self:center}.profile-field input,.profile-field select{min-width:0}}
 @media(max-width:380px){.profile-app{padding-left:12px;padding-right:12px}.identity-card{padding:17px}.profile-panel{padding:14px}.profile-field small{font-size:9px}.identity-card>p{font-size:11px}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
