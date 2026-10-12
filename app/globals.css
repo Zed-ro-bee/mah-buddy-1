@@ -196,3 +196,51 @@ html[data-theme="dark"]{color-scheme:dark;}
 html[data-theme="dark"]{color-scheme:dark;}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+
+
+/* Independent accent colour: keep it separate from the selected background palette. */
+:root { --mb-accent: var(--mb-accent, #9BE8F4); }
+.mb-home .mb-brand,
+.mb-hero h1 span,
+.mb-msg-label,
+.mb-answer-actions button:hover,
+.mb-side-link.active,
+.mb-side-link:hover,
+.mb-composer-btn:hover,
+.mb-composer-btn.active,
+.profile-header .saved,
+.eyebrow,
+.panel-title>div>span,
+.account-card>span,
+.identity-card h1 em,
+.status-pill i,
+.mb-nav-four button.active,
+.mb-nav-four a.active {
+  --_mb-accent: var(--mb-accent, #9BE8F4);
+}
+.mb-msg-label,
+.mb-answer-actions button:hover,
+.mb-side-link.active,
+.mb-side-link:hover,
+.profile-header .saved,
+.eyebrow,
+.panel-title>div>span,
+.account-card>span,
+.identity-card h1 em { color: var(--mb-accent, #9BE8F4) !important; }
+.mb-composer:focus-within,
+.mb-composer.listening { border-color: var(--mb-accent, #9BE8F4) !important; }
+.mb-composer-btn:hover,
+.mb-composer-btn.active,
+.mb-icon-btn:hover { color: var(--mb-accent, #9BE8F4) !important; }
+.mb-send,
+.mb-nav-four button.active,
+.mb-nav-four a.active { background: var(--mb-accent, #9BE8F4) !important; }
+.mb-send { color: var(--mb-ink, #141916) !important; }
+.mb-nav-four button.active,
+.mb-nav-four a.active { color: var(--mb-ink, #141916) !important; }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible { outline-color: var(--mb-accent, #9BE8F4); }
+::selection { background: color-mix(in srgb, var(--mb-accent, #9BE8F4) 30%, transparent); }
