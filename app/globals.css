@@ -157,3 +157,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 @media(max-width:380px){.profile-app{padding-left:12px;padding-right:12px}.identity-card{padding:17px}.profile-panel{padding:14px}.profile-field small{font-size:9px}.identity-card>p{font-size:11px}}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
