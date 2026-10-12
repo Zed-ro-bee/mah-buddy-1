@@ -179,3 +179,14 @@ html[data-theme="dark"]{color-scheme:dark;}
 html[data-theme="dark"]{color-scheme:dark;}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+
+/* User-selected whole-site palette and accent */
+:root{--mb-accent:var(--mb-cyan,#9BE8F4)}
+html,body{background:var(--mb-ink)!important;color:var(--mb-cloud)!important}
+::selection{background:color-mix(in srgb,var(--mb-accent) 35%,transparent);color:var(--mb-cloud)}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline-color:var(--mb-accent)!important;box-shadow:var(--mb-focus)}
+.mb-nav-four,.profile-panel,.identity-card,.account-actions,.study-card,.study-panel,.library-card,.note-card,.quiz-card,.revision-card{border-color:var(--mb-border-strong)!important}
+.mb-nav-four,.profile-panel,.account-actions{background-color:var(--mb-surface)!important}
+.action-symbol,.profile-badge,.study-icon{background-color:var(--mb-surface-raised)!important;color:var(--mb-accent)!important;border-color:var(--mb-border-strong)!important}
+.continue{background:var(--mb-accent)!important;border-color:var(--mb-accent)!important;color:#142126!important}
+.mb-settings-full-link{border-color:var(--mb-border-strong)!important;background:color-mix(in srgb,var(--mb-accent) 9%,var(--mb-surface))!important;color:var(--mb-accent)!important}
