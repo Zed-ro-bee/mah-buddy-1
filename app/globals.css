@@ -199,7 +199,6 @@ html[data-theme="dark"]{color-scheme:dark;}
 
 
 /* Independent accent colour: keep it separate from the selected background palette. */
-:root { --mb-accent: var(--mb-accent, #9BE8F4); }
 .mb-home .mb-brand,
 .mb-hero h1 span,
 .mb-msg-label,
