@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode, CSSProperties } from "react";
 
 type Difficulty = "Easy" | "Normal" | "Hard";
 type Prefs = {
@@ -19,13 +20,13 @@ const ink = "#141916", surface = "#1D2922", border = "#344B3C", ice = "#9BE8F4",
 function Toggle({value,onChange,label}:{value:boolean;onChange:(v:boolean)=>void;label:string}) {
   return <button type="button" role="switch" aria-checked={value} aria-label={label} onClick={()=>onChange(!value)} style={{width:45,height:27,padding:3,border:0,borderRadius:99,background:value?ice:"#46534A",display:"flex",alignItems:"center",justifyContent:value?"flex-end":"flex-start",flexShrink:0,cursor:"pointer"}}><span style={{width:21,height:21,borderRadius:"50%",background:value?"#142126":"#D4DDD5",display:"grid",placeItems:"center",fontSize:11,color:"#142126"}}>{value?"✓":""}</span></button>
 }
-function Row({title,description,children}:{title:string;description:string;children:React.ReactNode}) {
+function Row({title,description,children}:{title:string;description:string;children:ReactNode}) {
   return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,padding:"14px 0",borderBottom:"1px solid #2C3930"}}><div style={{minWidth:0}}><div style={{fontSize:13,fontWeight:650,color:"#F0F4F0"}}>{title}</div><div style={{fontSize:11,lineHeight:1.5,color:muted,marginTop:4}}>{description}</div></div>{children}</div>
 }
-function Section({number,title,kicker,children}:{number:string;title:string;kicker:string;children:React.ReactNode}) {
+function Section({number,title,kicker,children}:{number:string;title:string;kicker:string;children:ReactNode}) {
   return <section style={{padding:"17px 18px",marginBottom:12,border:"1px solid "+border,borderRadius:18,background:surface}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}><div><div style={{fontSize:9,letterSpacing:".15em",fontWeight:800,color:ice}}>{kicker}</div><h2 style={{fontSize:16,letterSpacing:"-.025em",margin:"5px 0 2px"}}>{title}</h2></div><span style={{fontSize:10,color:"#718077"}}>{number}</span></div>{children}</section>
 }
-const selectStyle:React.CSSProperties={maxWidth:"48%",minWidth:112,padding:"9px 10px",border:"1px solid "+border,borderRadius:10,background:"#172019",color:"#F0F4F0",fontSize:12};
+const selectStyle:CSSProperties={maxWidth:"48%",minWidth:112,padding:"9px 10px",border:"1px solid "+border,borderRadius:10,background:"#172019",color:"#F0F4F0",fontSize:12};
 export default function SettingsPage(){
  const [prefs,setPrefs]=useState<Prefs>(defaults); const [saved,setSaved]=useState(false);
  useEffect(()=>{try{const raw=localStorage.getItem(KEY);if(raw){const parsed=JSON.parse(raw);setPrefs({...defaults,...parsed,answerStyle:["Simple","Balanced","Detailed"].includes(parsed.answerStyle)?parsed.answerStyle:"Balanced",voiceSpeed:["0.75","1","1.25","1.5"].includes(parsed.voiceSpeed)?parsed.voiceSpeed:"1",dailyGoal:["15","30","45","60"].includes(parsed.dailyGoal)?parsed.dailyGoal:"30"});} }catch{} document.documentElement.dataset.theme="dark";document.documentElement.dataset.mbTheme="dark";localStorage.setItem("mb-theme","Dark");},[]);
