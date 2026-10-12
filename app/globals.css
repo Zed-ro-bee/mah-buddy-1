@@ -173,3 +173,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-settings-full-link:hover{background:rgba(155,232,244,.12);border-color:rgba(155,232,244,.4)}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
