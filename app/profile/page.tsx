@@ -109,15 +109,15 @@ export default function ProfilePage() {
     <main className="profile-app">
       <header className="profile-header">
         <a href="/study" className="back" aria-label="Back to Home">←</a>
-        <div className="head-brand"><Logo size={30}/><div><strong>Profile</strong><span>Mah Buddy</span></div></div>
+        <div className="head-brand"><Logo size={30}/><div><strong>Your Profile</strong><span>Mah Buddy · Student account</span></div></div>
         <span className="saved" role="status">{saved ? "Saved ✓" : ""}</span>
       </header>
       <div className="profile-content">
         <section className="identity-card">
-          <div className="identity-top"><span className="eyebrow">YOUR SPACE</span><span className="status-pill"><i/> Personal</span></div>
-          <div className="avatar-area"><div className="avatar"><span>{(profile.preferredName || "M").trim().slice(0,1).toUpperCase()}</span><i><Logo size={12}/></i></div><div><b>{profile.preferredName || "Your profile"}</b><small>{profile.preferredName ? "Personal study space" : "Make your study space yours"}</small></div></div>
-          <h1>Your learning, <em>your way.</em></h1>
-          <p>Personalise Mah Buddy, keep track of your learning, and manage your account in one place.</p>
+          <div className="identity-top"><span className="eyebrow">YOUR PROFILE</span><span className="status-pill"><i/> Student account</span></div>
+          <div className="avatar-area"><div className="avatar"><span>{(profile.preferredName || "M").trim().slice(0,1).toUpperCase()}</span><i><Logo size={12}/></i></div><div><b>{profile.preferredName || "Your Name"}</b><small>{email || "Your personal learning space"}</small><small className="profile-learning-label">Learning profile · Personalised to you</small></div></div>
+          <h1>Your profile, <em>your way.</em></h1>
+          <p>Manage your details, study preferences, learning progress, and account settings in one place.</p>
         </section>
 
         <section className="profile-panel">
@@ -166,6 +166,12 @@ export default function ProfilePage() {
         <a href="/" className="continue">Continue to Mah Buddy <span>→</span></a>
         <p className="profile-footnote">Manage the information saved on this device through Privacy & data.</p>
       </div>
+        <nav className="profile-bottom-nav mb-nav-four" aria-label="Main navigation">
+          <a href="/study"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5M9 21v-7h6v7"/></svg><span>Home</span></a>
+          <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 13.8 9.2 20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8L12 3Z"/><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg><span>AI Assistance</span></a>
+          <a href="/library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5Z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h6"/></svg><span>Resources</span></a>
+          <a className="active" href="/profile" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span></a>
+        </nav>
     </main>
   );
 }
