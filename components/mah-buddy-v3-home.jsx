@@ -19,6 +19,94 @@ function readStoredDifficulty() {
   } catch { return "Medium"; }
 }
 
+function InlineMarkdown({ text }) {
+  const pattern = /(\*\*[^*]+\*\*|(?<!\*)\*[^*\n]+\*(?!\*)|\`[^\`\n]+\`|\$[^$\n]+\$|\\\([^\n]+?\\\))/g;
+  return text.split(pattern).filter(Boolean).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
+    if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
+    if (part.startsWith("\`") && part.endsWith("\`")) return <code className="mb-md-inline-code" key={index}>{part.slice(1, -1)}</code>;
+    if (part.startsWith("$") && part.endsWith("$")) return <span className="mb-md-math" key={index}>{part.slice(1, -1)}</span>;
+    if (part.startsWith("\\(") && part.endsWith("\\)")) return <span className="mb-md-math" key={index}>{part.slice(2, -2)}</span>;
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function MarkdownAnswer({ content }) {
+  const lines = String(content || "").replace(/\r/g, "").split("\n");
+  const blocks = [];
+  let i = 0;
+  const cells = (line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+  const isTableDivider = (line) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) { i++; continue; }
+    if (/^\s*\`\`\`/.test(line)) {
+      const language = line.trim().slice(3).trim();
+      const body = [];
+      i++;
+      while (i < lines.length && !/^\s*\`\`\`/.test(lines[i])) body.push(lines[i++]);
+      if (i < lines.length) i++;
+      blocks.push(<pre className="mb-md-code-block" key={blocks.length}><code data-language={language || undefined}>{body.join("\n")}</code></pre>);
+      continue;
+    }
+    if (/^\s*\$\$\s*$/.test(line)) {
+      const body = [];
+      i++;
+      while (i < lines.length && !/^\s*\$\$\s*$/.test(lines[i])) body.push(lines[i++]);
+      if (i < lines.length) i++;
+      blocks.push(<div className="mb-md-display-math" key={blocks.length}>{body.join(" ")}</div>);
+      continue;
+    }
+    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+)$/);
+    if (heading) {
+      const level = heading[1].length;
+      const Tag = ("h" + level);
+      blocks.push(<Tag className="mb-md-heading" key={blocks.length}><InlineMarkdown text={heading[2].replace(/\s+#+\s*$/, "")}/></Tag>);
+      i++; continue;
+    }
+    if (/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)) {
+      blocks.push(<hr className="mb-md-divider" key={blocks.length}/>); i++; continue;
+    }
+    if (i + 1 < lines.length && line.includes("|") && isTableDivider(lines[i + 1])) {
+      const headers = cells(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].trim() && lines[i].includes("|")) rows.push(cells(lines[i++]));
+      blocks.push(<div className="mb-md-table-wrap" key={blocks.length}><table className="mb-md-table"><thead><tr>{headers.map((cell, n) => <th key={n}><InlineMarkdown text={cell}/></th>)}</tr></thead><tbody>{rows.map((row, ri) => <tr key={ri}>{headers.map((_, ci) => <td key={ci}><InlineMarkdown text={row[ci] || ""}/></td>)}</tr>)}</tbody></table></div>);
+      continue;
+    }
+    if (/^\s*>\s?/.test(line)) {
+      const quote = [];
+      while (i < lines.length && /^\s*>\s?/.test(lines[i])) quote.push(lines[i++].replace(/^\s*>\s?/, ""));
+      blocks.push(<blockquote className="mb-md-quote" key={blocks.length}>{quote.map((part, n) => <p key={n}><InlineMarkdown text={part}/></p>)}</blockquote>);
+      continue;
+    }
+    if (/^\s*[-*+]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*+]\s+/, ""));
+      blocks.push(<ul className="mb-md-list" key={blocks.length}>{items.map((item, n) => <li key={n}><InlineMarkdown text={item}/></li>)}</ul>);
+      continue;
+    }
+    if (/^\s*\d+[.)]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*\d+[.)]\s+/, ""));
+      blocks.push(<ol className="mb-md-list" key={blocks.length}>{items.map((item, n) => <li key={n}><InlineMarkdown text={item}/></li>)}</ol>);
+      continue;
+    }
+    if (/^\s*[-*]\s+\[[ xX]\]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*]\s+\[[ xX]\]\s+/.test(lines[i])) items.push({ done: /\[[xX]\]/.test(lines[i]), text: lines[i++].replace(/^\s*[-*]\s+\[[ xX]\]\s+/, "") });
+      blocks.push(<ul className="mb-md-list" key={blocks.length}>{items.map((item, n) => <li key={n}><span aria-hidden="true">{item.done ? "☑ " : "☐ "}</span><InlineMarkdown text={item.text}/></li>)}</ul>);
+      continue;
+    }
+    const paragraph = [line.trim()];
+    i++;
+    while (i < lines.length && lines[i].trim() && !/^\s*(#{1,6}\s|[-*+]\s+|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|---+|\*\*\*+|___+)\s*$/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
+    blocks.push(<p className="mb-md-paragraph" key={blocks.length}>{paragraph.map((part, n) => <span key={n}>{n > 0 ? " " : ""}<InlineMarkdown text={part}/></span>)}</p>);
+  }
+  return <div className="mb-md-content">{blocks}</div>;
+}
+
 function Mark() { return null; }
 
 function Icon({ name, size = 20 }) {
@@ -201,7 +289,7 @@ export default function MahBuddyV3Home() {
     <div className="mb-shell"><div className="mb-home">
       <header className="mb-header"><button className="mb-icon-btn" onClick={() => setDrawer(true)} aria-label="Open navigation"><Icon name="menu"/></button><div className="mb-brand"><Mark size={32}/><strong>Mah Buddy</strong></div><button className="mb-icon-btn" onClick={() => setSettings(true)} aria-label="Settings"><Icon name="settings"/></button></header>
       <main className="mb-content">
-        {messages.length === 0 ? <div className="mb-hero"><h1>What’s on your mind?</h1><p>Ask me anything you’re learning.</p></div> : <div className="mb-chat">{messages.map((message, index) => <div className={`mb-msg ${message.role}`} key={index}>{message.role === "assistant" && <Mark size={30}/>}<div className="mb-msg-body"><span className="mb-msg-label">{message.role === "assistant" ? "Mah Buddy" : "You"}</span>{message.attachment && <div className="mb-attachment-card"><span>📎</span><div><strong>{message.attachment.name}</strong><small>{message.attachment.type || "File"}</small></div></div>}<div className={message.role === "assistant" ? "mb-answer-card" : "mb-user-bubble"}><p>{message.content}</p></div>{message.role === "assistant" && <div className="mb-answer-actions"><button onClick={() => copyAnswer(message.content)} aria-label="Copy answer"><Icon name="copy" size={15}/> Copy</button><button onClick={() => listenTo(message.content)} aria-label="Listen to answer"><Icon name="volume" size={15}/> Listen</button><button onClick={() => explainMore(message.content)} disabled={busy} aria-label="Explain more"><Icon name="spark" size={15}/> Explain more</button></div>}</div></div>)}{busy && <div className="mb-msg assistant"><Mark size={30}/><div className="mb-msg-body"><span className="mb-msg-label">Mah Buddy</span><div className="mb-thinking"><i/><i/><i/></div></div></div>}<div ref={bottom}/></div>}
+        {messages.length === 0 ? <div className="mb-hero"><h1>What’s on your mind?</h1><p>Ask me anything you’re learning.</p></div> : <div className="mb-chat">{messages.map((message, index) => <div className={`mb-msg ${message.role}`} key={index}>{message.role === "assistant" && <Mark size={30}/>}<div className="mb-msg-body"><span className="mb-msg-label">{message.role === "assistant" ? "Mah Buddy" : "You"}</span>{message.attachment && <div className="mb-attachment-card"><span>📎</span><div><strong>{message.attachment.name}</strong><small>{message.attachment.type || "File"}</small></div></div>}{message.role === "assistant" ? <div className="mb-answer-card"><MarkdownAnswer content={message.content}/></div> : <div className="mb-user-bubble"><p>{message.content}</p></div>}{message.role === "assistant" && <div className="mb-answer-actions"><button onClick={() => copyAnswer(message.content)} aria-label="Copy answer"><Icon name="copy" size={15}/> Copy</button><button onClick={() => listenTo(message.content)} aria-label="Listen to answer"><Icon name="volume" size={15}/> Listen</button><button onClick={() => explainMore(message.content)} disabled={busy} aria-label="Explain more"><Icon name="spark" size={15}/> Explain more</button></div>}</div></div>)}{busy && <div className="mb-msg assistant"><Mark size={30}/><div className="mb-msg-body"><span className="mb-msg-label">Mah Buddy</span><div className="mb-thinking"><i/><i/><i/></div></div></div>}<div ref={bottom}/></div>}
       </main>
       <div className="mb-composer-area"><input ref={fileRef} type="file" hidden accept="image/*,.pdf,.txt,.md,.csv,.json,.html,audio/*,video/*" onChange={chooseFile}/>{attachment && <div className="mb-attachment-preview"><span>📎</span><div><strong>{attachment.name}</strong><small>{Math.max(1, Math.round(attachment.size / 1024))} KB · ready to attach</small></div><button onClick={() => setAttachment(null)}><Icon name="close" size={16}/></button></div>}<div className={listening ? "mb-composer listening" : "mb-composer"}><button className="mb-composer-btn" onClick={() => fileRef.current?.click()} aria-label="Attach file"><Icon name="plus"/></button><textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && localStorage.getItem("mb-enter") !== "false") { e.preventDefault(); send(); } }} placeholder="Message Mah Buddy…" rows={1}/>{!input.trim() && <button className={listening ? "mb-composer-btn active" : "mb-composer-btn"} onClick={mic} aria-label="Voice input"><Icon name="mic"/></button>}{(input.trim() || attachment) && <button className="mb-send" onClick={() => send()} disabled={busy} aria-label="Send message"><Icon name="send" size={18}/></button>}</div><small>Mah Buddy can make mistakes. Check important information.</small></div>
       <nav className="mb-mobile-nav mb-nav-four" aria-label="Main navigation"><button className="active" onClick={newChat} aria-current="page"><Icon name="message" size={19}/><span>Chat</span></button><a className="active" href="/study" aria-current="page"><Icon name="book" size={19}/><span>Study</span></a><button onClick={() => setDrawer(true)}><Icon name="library" size={19}/><span>Library</span></button><a href="/profile"><Icon name="user" size={19}/><span>Profile</span></a></nav>
