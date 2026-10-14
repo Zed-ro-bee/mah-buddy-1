@@ -378,3 +378,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-drawer-legal a{color:#9EAEA4;text-decoration:none}
 .mb-drawer-legal a:hover{color:#B9E8F2;text-decoration:underline;text-underline-offset:3px}
 @media(max-height:640px){.mb-history{overflow-y:auto}.mb-drawer-legal{margin-top:16px}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
