@@ -143,7 +143,24 @@ function readFile(file) {
 }
 
 function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
-  return <div className="mb-history-overlay" onClick={onClose}><aside className="mb-history" onClick={e => e.stopPropagation()}><div className="mb-history-head"><strong>Mah Buddy</strong><button className="mb-icon-btn" onClick={onClose} aria-label="Close navigation"><Icon name="close"/></button></div><nav className="mb-side-navigation" aria-label="Main navigation"><button className="mb-side-link active" onClick={onNew}><Icon name="spark" size={18}/> AI Tutor</button><a className="mb-side-link" href="/study"><Icon name="book" size={18}/> Study</a><a className="mb-side-link" href="/quiz"><Icon name="spark" size={18}/> Quizzes & Practice</a><a className="mb-side-link" href="/profile"><Icon name="settings" size={18}/> Profile</a></nav><div className="mb-history-section-title">Recent chats</div><div className="mb-history-list">{history.length === 0 ? <p className="mb-history-empty">Your conversations will appear here.</p> : history.map(h => <button className="mb-history-item" key={h.id} onClick={() => onSelect(h.id)}><Icon name="history" size={17}/><span>{h.title || "New conversation"}<small>{new Date(h.updatedAt).toLocaleDateString()}</small></span></button>)}</div><button className="mb-settings-nav" onClick={onSettings}><Icon name="settings" size={18}/><span>Settings</span><small>Preferences & appearance</small></button></aside></div>;
+  return <div className="mb-history-overlay" onClick={onClose}><aside className="mb-history" onClick={e => e.stopPropagation()}>
+    <div className="mb-history-head"><div className="mb-drawer-brand"><span className="mb-drawer-brand-mark"><Icon name="spark" size={18}/></span><div><strong>Mah Buddy</strong><small>Your study companion</small></div></div><button className="mb-icon-btn" onClick={onClose} aria-label="Close navigation"><Icon name="close"/></button></div>
+    <button className="mb-drawer-new-chat" onClick={onNew}><Icon name="plus" size={18}/> New chat</button>
+    <div className="mb-history-section-title">WORKSPACE</div>
+    <nav className="mb-side-navigation" aria-label="Main navigation">
+      <a className="mb-side-link active" href="/"><Icon name="message" size={18}/> AI Assistance</a>
+      <a className="mb-side-link" href="/study"><Icon name="book" size={18}/> Study</a>
+      <a className="mb-side-link" href="/library"><Icon name="library" size={18}/> Library & Resources</a>
+    </nav>
+    <div className="mb-history-section-title">YOUR ACCOUNT</div>
+    <nav className="mb-side-navigation mb-side-account" aria-label="Account navigation">
+      <a className="mb-side-link" href="/profile"><Icon name="user" size={18}/> Profile</a>
+      <button className="mb-side-link" onClick={onSettings}><Icon name="settings" size={18}/> Settings</button>
+    </nav>
+    <div className="mb-history-section-title">RECENT CHATS</div>
+    <div className="mb-history-list">{history.length === 0 ? <p className="mb-history-empty">Your conversations will appear here.</p> : history.map(h => <button className="mb-history-item" key={h.id} onClick={() => onSelect(h.id)}><Icon name="history" size={17}/><span>{h.title || "New conversation"}<small>{new Date(h.updatedAt).toLocaleDateString()}</small></span></button>)}</div>
+    <div className="mb-drawer-legal"><a href="/privacy-policy">Privacy Policy</a><span>·</span><a href="/terms-of-service">Terms of Service</a></div>
+  </aside></div>;
 }
 
 function SettingsPanel({ onClose }) {
