@@ -125,7 +125,7 @@ export default function LibraryPage() {
   }
 
   function startTopicTool(topic: string, tool: "quiz" | "flashcards") {
-    window.location.href = "/" + tool + "?topic=" + encodeURIComponent(topic);
+    window.location.href = "/" + tool + "?topic=" + encodeURIComponent(topic) + "&autostart=1";
   }
 
   const hasResults = matchingNotes.length + matchingUploads.length > 0;
@@ -162,7 +162,7 @@ export default function LibraryPage() {
               <button className="subject-main" onClick={() => setActiveSubject(activeSubject === subject.name ? "" : subject.name)} aria-expanded={activeSubject === subject.name}>
                 <span className="subject-icon"><Icon name={subject.icon} size={22}/></span><span className="subject-copy"><strong>{subject.name}</strong><small>{subject.detail}</small></span><span className="subject-arrow"><Icon name="arrow" size={17}/></span>
               </button>
-              {activeSubject === subject.name && <div className="subject-actions"><button onClick={() => startTopicTool(subject.topic, "quiz")}>Make a quiz <Icon name="arrow" size={14}/></button><button onClick={() => startTopicTool(subject.topic, "flashcards")}>Create flashcards <Icon name="arrow" size={14}/></button><button onClick={() => { window.location.href = "/?prompt=" + encodeURIComponent("Help me learn " + subject.topic + ". Start with a simple overview, then give me examples and check my understanding."); }}>Ask Mah Buddy <Icon name="arrow" size={14}/></button></div>}
+              {activeSubject === subject.name && <div className="subject-actions"><button onClick={() => startTopicTool(subject.topic, "quiz")}>Take a quiz <Icon name="arrow" size={14}/></button><button onClick={() => startTopicTool(subject.topic, "flashcards")}>Create flashcards <Icon name="arrow" size={14}/></button><button onClick={() => { window.location.href = "/?prompt=" + encodeURIComponent("Help me learn " + subject.topic + ". Start with a simple overview, then give me examples and check my understanding.") + "&autostart=1"; }}>Ask Mah Buddy <Icon name="arrow" size={14}/></button></div>}
             </article>
           ))}
         </div>
