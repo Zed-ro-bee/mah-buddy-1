@@ -81,9 +81,9 @@ function MarkdownAnswer({ content }) {
       blocks.push(<blockquote className="mb-md-quote" key={blocks.length}>{quote.map((part, n) => <p key={n}><InlineMarkdown text={part}/></p>)}</blockquote>);
       continue;
     }
-    if (/^\s*[-*+]\s+/.test(line)) {
+    if (/^\s*[-*+]\s+(?!\[[ xX]\]\s+)/.test(line)) {
       const items = [];
-      while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*+]\s+/, ""));
+      while (i < lines.length && /^\s*[-*+]\s+(?!\[[ xX]\]\s+)/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*+]\s+/, ""));
       blocks.push(<ul className="mb-md-list" key={blocks.length}>{items.map((item, n) => <li key={n}><InlineMarkdown text={item}/></li>)}</ul>);
       continue;
     }
@@ -101,7 +101,7 @@ function MarkdownAnswer({ content }) {
     }
     const paragraph = [line.trim()];
     i++;
-    while (i < lines.length && lines[i].trim() && !/^\s*(#{1,6}\s|[-*+]\s+|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|---+|\*\*\*+|___+)\s*$/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
+    while (i < lines.length && lines[i].trim() && !/^\s{0,3}(#{1,6}\s+|[-*+]\s+(?!\[[ xX]\]\s+)|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|(?:---+|\*\*\*+|___+)\s*$)/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
     blocks.push(<p className="mb-md-paragraph" key={blocks.length}>{paragraph.map((part, n) => <span key={n}>{n > 0 ? " " : ""}<InlineMarkdown text={part}/></span>)}</p>);
   }
   return <div className="mb-md-content">{blocks}</div>;
