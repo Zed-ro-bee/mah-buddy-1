@@ -309,3 +309,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .profile-bottom-nav svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .profile-learning-label{color:var(--mb-accent,#9BE8F4)!important}
 @media(min-width:760px){.profile-app{padding-bottom:125px}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
