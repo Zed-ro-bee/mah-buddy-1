@@ -138,12 +138,6 @@ export default function StudyPage() {
         </section>
       </section>
 
-      <nav className="home-nav" aria-label="Main navigation">
-        <a href="/study" className="active" aria-current="page"><Icon name="home" size={21}/><span>Home</span></a>
-        <a href="/"><Icon name="orbit" size={22}/><span>AI Assistance</span></a>
-        <a href="/library"><Icon name="library" size={21}/><span>Resources</span></a>
-        <a href="/profile"><Icon name="user" size={21}/><span>Profile</span></a>
-      </nav>
 
       <style jsx>{`
         :global(*){box-sizing:border-box}
@@ -221,11 +215,6 @@ export default function StudyPage() {
         .progress-copy strong{font-size:12px;font-weight:750}
         .progress-copy p{margin:0;color:#9BAFA3;font-size:10px;line-height:1.5}
         .progress-card>a{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border:1px solid #344B3C;border-radius:50%;color:var(--ice);text-decoration:none}
-        .home-nav{position:fixed;z-index:80;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:stretch;gap:4px;width:min(540px,calc(100% - 24px));min-height:68px;padding:7px;border:1px solid rgba(185,232,244,.18);border-radius:23px;background:rgba(20,32,25,.95);backdrop-filter:blur(25px) saturate(150%);box-shadow:0 18px 48px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.035)}
-        .home-nav a{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;border-radius:16px;color:#91A599;text-decoration:none;font-size:9px;font-weight:750;transition:background .18s,color .18s}
-        .home-nav a.active{background:linear-gradient(135deg,#B9E8F4,#D0F2E0);color:#14372D;box-shadow:0 5px 18px rgba(185,232,244,.12)}
-        .home-nav a:hover:not(.active){background:rgba(185,232,244,.07);color:#E6F4EA}
-        .home-nav a span{white-space:nowrap}
         @keyframes carousel-copy-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
         @keyframes workspace-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
         @media(min-width:620px){.home-content{padding:38px 25px 30px}.welcome-copy{margin-bottom:27px}.feature-carousel{min-height:330px;border-radius:28px}.carousel-copy{left:27px;bottom:51px}.carousel-topline{left:25px;right:25px;top:22px}.workspace-grid{gap:15px}.workspace-card{min-height:190px;padding:16px}.workspace-card-copy strong{font-size:17px}.workspace-card-copy small{font-size:11px}.workspace-section{margin-top:35px}.home-nav{bottom:17px}.home-nav a{flex-direction:row;gap:8px;font-size:11px}.home-nav a span{font-size:11px}}
