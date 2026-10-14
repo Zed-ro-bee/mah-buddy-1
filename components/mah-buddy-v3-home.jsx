@@ -72,6 +72,7 @@ export default function MahBuddyV3Home() {
   const [history, setHistory] = useState([]);
   const [currentId, setCurrentId] = useState("");
   const [input, setInput] = useState("");
+  const [launchPrompt, setLaunchPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -86,11 +87,20 @@ export default function MahBuddyV3Home() {
   useEffect(() => {
     const timer = setTimeout(() => setIntro(false), 700);
     try {
+      const params = new URLSearchParams(window.location.search);
+      const prompt = params.get("prompt");
+      const autoStart = params.get("autostart") === "1";
       const saved = JSON.parse(localStorage.getItem("mah-buddy-history") || "[]");
       setHistory(saved);
-      const id = localStorage.getItem("mah-buddy-current");
-      const active = saved.find(x => x.id === id) || saved[0];
-      if (active) { setCurrentId(active.id); setMessages(active.messages || []); }
+      if (prompt && autoStart) {
+        setCurrentId("");
+        setMessages([]);
+        setLaunchPrompt(prompt);
+      } else {
+        const id = localStorage.getItem("mah-buddy-current");
+        const active = saved.find(x => x.id === id) || saved[0];
+        if (active) { setCurrentId(active.id); setMessages(active.messages || []); }
+      }
       // Minimal Studio is intentionally dark-first: charcoal, deep green and ice blue.
       localStorage.setItem("mb-theme", "Dark");
       setTheme("dark");
@@ -98,6 +108,13 @@ export default function MahBuddyV3Home() {
     } catch {}
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!launchPrompt) return;
+    const prompt = launchPrompt;
+    setLaunchPrompt("");
+    send(prompt);
+  }, [launchPrompt]);
 
   useEffect(() => {
     if (currentId) {
