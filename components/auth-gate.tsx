@@ -623,6 +623,7 @@ function GoogleMark() {
 function Intro({ onStart }: { onStart: () => void }) {
   return (
     <main className="auth-lock auth-intro">
+      <style>{AUTH_CSS}</style>
       <div className="intro-top">
         <span>MAH BUDDY</span>
         <span>YOUR AI STUDY COMPANION</span>
@@ -671,6 +672,7 @@ function Intro({ onStart }: { onStart: () => void }) {
 function AuthFallback({ text }: { text: string }) {
   return (
     <main className="auth-lock auth-fallback">
+      <style>{AUTH_CSS}</style>
       <Mark />
       <h1>Mah Buddy</h1>
       <p>{text}</p>
@@ -685,7 +687,6 @@ export default function AuthGate({
 }) {
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const pathname = usePathname();
   const [started, setStarted] = useState(false);
 
   const [mode, setMode] = useState<"signup" | "signin">("signup");
@@ -699,7 +700,7 @@ export default function AuthGate({
   useEffect(() => {
     if (typeof window !== "undefined") {
       setStarted(
-        ((window.location.pathname === "/login" || window.location.pathname === "/signup") || window.sessionStorage.getItem("mah-buddy-onboarding-seen") === "1")
+        window.location.pathname === "/get-started" ? false : ((window.location.pathname === "/login" || window.location.pathname === "/signup") || window.sessionStorage.getItem("mah-buddy-onboarding-seen") === "1")
       );
     }
 
