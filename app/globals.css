@@ -346,3 +346,5 @@ h3.mb-md-heading,h4.mb-md-heading,h5.mb-md-heading,h6.mb-md-heading{font-size:1e
 .mb-md-math{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:1.03em;font-style:italic;white-space:normal}
 .mb-md-display-math{margin:.8em 0;padding:12px;text-align:center;overflow-x:auto;border-radius:10px;background:rgba(155,232,244,.06);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:1.1em;font-style:italic}
 .mb-answer-card .mb-md-content p{white-space:normal}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
