@@ -1,5 +1,5 @@
 "use client";
-import AuthGate from "../components/auth-gate";
+import AuthGate from "../components/mah-buddy-auth";
 import MahBuddyV3Home from "../components/mah-buddy-v3-home";
 import ProfileMemory from "../components/profile-memory";
 import TtsLayer from "../components/tts-layer";
