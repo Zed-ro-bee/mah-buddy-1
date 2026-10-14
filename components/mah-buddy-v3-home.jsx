@@ -101,7 +101,7 @@ function MarkdownAnswer({ content }) {
     }
     const paragraph = [line.trim()];
     i++;
-    while (i < lines.length && lines[i].trim() && !/^\s{0,3}(#{1,6}\s+|[-*+]\s+(?!\[[ xX]\]\s+)|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|(?:---+|\*\*\*+|___+)\s*$)/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
+    while (i < lines.length && lines[i].trim() && !/^\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|(?:---+|\*\*\*+|___+)\s*$)/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
     blocks.push(<p className="mb-md-paragraph" key={blocks.length}>{paragraph.map((part, n) => <span key={n}>{n > 0 ? " " : ""}<InlineMarkdown text={part}/></span>)}</p>);
   }
   return <div className="mb-md-content">{blocks}</div>;
