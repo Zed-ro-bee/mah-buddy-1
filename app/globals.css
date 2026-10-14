@@ -285,3 +285,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .reset-link{margin-top:0}
 .reset-link button{border:1px solid var(--mb-border-strong,#344B3C);background:var(--mb-ink,#141916);border-radius:9px;color:var(--mb-accent,#9BE8F4);padding:8px 10px;font-size:10px;font-weight:700}
 @media(max-width:380px){.three-stats{gap:6px}.profile-stats>div{padding:10px 7px}.profile-stats span{font-size:9px}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
