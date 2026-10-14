@@ -348,3 +348,5 @@ h3.mb-md-heading,h4.mb-md-heading,h5.mb-md-heading,h6.mb-md-heading{font-size:1e
 .mb-answer-card .mb-md-content p{white-space:normal}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
