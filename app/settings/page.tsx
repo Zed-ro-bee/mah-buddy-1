@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 type Difficulty = "Easy" | "Normal" | "Hard";
 type Palette = "forest" | "ocean" | "violet" | "rose" | "amber" | "midnight";
@@ -22,7 +23,7 @@ const KEY="mah-buddy-prefs";
 function Switch({value,label,onChange}:{value:boolean;label:string;onChange:(value:boolean)=>void}) {
   return <button className={"mb-pref-switch"+(value?" is-on":"")} type="button" role="switch" aria-checked={value} aria-label={label} onClick={()=>onChange(!value)}><span/></button>;
 }
-function Row({title,description,children}:{title:string;description:string;children:React.ReactNode}) {
+function Row({title,description,children}:{title:string;description:string;children:ReactNode}) {
   return <div className="mb-pref-row"><div className="mb-pref-row-copy"><strong>{title}</strong><p>{description}</p></div><div className="mb-pref-row-control">{children}</div></div>;
 }
 function Group({id,title,subtitle,children}:{id:string;title:string;subtitle:string;children:React.ReactNode}) {
