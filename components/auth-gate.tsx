@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import PersistenceBridge from "./persistence-bridge";
 
