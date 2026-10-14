@@ -15,7 +15,7 @@ function readStoredProfile() {
 function readStoredDifficulty() {
   try {
     const value = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
-    return ["Easy", "Medium", "Hard"].includes(value?.difficulty) ? value.difficulty : "Medium";
+    return ["Easy", "Normal", "Hard"].includes(value?.difficulty) ? value.difficulty : "Normal";
   } catch { return "Medium"; }
 }
 
@@ -239,7 +239,7 @@ export default function MahBuddyV3Home() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(String(text || ""));
     utterance.lang = "en-GB";
-    utterance.rate = 0.96;
+    try { utterance.rate = Number(localStorage.getItem("mb-voice-speed") || "1"); } catch { utterance.rate = 1; }
     window.speechSynthesis.speak(utterance);
   }
   async function copyAnswer(text) {
@@ -277,10 +277,15 @@ export default function MahBuddyV3Home() {
       // always contains the user's learning level and selected difficulty.
       const profile = readStoredProfile();
       const difficulty = readStoredDifficulty();
-      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.slice(-30), customInstructions: SYSTEM, memory: "Use the current conversation as context.", profile, difficulty }) });
+      const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch { return {}; } })();
+      const styleGuide = prefs.answerStyle === "Simple" ? "Prefer simple, plain-language explanations and short steps." : prefs.answerStyle === "Detailed" ? "Give thorough explanations with useful context and examples when relevant." : "Use a balanced level of detail, with clear explanations and examples when helpful.";
+      const learningGuide = prefs.memory === false ? "Do not rely on saved learning preferences; use only the current message and conversation context." : "Use the current conversation and saved learning profile as context where relevant.";
+      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.slice(-30), customInstructions: SYSTEM + " " + styleGuide, memory: learningGuide, profile: prefs.memory === false ? {} : profile, difficulty }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to respond.");
-      setMessages(prev => [...prev, { role: "assistant", content: data.text || "I'm here. What would you like to work on?" }]);
+      const answer = data.text || "I'm here. What would you like to work on?";
+      setMessages(prev => [...prev, { role: "assistant", content: answer }]);
+      if (localStorage.getItem("mb-auto-speak") === "true" && "speechSynthesis" in window) listenTo(answer);
     } catch (error) {
       setMessages(prev => [...prev, { role: "assistant", content: `I couldn't respond right now. ${error.message || "Please try again."}` }]);
     } finally { setBusy(false); }
