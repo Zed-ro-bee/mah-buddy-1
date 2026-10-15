@@ -466,3 +466,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-send:disabled,.generate:disabled,.start:disabled,.next:disabled,.actions button:disabled,
 .mb-start-submit:disabled,.google-btn:disabled,.auth-submit:disabled{opacity:.75!important}
 button:disabled{cursor:not-allowed}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
