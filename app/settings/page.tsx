@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { supabase } from "../../lib/supabase";
 
 type Difficulty = "Easy" | "Normal" | "Hard";
 type Palette = "forest" | "ocean" | "violet" | "rose" | "amber" | "midnight";
@@ -32,20 +33,37 @@ function Group({id,title,subtitle,children}:{id:string;title:string;subtitle:str
 export default function SettingsPage() {
   const [prefs,setPrefs]=useState<Prefs>(defaults);
   const [saved,setSaved]=useState(false);
+  const [syncStatus,setSyncStatus]=useState("Loading settings…");
   useEffect(()=>{
-    try {
-      const raw=JSON.parse(localStorage.getItem(KEY)||"{}");
-      const next={...defaults,...raw};
+    let active=true;
+    async function load() {
+      let raw:Partial<Prefs>={};
+      try { raw=JSON.parse(localStorage.getItem(KEY)||"{}"); } catch {}
+      let signedIn=false;
+      try {
+        if(supabase) {
+          const {data}=await supabase.auth.getUser();
+          const remote=data.user?.user_metadata?.mah_buddy_preferences;
+          if(remote && typeof remote==="object") raw={...raw,...remote};
+          signedIn=!!data.user;
+        }
+      } catch {}
+      const next:any={...defaults,...raw};
       if(!palettes[next.palette as Palette])next.palette="forest";
       if(!["Simple","Balanced","Detailed"].includes(next.answerStyle))next.answerStyle="Balanced";
-      if(!["Easy","Normal","Hard"].includes(next.difficulty))next.difficulty=raw.difficulty==="Medium"?"Normal":"Normal";
+      if(!["Easy","Normal","Hard"].includes(next.difficulty))next.difficulty="Normal";
       if(!["0.75","1","1.25","1.5"].includes(next.voiceSpeed))next.voiceSpeed="1";
       if(!["15","30","45","60"].includes(next.dailyGoal))next.dailyGoal="30";
       if(!/^#[0-9a-fA-F]{6}$/.test(next.accent||""))next.accent=palettes[next.palette as Palette].accent;
+      if(!active)return;
       setPrefs(next);
+      try { localStorage.setItem(KEY,JSON.stringify(next)); } catch {}
       applyAppearance(next);
       document.documentElement.classList.toggle("mb-reduced-motion",!!next.reducedMotion);
-    } catch { applyAppearance(defaults); }
+      setSyncStatus(signedIn?"Synced to your account":"Saved on this device · Sign in to sync");
+    }
+    load();
+    return ()=>{active=false};
   },[]);
   function applyAppearance(value:Partial<Prefs>) {
     const palette=palettes[value.palette||"forest"]||palettes.forest;
@@ -78,6 +96,16 @@ export default function SettingsPage() {
       window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"));
     } catch {}
     setSaved(true);window.setTimeout(()=>setSaved(false),1500);
+    void (async()=>{
+      try {
+        if(!supabase) { setSyncStatus("Saved on this device · Account sync unavailable"); return; }
+        const {data}=await supabase.auth.getUser();
+        if(!data.user) { setSyncStatus("Saved on this device · Sign in to sync"); return; }
+        const {error}=await supabase.auth.updateUser({data:{mah_buddy_preferences:next}});
+        if(error) throw error;
+        setSyncStatus("Synced to your account");
+      } catch { setSyncStatus("Saved on this device · Account sync failed"); }
+    })();
   }
   function reset() {
     if(!window.confirm("Reset Mah Buddy settings to their defaults? Your chats, notes and study progress will remain saved."))return;
@@ -91,7 +119,7 @@ export default function SettingsPage() {
       <span className="mb-pref-saved" aria-live="polite">{saved?"Saved ✓":""}</span>
     </header>
     <div className="mb-pref-layout">
-      <div className="mb-pref-intro"><span className="mb-pref-eyebrow">YOUR SPACE · YOUR RULES</span><h1>Make it yours.</h1><p>Adjust how Mah Buddy looks, speaks and helps you learn. Your choices save automatically on this device.</p></div>
+      <div className="mb-pref-intro"><span className="mb-pref-eyebrow">YOUR SPACE · YOUR RULES</span><h1>Make it yours.</h1><p>Adjust how Mah Buddy looks, speaks and helps you learn. Your choices apply to Mah Buddy immediately and sync to your account when you are signed in.</p></div>
       <Group id="appearance" subtitle="01 · LOOK & FEEL" title="Appearance">
         <Row title="Colour theme" description="Choose your workspace colour."><select className={selectClass} aria-label="Colour theme" value={prefs.palette} onChange={e=>update({palette:e.target.value as Palette})}>{(Object.keys(palettes) as Palette[]).map(k=><option key={k} value={k}>{palettes[k].name}</option>)}</select></Row>
         <div className="mb-pref-palette-grid">{(Object.keys(palettes) as Palette[]).map(k=><button type="button" key={k} className={"mb-pref-palette"+(prefs.palette===k?" selected":"")} aria-pressed={prefs.palette===k} onClick={()=>update({palette:k})}><span style={{background:palettes[k].bg}}><i style={{background:palettes[k].accent}}/></span><b>{palettes[k].name}</b>{prefs.palette===k&&<em>✓</em>}</button>)}</div>
@@ -125,7 +153,7 @@ export default function SettingsPage() {
         <a className="mb-pref-link-row" href="/profile"><span><strong>Your profile</strong><small>Manage your details and learning profile</small></span><b>›</b></a>
       </Group>
       <button className="mb-pref-reset" type="button" onClick={reset}>Reset settings to defaults</button>
-      <p className="mb-pref-footnote">Mah Buddy · Minimal Studio<br/>Settings are saved on this device. Study reminders are a saved preference and may require notification support to send alerts.</p>
+      <p className="mb-pref-footnote" role="status">Mah Buddy · Minimal Studio<br/>{syncStatus}. Study reminders are saved preferences; sending alerts requires notification support.</p>
     </div>
   </main>;
 }
