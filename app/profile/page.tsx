@@ -86,31 +86,33 @@ export default function ProfilePage() {
     if (signingOut) return;
     setSigningOut(true);
 
-    // Persisted learning data stays in its account-scoped snapshot. Clear the
-    // active Supabase session before navigating so this device is signed out
-    // even if the auth request fails or another component is still mounted.
+    // Always finish on the public sign-in screen, even if Supabase returns
+    // an auth error. Clear every browser-side Supabase session token as a
+    // fallback, then force a full document navigation to reset React auth state.
     try {
       if (supabase) {
         const { error } = await supabase.auth.signOut({ scope: "local" });
-        if (error) console.error("Mah Buddy local sign out:", error);
+        if (error) console.error("Mah Buddy sign out:", error.message);
       }
     } catch (error) {
-      console.error("Mah Buddy local sign out:", error);
+      console.error("Mah Buddy sign out:", error);
     } finally {
       try {
-        for (const key of Object.keys(localStorage)) {
-          if (key.startsWith("sb-") && /auth-token/i.test(key)) {
-            localStorage.removeItem(key);
-          }
-        }
+        const authKeys = Object.keys(localStorage).filter(
+          key => /^sb-.*-auth-token$/i.test(key) || (/^sb-/i.test(key) && /auth-token/i.test(key))
+        );
+        for (const key of authKeys) localStorage.removeItem(key);
+
+        // Clear legacy app flags only; keep account-scoped learning snapshots.
         sessionStorage.removeItem("mah-buddy-hydrated");
         sessionStorage.removeItem("mah-buddy-onboarding-seen");
         window.dispatchEvent(new CustomEvent("mah-buddy-account-cleared"));
       } catch (error) {
-        console.error("Mah Buddy session cleanup:", error);
+        console.error("Mah Buddy browser session cleanup:", error);
       }
-      // Use the explicit sign-in route; AuthGate recognises /login as sign-in.
-      window.location.replace("/login");
+
+      // /login currently redirects straight back to /. Use the root auth screen.
+      window.location.href = "/?signedOut=1";
     }
   }
 
