@@ -85,12 +85,27 @@ export default function ProfilePage() {
   async function signOut() {
     if (signingOut) return;
     setSigningOut(true);
+
+    // Clear the local session first so a network failure cannot leave this
+    // device appearing signed in. Global revocation is best-effort afterwards.
     try {
-      if (supabase) await supabase.auth.signOut({ scope: "global" });
-      Object.keys(localStorage).filter(key => key.startsWith("sb-") && key.includes("auth-token")).forEach(key => localStorage.removeItem(key));
-      sessionStorage.clear();
-      window.location.replace("/?auth=signin");
-    } catch {
+      if (supabase) await supabase.auth.signOut({ scope: "local" });
+    } catch (error) {
+      console.error("Mah Buddy local sign out:", error);
+    } finally {
+      try {
+        Object.keys(localStorage)
+          .filter(key => key.startsWith("sb-") && key.includes("auth-token"))
+          .forEach(key => localStorage.removeItem(key));
+        sessionStorage.removeItem("mah-buddy-hydrated");
+        window.dispatchEvent(new CustomEvent("mah-buddy-account-cleared"));
+      } catch (error) {
+        console.error("Mah Buddy session cleanup:", error);
+      }
+      // Revoke other sessions when possible, without blocking local sign-out.
+      if (supabase) void supabase.auth.signOut({ scope: "global" }).catch(error => {
+        console.error("Mah Buddy global session revocation:", error);
+      });
       window.location.replace("/?auth=signin");
     }
   }
