@@ -186,7 +186,7 @@ function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
     <div className="mb-history-section-title">YOUR ACCOUNT</div>
     <nav className="mb-side-navigation mb-side-account" aria-label="Account navigation">
       <a className="mb-side-link" href="/profile"><Icon name="user" size={18}/> Profile</a>
-      <button className="mb-side-link" onClick={onSettings}><Icon name="settings" size={18}/> Settings</button>
+      <a className="mb-side-link" href="/settings"><Icon name="settings" size={18}/> Settings</a>
     </nav>
     <div className="mb-history-section-title">RECENT CHATS</div>
     <div className="mb-history-list">{history.length === 0 ? <p className="mb-history-empty">Your conversations will appear here.</p> : history.map(h => <button className="mb-history-item" key={h.id} onClick={() => onSelect(h.id)}><Icon name="history" size={17}/><span>{h.title || "New conversation"}<small>{new Date(h.updatedAt).toLocaleDateString()}</small></span></button>)}</div>
