@@ -163,7 +163,7 @@ export default function StudyPage() {
         .tone-blue .carousel-glow{background:radial-gradient(ellipse at 88% 14%,rgba(130,208,255,.2),transparent 36%),linear-gradient(120deg,rgba(18,49,75,.2),transparent 70%)}
         .tone-violet .carousel-glow{background:radial-gradient(ellipse at 88% 14%,rgba(208,173,255,.18),transparent 36%),linear-gradient(120deg,rgba(54,35,70,.2),transparent 70%)}
         .carousel-topline{position:absolute;top:17px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;color:rgba(244,252,246,.83);font-size:8px;font-weight:850;letter-spacing:.15em}
-        .carousel-topline i{font-style:normal;color:rgba(244,252,246,.6)}
+        .carousel-topline i{font-style:normal;color:rgba(244,252,246,.82)}
         .carousel-copy{position:absolute;left:20px;right:52px;bottom:45px;max-width:370px;animation:carousel-copy-in .35s ease both}
         .carousel-eyebrow{display:inline-flex;margin-bottom:10px;color:#D4F3E0;font-size:9px;letter-spacing:.15em;font-weight:850}
         .carousel-copy h2{max-width:330px;margin:0 0 9px;color:white;font-size:clamp(25px,6vw,36px);line-height:1.03;letter-spacing:-.055em;font-weight:720;text-shadow:0 2px 18px rgba(0,0,0,.18)}
@@ -179,7 +179,7 @@ export default function StudyPage() {
         .carousel-dots button.selected{width:22px;background:var(--ice)}
         .workspace-section{margin-top:30px}
         .section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:15px}
-        .section-kicker{color:#789185;font-size:8px;font-weight:850;letter-spacing:.16em}
+        .section-kicker{color:#A0ACA3;font-size:8px;font-weight:850;letter-spacing:.16em}
         .section-heading h2{margin:5px 0 0;font-size:21px;letter-spacing:-.045em;font-weight:680}
         .section-heading>a{display:flex;align-items:center;gap:5px;padding-bottom:3px;color:var(--ice);font-size:10px;font-weight:750;text-decoration:none;white-space:nowrap}
         .workspace-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -211,7 +211,7 @@ export default function StudyPage() {
         .progress-art{position:relative;display:grid;place-items:center;flex:0 0 47px;width:47px;height:47px;border:1px solid #385844;border-radius:15px;background:linear-gradient(145deg,#294B36,#1F3528);color:#B9E8C9}
         .progress-art span,.progress-art i{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--ice);right:7px;top:8px}.progress-art i{right:auto;top:auto;left:8px;bottom:9px;width:3px;height:3px;background:#9BE9C1}
         .progress-copy{display:flex;flex:1;flex-direction:column;gap:5px;min-width:0}
-        .progress-copy>span{color:#82998A;font-size:8px;font-weight:850;letter-spacing:.13em}
+        .progress-copy>span{color:#A0ACA3;font-size:8px;font-weight:850;letter-spacing:.13em}
         .progress-copy strong{font-size:12px;font-weight:750}
         .progress-copy p{margin:0;color:#9BAFA3;font-size:10px;line-height:1.5}
         .progress-card>a{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border:1px solid #344B3C;border-radius:50%;color:var(--ice);text-decoration:none}
