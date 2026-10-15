@@ -86,27 +86,31 @@ export default function ProfilePage() {
     if (signingOut) return;
     setSigningOut(true);
 
-    // Clear the local session first so a network failure cannot leave this
-    // device appearing signed in. Global revocation is best-effort afterwards.
+    // Persisted learning data stays in its account-scoped snapshot. Clear the
+    // active Supabase session before navigating so this device is signed out
+    // even if the auth request fails or another component is still mounted.
     try {
-      if (supabase) await supabase.auth.signOut({ scope: "local" });
+      if (supabase) {
+        const { error } = await supabase.auth.signOut({ scope: "local" });
+        if (error) console.error("Mah Buddy local sign out:", error);
+      }
     } catch (error) {
       console.error("Mah Buddy local sign out:", error);
     } finally {
       try {
-        Object.keys(localStorage)
-          .filter(key => key.startsWith("sb-") && key.includes("auth-token"))
-          .forEach(key => localStorage.removeItem(key));
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith("sb-") && /auth-token/i.test(key)) {
+            localStorage.removeItem(key);
+          }
+        }
         sessionStorage.removeItem("mah-buddy-hydrated");
+        sessionStorage.removeItem("mah-buddy-onboarding-seen");
         window.dispatchEvent(new CustomEvent("mah-buddy-account-cleared"));
       } catch (error) {
         console.error("Mah Buddy session cleanup:", error);
       }
-      // Revoke other sessions when possible, without blocking local sign-out.
-      if (supabase) void supabase.auth.signOut({ scope: "global" }).catch(error => {
-        console.error("Mah Buddy global session revocation:", error);
-      });
-      window.location.replace("/?auth=signin");
+      // Use the explicit sign-in route; AuthGate recognises /login as sign-in.
+      window.location.replace("/login");
     }
   }
 
