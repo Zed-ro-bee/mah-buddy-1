@@ -84,22 +84,10 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
   const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};window.addEventListener("storage",onStorage);
   const original=localStorage.setItem.bind(localStorage);localStorage.setItem=(key:string,value:string)=>{original(key,value);if(USER_LOCAL_KEYS.includes(key))schedule()};
   void hydrate();
-  const signOut=async()=>{
-   if(!active)return;
-   if(timer)clearTimeout(timer);
-   try{
-    await persist();
-    saveLocalSnapshot();
-    active=false;
-    await client.auth.signOut({scope:"local"});
-    clearActiveLocal();
-    sessionStorage.removeItem("mah-buddy-hydrated");
-    window.dispatchEvent(new CustomEvent("mah-buddy-account-cleared"));
-    onSignOut?.();
-   }catch(e){console.error("Mah Buddy sign out failed",e)}
-  };
-  const observer=new MutationObserver(()=>{const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>(".danger"));const b=buttons.find(button=>/sign\s*out/i.test(button.textContent||""))||buttons[0];if(b&&!b.dataset.mahBuddySignout){b.dataset.mahBuddySignout="true";b.addEventListener("click",signOut)}});observer.observe(document.body,{childList:true,subtree:true});
-  return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);localStorage.setItem=original;observer.disconnect()};
+  // Sign-out is handled by the profile page. Do not attach click handlers
+  // to buttons discovered by DOM text/class heuristics: that could hijack
+  // unrelated controls and race the explicit sign-out flow.
+  return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);localStorage.setItem=original};
  },[userId,onSignOut]);
  return null;
 }
