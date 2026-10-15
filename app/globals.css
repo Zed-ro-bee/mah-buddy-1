@@ -452,3 +452,17 @@ html[data-theme="dark"]{color-scheme:dark;}
 html[data-theme="dark"]{color-scheme:dark;}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+
+/* Accessibility pass: keep secondary copy, placeholders and disabled controls readable */
+:root{--mb-muted:#C2CEC6;--mb-subtle:#A0ACA3}
+.mb-composer-area>small,.mb-composer textarea::placeholder,.mb-attachment-preview small,.mb-attachment-card small,
+.profile-field input::placeholder,.notes-form input::placeholder,.notes-disclaimer,
+.account-actions small,.head-brand span,.profile-field small,.account-line small,.profile-footnote,
+.mb-pref-footnote,.mb-pref-link-row small,.mb-start-foot,.mb-start-note,.mb-start-input::placeholder,
+.mb-start-tabs button,.mb-start-back,.mb-start-message,.recent-row small,.recent-row>svg{
+  color:#A0ACA3!important;
+}
+.mb-answer-actions button,.mb-nav-four button,.mb-nav-four a,.mb-side-link{color:#C2CEC6}
+.mb-send:disabled,.generate:disabled,.start:disabled,.next:disabled,.actions button:disabled,
+.mb-start-submit:disabled,.google-btn:disabled,.auth-submit:disabled{opacity:.75!important}
+button:disabled{cursor:not-allowed}
