@@ -1,9 +1,40 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const SYSTEM = "You are Mah Buddy, the AI assistant of the Mah Buddy app. Be friendly, intelligent, professional, and direct. Match answer length to the question and the user's saved learning level. Write in clear everyday English. Format answers like a polished chat assistant: use short paragraphs separated by blank lines, and start a new paragraph when the idea changes. Use headings, bold text, lists, tables, and equations when they improve clarity. Avoid dense walls of text. Keep study difficulty separate from language level.";
 const PROFILE_KEY = "mah-buddy-profile";
 const PREFS_KEY = "mah-buddy-prefs";
+const CHAT_PALETTES = {
+  forest:{bg:"#141916",surface:"#1D2922",raised:"#263B30",accent:"#9BE8F4",muted:"#A0ACA3"},
+  ocean:{bg:"#101923",surface:"#182A39",raised:"#213D50",accent:"#71D8FF",muted:"#9CB5C6"},
+  violet:{bg:"#191523",surface:"#282038",raised:"#3B2D52",accent:"#C6A5FF",muted:"#B0A6C2"},
+  rose:{bg:"#211719",surface:"#332225",raised:"#4A2E35",accent:"#FF9EBC",muted:"#C6A6AD"},
+  amber:{bg:"#211D14",surface:"#332B1D",raised:"#4A3B25",accent:"#FFD080",muted:"#C1B49A"},
+  midnight:{bg:"#111827",surface:"#1C273B",raised:"#293A56",accent:"#A5BFFF",muted:"#A5B0C5"}
+};
+function applyChatPreferences(prefs = {}) {
+  const palette = CHAT_PALETTES[prefs.palette] || CHAT_PALETTES.forest;
+  const accent = /^#[0-9a-fA-F]{6}$/.test(prefs.accent || "") ? prefs.accent : palette.accent;
+  const root = document.documentElement;
+  root.dataset.theme = "dark";
+  root.dataset.mbTheme = "dark";
+  root.style.colorScheme = "dark";
+  root.style.setProperty("--mb-ink",palette.bg);
+  root.style.setProperty("--mb-ink-raised",palette.surface);
+  root.style.setProperty("--mb-surface",palette.surface);
+  root.style.setProperty("--mb-surface-raised",palette.raised);
+  root.style.setProperty("--mb-violet",accent);
+  root.style.setProperty("--mb-violet-bright",accent);
+  root.style.setProperty("--mb-cyan",accent);
+  root.style.setProperty("--mb-accent",accent);
+  root.style.setProperty("--mb-cloud","#F0F4F0");
+  root.style.setProperty("--mb-muted",palette.muted);
+  root.style.setProperty("--mb-border",accent+"35");
+  root.style.setProperty("--mb-border-strong",accent+"70");
+  root.style.setProperty("--mb-focus","0 0 0 3px "+accent+"45");
+  root.classList.toggle("mb-reduced-motion",!!prefs.reducedMotion);
+}
 
 function readStoredProfile() {
   try {
@@ -167,7 +198,17 @@ function SettingsPanel({ onClose }) {
   const [voice, setVoice] = useState(true);
   const [enter, setEnter] = useState(true);
   useEffect(() => { setVoice(localStorage.getItem("mb-voice") !== "false"); setEnter(localStorage.getItem("mb-enter") !== "false"); }, []);
-  const toggle = (key, setter, value) => { setter(value); localStorage.setItem(key, value ? "true" : "false"); };
+  const toggle = (key, setter, value) => {
+    setter(value);
+    localStorage.setItem(key, value ? "true" : "false");
+    try {
+      const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+      if (key === "mb-voice") prefs.voice = value;
+      if (key === "mb-enter") prefs.enterToSend = value;
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"));
+    } catch {}
+  };
   return <div className="mb-settings-overlay" onClick={onClose}><section className="mb-settings" onClick={e => e.stopPropagation()}><header><div><span className="mb-settings-eyebrow">MAH BUDDY</span><h2>Settings</h2><p>Make Mah Buddy feel exactly right for you.</p></div><button className="mb-icon-btn" onClick={onClose}><Icon name="close"/></button></header><div className="mb-settings-section"><h3>Conversation</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="mic"/></div><div className="mb-setting-copy"><strong>Voice input</strong><span>Use your microphone in chat</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-voice", setVoice, !voice)}><span className={voice ? "on" : ""}/></button></div><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="send"/></div><div className="mb-setting-copy"><strong>Enter to send</strong><span>Press Enter to send messages</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-enter", setEnter, !enter)}><span className={enter ? "on" : ""}/></button></div></div><a className="mb-settings-full-link" href="/settings">Open all settings <span aria-hidden="true">→</span></a><div className="mb-settings-footer"><Mark size={30}/><span>Mah Buddy • Your intelligent study companion</span></div></section></div>;
 }
 
@@ -206,12 +247,56 @@ export default function MahBuddyV3Home() {
         const active = saved.find(x => x.id === id) || saved[0];
         if (active) { setCurrentId(active.id); setMessages(active.messages || []); }
       }
-      // Minimal Studio is intentionally dark-first: charcoal, deep green and ice blue.
-      localStorage.setItem("mb-theme", "Dark");
+      // Load the same saved preferences used by the Settings page.
+      let prefs = {};
+      try { prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch {}
+      applyChatPreferences(prefs);
+      localStorage.setItem("mb-voice",String(prefs.voice !== false));
+      localStorage.setItem("mb-auto-speak",String(!!prefs.autoSpeak));
+      localStorage.setItem("mb-enter",String(prefs.enterToSend !== false));
+      localStorage.setItem("mb-voice-speed",String(prefs.voiceSpeed || "1"));
+      localStorage.setItem("mah-buddy-daily-goal",String(prefs.dailyGoal || "30"));
+      localStorage.setItem("mah-buddy-reminders",String(!!prefs.reminders));
+      localStorage.setItem("mah-buddy-revision-enabled",String(prefs.revision !== false));
       setTheme("dark");
-      document.documentElement.dataset.theme = "dark";
+      if (supabase) {
+        supabase.auth.getUser().then(({data}) => {
+          const remote = data.user?.user_metadata?.mah_buddy_preferences;
+          if (remote && typeof remote === "object") {
+            const merged = {...prefs,...remote};
+            try { localStorage.setItem(PREFS_KEY,JSON.stringify(merged)); } catch {}
+            applyChatPreferences(merged);
+            localStorage.setItem("mb-voice",String(merged.voice !== false));
+            localStorage.setItem("mb-auto-speak",String(!!merged.autoSpeak));
+            localStorage.setItem("mb-enter",String(merged.enterToSend !== false));
+            localStorage.setItem("mb-voice-speed",String(merged.voiceSpeed || "1"));
+            localStorage.setItem("mah-buddy-daily-goal",String(merged.dailyGoal || "30"));
+            localStorage.setItem("mah-buddy-reminders",String(!!merged.reminders));
+            localStorage.setItem("mah-buddy-revision-enabled",String(merged.revision !== false));
+          }
+        }).catch(() => {});
+      }
     } catch {}
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const refreshPreferences = () => {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+        applyChatPreferences(prefs);
+        localStorage.setItem("mb-voice",String(prefs.voice !== false));
+        localStorage.setItem("mb-auto-speak",String(!!prefs.autoSpeak));
+        localStorage.setItem("mb-enter",String(prefs.enterToSend !== false));
+        localStorage.setItem("mb-voice-speed",String(prefs.voiceSpeed || "1"));
+      } catch {}
+    };
+    window.addEventListener("mah-buddy-preferences-changed",refreshPreferences);
+    window.addEventListener("storage",refreshPreferences);
+    return () => {
+      window.removeEventListener("mah-buddy-preferences-changed",refreshPreferences);
+      window.removeEventListener("storage",refreshPreferences);
+    };
   }, []);
 
   useEffect(() => {
