@@ -502,3 +502,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-composer textarea{overflow-y:auto}
 .mb-side-link:focus-visible,.mb-composer-btn:focus-visible,.mb-send:focus-visible{outline:2px solid #9BE8F4;outline-offset:3px}
 @media(max-width:420px){.mb-hero{min-height:50vh;padding-top:clamp(38px,9vh,76px)}.mb-hero p{font-size:13px;line-height:1.7}.mb-hero-eyebrow{font-size:9px;letter-spacing:.14em}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
