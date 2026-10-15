@@ -175,7 +175,7 @@ function readFile(file) {
 
 function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
   return <div className="mb-history-overlay" onClick={onClose}><aside className="mb-history" onClick={e => e.stopPropagation()}>
-    <div className="mb-history-head"><div className="mb-drawer-brand"><span className="mb-drawer-brand-mark"><Icon name="spark" size={18}/></span><div><strong>Mah Buddy</strong><small>Your study companion</small></div></div><button className="mb-icon-btn" onClick={onClose} aria-label="Close navigation"><Icon name="close"/></button></div>
+    <div className="mb-history-head"><div className="mb-drawer-brand"><span className="mb-drawer-brand-mark"><Mark size={38}/></span><div><strong>Mah Buddy</strong><small>Your study companion</small></div></div><button className="mb-icon-btn" onClick={onClose} aria-label="Close navigation"><Icon name="close"/></button></div>
     <button className="mb-drawer-new-chat" onClick={onNew}><Icon name="plus" size={18}/> New chat</button>
     <div className="mb-history-section-title">WORKSPACE</div>
     <nav className="mb-side-navigation" aria-label="Main navigation">
