@@ -207,6 +207,11 @@ function SettingsPanel({ onClose }) {
       if (key === "mb-enter") prefs.enterToSend = value;
       localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
       window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"));
+      if (supabase) {
+        supabase.auth.getUser().then(({data}) => {
+          if (data.user) return supabase.auth.updateUser({data:{mah_buddy_preferences:prefs}});
+        }).catch(() => {});
+      }
     } catch {}
   };
   return <div className="mb-settings-overlay" onClick={onClose}><section className="mb-settings" onClick={e => e.stopPropagation()}><header><div><span className="mb-settings-eyebrow">MAH BUDDY</span><h2>Settings</h2><p>Make Mah Buddy feel exactly right for you.</p></div><button className="mb-icon-btn" onClick={onClose}><Icon name="close"/></button></header><div className="mb-settings-section"><h3>Conversation</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="mic"/></div><div className="mb-setting-copy"><strong>Voice input</strong><span>Use your microphone in chat</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-voice", setVoice, !voice)}><span className={voice ? "on" : ""}/></button></div><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="send"/></div><div className="mb-setting-copy"><strong>Enter to send</strong><span>Press Enter to send messages</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-enter", setEnter, !enter)}><span className={enter ? "on" : ""}/></button></div></div><a className="mb-settings-full-link" href="/settings">Open all settings <span aria-hidden="true">→</span></a><div className="mb-settings-footer"><Mark size={30}/><span>Mah Buddy • Your intelligent study companion</span></div></section></div>;
