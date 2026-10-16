@@ -556,3 +556,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 @media(min-width:760px){.mb-hero{padding-top:clamp(54px,10vh,96px)}.mb-composer-area{padding-bottom:3px}}
 @media(max-width:480px){.mb-hero{min-height:48vh;padding-top:35px;padding-bottom:24px}.mb-hero-eyebrow{margin-bottom:18px;font-size:9px}.mb-hero p{max-width:320px;font-size:13px;line-height:1.75}.mb-composer-area>small{font-size:9px}.mb-answer-card{padding:12px 14px}}
 @media(prefers-reduced-motion:reduce){.mb-composer,.mb-composer:focus-within{transition:none}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
