@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import MahBuddyFeatureGuide from "@/components/mah-buddy-feature-guide";
+import MahBuddyFeatureGuide from "../../components/mah-buddy-feature-guide";
 
 const siteUrl = "https://mah-buddy.vercel.app";
 
