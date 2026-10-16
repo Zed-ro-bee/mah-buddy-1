@@ -66,7 +66,7 @@ export default function PageTransitionLoading() {
     <div className="mb-route-loading" role="status" aria-live="polite" aria-label={`Opening ${label}}>
       <div className="mb-route-loading-card">
         <span className="mb-route-spinner" aria-hidden="true" />
-        <span className="mb-route-loading-copy"><strong>Opening {label}</strong><small>Getting everything ready…</small></span>
+        <span className="mb-route-loading-content"><span className="mb-route-loading-copy"><strong>Opening {label}</strong><small>Getting everything ready…</small></span><span className="mb-route-skeletons" aria-hidden="true"><i/><i/><i/></span></span>
       </div>
     </div>
   );
