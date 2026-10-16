@@ -621,3 +621,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-skeleton-options .mb-skeleton{height:48px;border:1px solid #344B3C;border-radius:12px}
 @keyframes mb-skeleton-shimmer{0%{background-position:100% 0}100%{background-position:-120% 0}}
 @media(prefers-reduced-motion:reduce){.mb-living-bars i,.mb-route-spinner,.mb-loading-spinner,.mb-skeleton{animation:none}.mb-route-loading{animation:none}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
