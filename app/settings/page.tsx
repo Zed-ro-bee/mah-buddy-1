@@ -34,6 +34,9 @@ export default function SettingsPage() {
   const [prefs,setPrefs]=useState<Prefs>(defaults);
   const [saved,setSaved]=useState(false);
   const [syncStatus,setSyncStatus]=useState("Loading settings…");
+  const [accountEmail,setAccountEmail]=useState("");
+  const [signingOut,setSigningOut]=useState(false);
+  const [accountMessage,setAccountMessage]=useState("");
   useEffect(()=>{
     let active=true;
     async function load() {
@@ -43,6 +46,7 @@ export default function SettingsPage() {
       try {
         if(supabase) {
           const {data}=await supabase.auth.getUser();
+          if(active) setAccountEmail(data.user?.email||"");
           const remote=data.user?.user_metadata?.mah_buddy_preferences;
           if(remote && typeof remote==="object") raw={...raw,...remote};
           signedIn=!!data.user;
@@ -111,6 +115,20 @@ export default function SettingsPage() {
     if(!window.confirm("Reset Mah Buddy settings to their defaults? Your chats, notes and study progress will remain saved."))return;
     update(defaults);
   }
+  async function signOut() {
+    if(!window.confirm("Sign out of Mah Buddy on this device?"))return;
+    setSigningOut(true);setAccountMessage("");
+    try {
+      if(!supabase) throw new Error("Authentication is unavailable right now.");
+      const {error}=await supabase.auth.signOut();
+      if(error) throw error;
+      try { localStorage.removeItem("mah-buddy-prefs"); } catch {}
+      window.location.assign("/login");
+    } catch {
+      setSigningOut(false);
+      setAccountMessage("Could not sign out. Please check your connection and try again.");
+    }
+  }
   const selectClass="mb-pref-select";
   return <main className="mb-settings-page">
     <header className="mb-pref-topbar">
@@ -151,6 +169,13 @@ export default function SettingsPage() {
         <a className="mb-pref-link-row" href="/privacy-policy"><span><strong>Privacy policy</strong><small>How Mah Buddy handles information</small></span><b>›</b></a>
         <a className="mb-pref-link-row" href="/terms-of-service"><span><strong>Terms of service</strong><small>Read the terms for using Mah Buddy</small></span><b>›</b></a>
         <a className="mb-pref-link-row" href="/profile"><span><strong>Your profile</strong><small>Manage your details and learning profile</small></span><b>›</b></a>
+      </Group>
+      <Group id="account" subtitle="07 · ACCOUNT & HELP" title="Your account">
+        <div className="mb-pref-account-summary"><strong>{accountEmail||"Signed-in Mah Buddy account"}</strong><p>{accountEmail?"This is the email currently connected to your account.":"Your account details will appear here when available."}</p></div>
+        <a className="mb-pref-link-row" href="/profile"><span><strong>Profile & learning goals</strong><small>Update your name, age and study profile</small></span><b>›</b></a>
+        <a className="mb-pref-link-row" href="/about-mah-buddy"><span><strong>About Mah Buddy</strong><small>Explore features and how to use them</small></span><b>›</b></a>
+        <button className="mb-pref-signout" type="button" onClick={signOut} disabled={signingOut}>{signingOut?"Signing out…":"Sign out"}</button>
+        {accountMessage&&<p className="mb-pref-account-error" role="alert">{accountMessage}</p>}
       </Group>
       <button className="mb-pref-reset" type="button" onClick={reset}>Reset settings to defaults</button>
       <p className="mb-pref-footnote" role="status">Mah Buddy · Minimal Studio<br/>{syncStatus}. Study reminders are saved preferences; sending alerts requires notification support.</p>
