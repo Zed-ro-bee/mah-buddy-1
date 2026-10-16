@@ -6,6 +6,16 @@ import PersistenceBridge from "./persistence-bridge";
 type Mode = "signup" | "signin";
 const css = `
 .mb-start{position:fixed;inset:0;z-index:2147483000;overflow:auto;min-height:100svh;background:#141916;color:#F0F4F0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.mb-start-loading{display:grid;place-items:center}
+.mb-start-loading-inner{display:flex;flex-direction:column;align-items:center;gap:13px;padding:24px;text-align:center}
+.mb-start-loading-inner img{object-fit:contain;border-radius:19px;box-shadow:0 0 0 1px #344B3C,0 10px 35px #0004}
+.mb-start-loading-inner strong{font-size:21px;letter-spacing:-.04em}
+.mb-start-loading-inner p{margin:0;color:#A0ACA3;font-size:12px}
+.mb-start-loading-bars{height:28px;display:flex;align-items:center;gap:5px;margin-top:7px}
+.mb-start-loading-bars i{display:block;width:4px;height:9px;border-radius:99px;background:#9BE8F4;animation:mb-start-bar 900ms ease-in-out infinite alternate}
+.mb-start-loading-bars i:nth-child(3n){height:17px}.mb-start-loading-bars i:nth-child(4n){height:24px}
+@keyframes mb-start-bar{from{transform:scaleY(.45);opacity:.45}to{transform:scaleY(1);opacity:1}}
+
 .mb-start *{box-sizing:border-box}.mb-start button,.mb-start input{font:inherit}.mb-start button{cursor:pointer}.mb-start button:focus-visible,.mb-start input:focus-visible{outline:2px solid #9BE8F4;outline-offset:3px}.mb-start button:disabled{opacity:.55;cursor:wait}
 .mb-start-wrap{width:min(1060px,100%);min-height:100svh;margin:auto;padding:clamp(18px,5vw,50px);display:flex;flex-direction:column}
 .mb-start-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
@@ -42,7 +52,7 @@ export default function MahBuddyAuth({children}:{children:React.ReactNode}){
  const [user,setUser]=useState<any>(null),[loading,setLoading]=useState(true),[started,setStarted]=useState(false),[mode,setMode]=useState<Mode>("signup"),[email,setEmail]=useState(""),[sent,setSent]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const authClient=supabase;
  useEffect(()=>{setStarted(window.sessionStorage.getItem("mah-buddy-onboarding-seen")==="1");const client=supabase;if(!client){setLoading(false);return}let live=true;const signedOut=new URLSearchParams(window.location.search).get("signedOut")==="1";const initialise=async()=>{try{if(signedOut){try{await client.auth.signOut({scope:"local"})}catch{};try{for(const key of Object.keys(localStorage)){if(/^sb-.*-auth-token$/i.test(key)||(/^sb-/i.test(key)&&/auth-token/i.test(key)))localStorage.removeItem(key)}}catch{}}const {data}=await client.auth.getSession();if(live){setUser(signedOut?null:(data.session?.user??null));setLoading(false);if(signedOut)window.history.replaceState({},document.title,window.location.pathname)}}catch{if(live){setUser(null);setLoading(false)}}};void initialise();const {data:sub}=client.auth.onAuthStateChange((_e,session)=>{if(live){setUser(signedOut?null:(session?.user??null));setLoading(false)}});return()=>{live=false;sub.subscription.unsubscribe()}},[]);
- if(loading)return <main className="mb-start"><style>{css}</style><div className="mb-start-wrap"><div className="mb-start-brand"><Mark/>Mah Buddy</div><p style={{color:"#A0ACA3",marginTop:60}}>Getting your space ready…</p></div></main>;
+ if(loading)return <main className="mb-start mb-start-loading" role="status" aria-live="polite"><style>{css}</style><div className="mb-start-loading-inner"><img src="/mah-buddy-logo.svg" alt="" width="76" height="76"/><strong>Mah Buddy</strong><p>Getting your space ready…</p><div className="mb-start-loading-bars" aria-hidden="true">{Array.from({length:8},(_,i)=><i key={i} style={{animationDelay:`${i*70}ms`}}/>)}</div></div></main>;
  if(user)return <><PersistenceBridge userId={user.id}/>{children}</>;
  function begin(){window.sessionStorage.setItem("mah-buddy-onboarding-seen","1");setStarted(true)}
  function switchMode(next:Mode){setMode(next);setSent(false);setMessage("")}
