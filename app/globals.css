@@ -643,3 +643,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .mb-generation-option{display:block;height:38px;border:1px solid #344B3C;border-radius:11px;background:linear-gradient(90deg,#1D2922 20%,#263B30 45%,#1D2922 70%);background-size:220% 100%;animation:mb-skeleton-shimmer 1.25s ease-in-out infinite}
 .mb-generation-flashcards{min-height:190px;justify-content:center}
 @media(prefers-reduced-motion:reduce){.mb-route-skeletons i,.mb-generation-line,.mb-generation-option,.mb-inline-loading-spinner{animation:none}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
