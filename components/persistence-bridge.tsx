@@ -8,8 +8,8 @@ type StoredProfile={preferredName:string;buddyName:string;age:string;learningLev
 
 const CHAT_KEY="mah-buddy-chats", LEGACY_CHAT_KEY="mah-buddy-chat", V3_HISTORY_KEY="mah-buddy-history", V3_CURRENT_KEY="mah-buddy-current", PREFS_KEY="mah-buddy-prefs", PROFILE_KEY="mah-buddy-profile";
 const QUIZ_HISTORY_KEY="mah-buddy-quiz-history", QUIZ_CONFIG_KEY="mah-buddy-quiz-config";
-const FLASH_HISTORY_KEY="mah-buddy-flashcard-history", FLASH_CONFIG_KEY="mah-buddy-flashcard-config";
-const USER_LOCAL_KEYS=[CHAT_KEY,LEGACY_CHAT_KEY,V3_HISTORY_KEY,V3_CURRENT_KEY,PREFS_KEY,PROFILE_KEY,QUIZ_HISTORY_KEY,QUIZ_CONFIG_KEY,FLASH_HISTORY_KEY,FLASH_CONFIG_KEY];
+const FLASH_HISTORY_KEY="mah-buddy-flashcard-history", FLASH_CONFIG_KEY="mah-buddy-flashcard-config", PROGRESS_KEY="mah-buddy-progress";
+const USER_LOCAL_KEYS=[CHAT_KEY,LEGACY_CHAT_KEY,V3_HISTORY_KEY,V3_CURRENT_KEY,PREFS_KEY,PROFILE_KEY,QUIZ_HISTORY_KEY,QUIZ_CONFIG_KEY,FLASH_HISTORY_KEY,FLASH_CONFIG_KEY,PROGRESS_KEY];
 const defaultProfile:StoredProfile={preferredName:"",buddyName:"Mah Buddy",age:"",learningLevel:"",goal:"",educationLevel:""};
 
 export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSignOut?:()=>void}){
@@ -56,7 +56,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
   };
   const persistProfile=async()=>{try{const p=readProfile();const{error}=await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,country:p.country||null,curriculum:p.curriculum||null,subjects:p.subjects||null,explanation_style:p.explanationStyle||"Normal",notifications:p.notifications===true,updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy profile persistence:",error.message)}catch(error){console.error("Mah Buddy profile persistence:",error)}};
   const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");const{error}=await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy settings persistence:",error.message)}catch(error){console.error("Mah Buddy settings persistence:",error)}};
-  const persistLearningState=async()=>{try{const{error}=await client.from("user_learning_state").upsert({user_id:userId,quiz_history:readJSON(QUIZ_HISTORY_KEY,[]),quiz_config:readJSON(QUIZ_CONFIG_KEY,{}),flashcard_history:readJSON(FLASH_HISTORY_KEY,[]),flashcard_config:readJSON(FLASH_CONFIG_KEY,{}),progress:readJSON("mah-buddy-progress",[]),updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy learning-state persistence:",error.message)}catch(error){console.error("Mah Buddy learning-state persistence:",error)}};
+  const persistLearningState=async()=>{try{const{error}=await client.from("user_learning_state").upsert({user_id:userId,quiz_history:readJSON(QUIZ_HISTORY_KEY,[]),quiz_config:readJSON(QUIZ_CONFIG_KEY,{}),flashcard_history:readJSON(FLASH_HISTORY_KEY,[]),flashcard_config:readJSON(FLASH_CONFIG_KEY,{}),progress:readJSON(PROGRESS_KEY,[]),updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy learning-state persistence:",error.message)}catch(error){console.error("Mah Buddy learning-state persistence:",error)}};
   const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs();void persistLearningState()},600)};
   const hydrate=async()=>{
    try{
@@ -80,7 +80,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     }
     if(settings)write(PREFS_KEY,{...readJSON(PREFS_KEY,{}),theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false});
     if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||"",country:remoteProfile.country||"",curriculum:remoteProfile.curriculum||"",subjects:remoteProfile.subjects||"",explanationStyle:remoteProfile.explanation_style||"Normal",notifications:remoteProfile.notifications===true};write(PROFILE_KEY,profile);window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}
-    if(learningState){write(QUIZ_HISTORY_KEY,learningState.quiz_history||[]);write(QUIZ_CONFIG_KEY,learningState.quiz_config||{});write(FLASH_HISTORY_KEY,learningState.flashcard_history||[]);write(FLASH_CONFIG_KEY,learningState.flashcard_config||{});write("mah-buddy-progress",learningState.progress||[]);}
+    if(learningState){write(QUIZ_HISTORY_KEY,learningState.quiz_history||[]);write(QUIZ_CONFIG_KEY,learningState.quiz_config||{});write(FLASH_HISTORY_KEY,learningState.flashcard_history||[]);write(FLASH_CONFIG_KEY,learningState.flashcard_config||{});write(PROGRESS_KEY,learningState.progress||[]);}
     saveLocalSnapshot();hydrated=true;schedule();window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));
    }catch{hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"))}
   };
