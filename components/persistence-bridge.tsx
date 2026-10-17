@@ -57,7 +57,7 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
   const persistProfile=async()=>{try{const p=readProfile();const{error}=await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,country:p.country||null,curriculum:p.curriculum||null,subjects:p.subjects||null,explanation_style:p.explanationStyle||"Normal",notifications:p.notifications===true,updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy profile persistence:",error.message)}catch(error){console.error("Mah Buddy profile persistence:",error)}};
   const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");const{error}=await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy settings persistence:",error.message)}catch(error){console.error("Mah Buddy settings persistence:",error)}};
   const persistLearningState=async()=>{try{const{error}=await client.from("user_learning_state").upsert({user_id:userId,quiz_history:readJSON(QUIZ_HISTORY_KEY,[]),quiz_config:readJSON(QUIZ_CONFIG_KEY,{}),flashcard_history:readJSON(FLASH_HISTORY_KEY,[]),flashcard_config:readJSON(FLASH_CONFIG_KEY,{}),progress:readJSON(PROGRESS_KEY,[]),updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy learning-state persistence:",error.message)}catch(error){console.error("Mah Buddy learning-state persistence:",error)}};
-  const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs();void persistLearningState()},600)};
+  const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs();void persistLearningState()},300)};
   const hydrate=async()=>{
    try{
     clearActiveLocal();restoreLocalSnapshot();
@@ -67,7 +67,8 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
      client.from("profiles").select("preferred_name,buddy_name,age,learning_level,goal,education_level,display_name,country,curriculum,subjects,explanation_style,notifications").eq("id",userId).maybeSingle(),
      client.from("user_learning_state").select("quiz_history,quiz_config,flashcard_history,flashcard_config,progress").eq("user_id",userId).maybeSingle()
     ]);
-    if(error||!active){hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));return}
+    if(!active)return;
+    if(error)console.error("Mah Buddy conversation hydration:",error.message);
     if(cs?.length){
      const{data:ms}=await client.from("messages").select("conversation_id,role,content,created_at").eq("user_id",userId).order("created_at",{ascending:true});
      const map=new Map<string,StoredMessage[]>();for(const m of ms||[]){const a=map.get(m.conversation_id)||[];a.push({role:m.role,content:m.content});map.set(m.conversation_id,a)}
@@ -84,13 +85,15 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     saveLocalSnapshot();hydrated=true;schedule();window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));
    }catch{hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"))}
   };
-  const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};window.addEventListener("storage",onStorage);
+  const onStorage=(e:StorageEvent)=>{if(USER_LOCAL_KEYS.includes(e.key||""))schedule()};
+  const onVisibility=()=>{if(document.visibilityState==="hidden")schedule()};
+  window.addEventListener("storage",onStorage);window.addEventListener("pagehide",schedule);document.addEventListener("visibilitychange",onVisibility);
   const original=localStorage.setItem.bind(localStorage);localStorage.setItem=(key:string,value:string)=>{original(key,value);if(USER_LOCAL_KEYS.includes(key))schedule()};
   void hydrate();
   // Sign-out is handled by the profile page. Do not attach click handlers
   // to buttons discovered by DOM text/class heuristics: that could hijack
   // unrelated controls and race the explicit sign-out flow.
-  return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);localStorage.setItem=original};
+  return()=>{active=false;if(timer)clearTimeout(timer);window.removeEventListener("storage",onStorage);window.removeEventListener("pagehide",schedule);document.removeEventListener("visibilitychange",onVisibility);localStorage.setItem=original};
  },[userId,onSignOut]);
  return null;
 }
