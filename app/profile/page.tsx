@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const [topicCount, setTopicCount] = useState(0);
   const [flashcardCount, setFlashcardCount] = useState(0);
   const [activeSection, setActiveSection] = useState<"about" | "learning" | "progress" | "preferences" | null>(null);
-  const [draftProfile, setDraftProfile] = useState<Profile>(defaults);
+  const [draftProfile, setDraftProfile] = useState<Profile>(defaults);\n  const [savingProfile, setSavingProfile] = useState(false);\n  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     const refreshSavedData = () => {
@@ -126,6 +126,42 @@ export default function ProfilePage() {
 
       // /login currently redirects straight back to /. Use the root auth screen.
       window.location.href = "/?signedOut=1";
+    }
+  }
+
+  async function saveProfileToAccount() {
+    if (savingProfile) return;
+    setSavingProfile(true);
+    setSaveError("");
+    try {
+      if (!supabase) throw new Error("Mah Buddy could not connect to Supabase. Please try again.");
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw new Error("Please sign in to save profile changes to your account.");
+      const p = draftProfile;
+      const { error } = await supabase.from("profiles").upsert({
+        id: authData.user.id,
+        display_name: p.preferredName.trim() || null,
+        preferred_name: p.preferredName.trim() || null,
+        buddy_name: p.buddyName.trim() || "Mah Buddy",
+        age: p.age || null,
+        learning_level: p.learningLevel || null,
+        goal: p.goal || null,
+        education_level: p.educationLevel || null,
+        country: p.country || null,
+        curriculum: p.curriculum || null,
+        subjects: p.subjects || null,
+        explanation_style: p.explanationStyle || "Normal",
+        notifications: p.notifications,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "id" });
+      if (error) throw error;
+      persist(p);
+      setActiveSection(null);
+    } catch (error) {
+      console.error("Mah Buddy profile save failed:", error);
+      setSaveError(error instanceof Error ? error.message : "Couldn't save your changes. Please try again.");
+    } finally {
+      setSavingProfile(false);
     }
   }
 
