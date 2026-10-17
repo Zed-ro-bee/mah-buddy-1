@@ -63,6 +63,7 @@ function InlineMarkdown({ text }) {
       if (external) return <a key={index} href={href} target="_blank" rel="noopener noreferrer" style={style}>{link[1]}</a>;
       return <span key={index}>{link[1]}</span>;
     }
+    if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
     if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
     if (part.startsWith("\`") && part.endsWith("\`")) return <code className="mb-md-inline-code" key={index}>{part.slice(1, -1)}</code>;
     if (part.startsWith("$") && part.endsWith("$")) return <span className="mb-md-math" key={index}>{part.slice(1, -1)}</span>;
