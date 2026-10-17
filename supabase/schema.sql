@@ -40,6 +40,9 @@ create table if not exists public.user_settings (
   updated_at timestamptz not null default now()
 );
 
+alter table public.user_settings add column if not exists tts_enabled boolean not null default true;
+alter table public.user_settings add column if not exists british_english boolean not null default true;
+
 create table if not exists public.user_memories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
