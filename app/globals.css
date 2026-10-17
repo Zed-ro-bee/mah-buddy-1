@@ -827,3 +827,5 @@ body.mb-has-global-nav .mb-mobile-nav{display:none!important}
   body.mb-keyboard-open .mb-composer-area{bottom:0!important}
 }
 @media(prefers-reduced-motion:reduce){.mah-buddy-nav-inner a{transition:none}}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
