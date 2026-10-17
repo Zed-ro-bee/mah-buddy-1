@@ -37,6 +37,8 @@ export default function SettingsPage() {
   const [accountEmail,setAccountEmail]=useState("");
   const [signingOut,setSigningOut]=useState(false);
   const [accountMessage,setAccountMessage]=useState("");
+  const [memoryMessage,setMemoryMessage]=useState("");
+  const [clearingMemory,setClearingMemory]=useState(false);
   useEffect(()=>{
     let active=true;
     async function load() {
@@ -111,6 +113,22 @@ export default function SettingsPage() {
       } catch { setSyncStatus("Saved on this device · Account sync failed"); }
     })();
   }
+  async function clearLongTermMemory() {
+    if(!window.confirm("Delete all saved long-term memories from your Mah Buddy account? This will not delete your chats or profile.")) return;
+    setClearingMemory(true); setMemoryMessage("");
+    try {
+      if(!supabase) throw new Error("Account connection is unavailable.");
+      const {data}=await supabase.auth.getSession();
+      const token=data.session?.access_token;
+      if(!token) throw new Error("Sign in to manage saved memory.");
+      const response=await fetch("/api/memory",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"clear"})});
+      const result=await response.json();
+      if(!response.ok) throw new Error(result.error||"Could not clear saved memory.");
+      setMemoryMessage("Saved long-term memory cleared.");
+    } catch(error) {
+      setMemoryMessage(error instanceof Error?error.message:"Could not clear saved memory.");
+    } finally { setClearingMemory(false); }
+  }
   function reset() {
     if(!window.confirm("Reset Mah Buddy settings to their defaults? Your chats, notes and study progress will remain saved."))return;
     update(defaults);
@@ -147,7 +165,8 @@ export default function SettingsPage() {
         <Row title="Answer style" description="Choose the usual level of detail."><select className={selectClass} aria-label="Answer style" value={prefs.answerStyle} onChange={e=>update({answerStyle:e.target.value as Prefs["answerStyle"]})}><option>Simple</option><option>Balanced</option><option>Detailed</option></select></Row>
         <Row title="Default practice difficulty" description="Starting difficulty for quizzes and practice."><select className={selectClass} aria-label="Default practice difficulty" value={prefs.difficulty} onChange={e=>update({difficulty:e.target.value as Difficulty})}><option>Easy</option><option>Normal</option><option>Hard</option></select></Row>
         <Row title="Questions per quiz" description="Preferred number when starting a quiz."><select className={selectClass} aria-label="Questions per quiz" value={prefs.questions} onChange={e=>update({questions:e.target.value})}>{["5","10","20","25","50"].map(n=><option key={n} value={n}>{n} questions</option>)}</select></Row>
-        <Row title="Use learning preferences" description="Use your saved study profile to tailor explanations."><Switch label="Use learning preferences" value={prefs.memory} onChange={v=>update({memory:v})}/></Row>
+        <Row title="Long-term memory" description="Let Mah Buddy recall useful learning details from earlier chats."><Switch label="Long-term memory" value={prefs.memory} onChange={v=>update({memory:v})}/></Row>
+        <div className="mb-pref-row"><div className="mb-pref-row-copy"><strong>Manage saved memory</strong><p>Delete remembered learning preferences and facts. Your conversations remain saved.</p>{memoryMessage&&<p role="status">{memoryMessage}</p>}</div><div className="mb-pref-row-control"><button className="mb-pref-signout" type="button" onClick={clearLongTermMemory} disabled={clearingMemory}>{clearingMemory?"Clearing…":"Clear memory"}</button></div></div>
       </Group>
       <Group id="voice" subtitle="03 · VOICE & SPEECH" title="Listen your way">
         <Row title="Voice input" description="Allow speech-to-text in chat."><Switch label="Voice input" value={prefs.voice} onChange={v=>update({voice:v})}/></Row>

@@ -370,11 +370,29 @@ export default function MahBuddyV3Home() {
       const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch { return {}; } })();
       const styleGuide = prefs.answerStyle === "Simple" ? "Prefer simple, plain-language explanations and short steps." : prefs.answerStyle === "Detailed" ? "Give thorough explanations with useful context and examples when relevant." : "Use a balanced level of detail, with clear explanations and examples when helpful.";
       const learningGuide = prefs.memory === false ? "Do not rely on saved learning preferences; use only the current message and conversation context." : "Use the current conversation and saved learning profile as context where relevant.";
-      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.slice(-30), customInstructions: SYSTEM + " " + styleGuide, memory: learningGuide, profile: prefs.memory === false ? {} : profile, difficulty }) });
+      let accessToken = "";
+      if (supabase && prefs.memory !== false) {
+        try { const { data } = await supabase.auth.getSession(); accessToken = data.session?.access_token || ""; } catch {}
+      }
+      let savedMemories = [];
+      if (accessToken) {
+        try {
+          const memoryResponse = await fetch("/api/memory", { headers: { Authorization: "Bearer " + accessToken } });
+          if (memoryResponse.ok) { const memoryData = await memoryResponse.json(); savedMemories = (memoryData.memories || []).map(item => item.content).filter(Boolean); }
+        } catch {}
+      }
+      const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.slice(-30), customInstructions: SYSTEM + " " + styleGuide, memory: learningGuide, profile: prefs.memory === false ? {} : profile, savedMemories: prefs.memory === false ? [] : savedMemories, difficulty }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to respond.");
       const answer = data.text || "I'm here. What would you like to work on?";
       setMessages(prev => [...prev, { role: "assistant", content: answer }]);
+      if (accessToken && prefs.memory !== false) {
+        void fetch("/api/memory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken },
+          body: JSON.stringify({ action: "extract", messages: [...next.slice(-8), { role: "assistant", content: answer }] })
+        }).catch(() => {});
+      }
       if (localStorage.getItem("mb-auto-speak") === "true" && "speechSynthesis" in window) listenTo(answer);
     } catch (error) {
       setMessages(prev => [...prev, { role: "assistant", content: `I couldn't respond right now. ${error.message || "Please try again."}` }]);
