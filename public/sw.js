@@ -1,4 +1,4 @@
-const CACHE="mah-buddy-shell-v3";
+const CACHE="mah-buddy-shell-v4";
 const SHELL=["/","/icon.svg","/mah-buddy-logo.svg"];
 
 self.addEventListener("install",event=>{
@@ -18,18 +18,29 @@ self.addEventListener("activate",event=>{
 });
 
 self.addEventListener("fetch",event=>{
-  const url=new URL(event.request.url);
-  if(event.request.method!=="GET"||url.origin!==self.location.origin)return;
+  const request=event.request;
+  const url=new URL(request.url);
+  if(request.method!=="GET"||url.origin!==self.location.origin)return;
   if(url.pathname.startsWith("/api/"))return;
 
-  // Network-first keeps deployed UI changes from being trapped behind an old PWA cache.
+  // Never cache document navigations: stale HTML can point at CSS chunks that no longer exist.
+  if(request.mode==="navigate"){
+    event.respondWith(
+      fetch(request).catch(()=>caches.match("/").then(cached=>cached||Response.error()))
+    );
+    return;
+  }
+
+  // Network-first for assets so the latest deployed UI is picked up promptly.
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then(response=>{
-        const copy=response.clone();
-        caches.open(CACHE).then(c=>c.put(event.request,copy));
+        if(response.ok){
+          const copy=response.clone();
+          caches.open(CACHE).then(cache=>cache.put(request,copy));
+        }
         return response;
       })
-      .catch(()=>caches.match(event.request).then(c=>c||caches.match("/")))
+      .catch(()=>caches.match(request).then(cached=>cached||caches.match("/")))
   );
 });
