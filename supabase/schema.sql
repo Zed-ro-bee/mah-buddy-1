@@ -23,6 +23,11 @@ alter table public.profiles add column if not exists age text;
 alter table public.profiles add column if not exists learning_level text;
 alter table public.profiles add column if not exists goal text;
 alter table public.profiles add column if not exists education_level text;
+alter table public.profiles add column if not exists country text;
+alter table public.profiles add column if not exists curriculum text;
+alter table public.profiles add column if not exists subjects text;
+alter table public.profiles add column if not exists explanation_style text;
+alter table public.profiles add column if not exists notifications boolean not null default false;
 
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -46,6 +51,23 @@ create table if not exists public.user_memories (
 );
 
 create index if not exists user_memories_user_updated_idx on public.user_memories(user_id, updated_at desc);
+
+-- Per-account learning history and settings that must survive browser/device changes.
+create table if not exists public.user_learning_state (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  quiz_history jsonb not null default '[]'::jsonb,
+  quiz_config jsonb not null default '{}'::jsonb,
+  flashcard_history jsonb not null default '[]'::jsonb,
+  flashcard_config jsonb not null default '{}'::jsonb,
+  progress jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.user_learning_state enable row level security;
+drop policy if exists "learning state own rows" on public.user_learning_state;
+create policy "learning state own rows" on public.user_learning_state for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists user_learning_state_updated_idx on public.user_learning_state(updated_at desc);
+
 alter table public.user_memories enable row level security;
 drop policy if exists "user memories own rows" on public.user_memories;
 create policy "user memories own rows" on public.user_memories for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
