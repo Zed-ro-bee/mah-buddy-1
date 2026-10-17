@@ -353,6 +353,53 @@ export default function MahBuddyV3Home() {
   }, []);
 
   useEffect(() => {
+    if (!supabase) return;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        setOwnerId("");
+        setHistory([]);
+        setCurrentId("");
+        setMessages([]);
+        setHistoryReady(true);
+      }
+      if (event === "SIGNED_IN" && session?.user?.id) {
+        const userId = session.user.id;
+        setOwnerId(userId);
+        setHistoryReady(false);
+        void (async () => {
+          let saved = [];
+          try {
+            const response = await fetch("/api/conversations", {
+              headers: { Authorization: "Bearer " + session.access_token },
+            });
+            if (response.ok) {
+              const payload = await response.json();
+              saved = Array.isArray(payload.history) ? payload.history : [];
+            } else {
+              const cached = JSON.parse(localStorage.getItem(`mah-buddy-history:${userId}`) || "[]");
+              saved = Array.isArray(cached) ? cached : [];
+            }
+          } catch {
+            try {
+              const cached = JSON.parse(localStorage.getItem(`mah-buddy-history:${userId}`) || "[]");
+              saved = Array.isArray(cached) ? cached : [];
+            } catch { saved = []; }
+          }
+          setHistory(saved);
+          setHistoryReady(true);
+          try { localStorage.setItem(`mah-buddy-history:${userId}`, JSON.stringify(saved)); } catch {}
+          const currentKey = `mah-buddy-current:${userId}`;
+          const preferred = localStorage.getItem(currentKey);
+          const active = saved.find(item => item.id === preferred) || saved[0];
+          setCurrentId(active?.id || "");
+          setMessages(active?.messages || []);
+        })();
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (!launchPrompt) return;
     const prompt = launchPrompt;
     setLaunchPrompt("");
