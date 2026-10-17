@@ -369,7 +369,17 @@ export default function MahBuddyV3Home() {
       const difficulty = readStoredDifficulty();
       const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch { return {}; } })();
       const styleGuide = prefs.answerStyle === "Simple" ? "Prefer simple, plain-language explanations and short steps." : prefs.answerStyle === "Detailed" ? "Give thorough explanations with useful context and examples when relevant." : "Use a balanced level of detail, with clear explanations and examples when helpful.";
-      const learningGuide = prefs.memory === false ? "Do not rely on saved learning preferences; use only the current message and conversation context." : "Use the current conversation and saved learning profile as context where relevant.";
+      const readLearningJSON = (key, fallback) => { try { const value = JSON.parse(localStorage.getItem(key) || "null"); return value == null ? fallback : value; } catch { return fallback; } };
+      const progress = prefs.memory === false ? [] : readLearningJSON("mah-buddy-progress", []);
+      const quizHistory = prefs.memory === false ? [] : readLearningJSON("mah-buddy-quiz-history", []);
+      const flashcardHistory = prefs.memory === false ? [] : readLearningJSON("mah-buddy-flashcard-history", []);
+      const progressSummary = Array.isArray(progress) ? progress.slice(-8).map(item => {
+        const score = Number(item?.score) || 0, total = Number(item?.total) || 0;
+        return { topic: String(item?.topic || "General study").slice(0, 100), score, total, percentage: total ? Math.round(score / total * 100) : null, date: item?.date || null };
+      }) : [];
+      const learningGuide = prefs.memory === false
+        ? "Memory is disabled. Use only the current message and conversation context. Do not use stored profile, learning history, or saved memories."
+        : "Act as the connected Mah Buddy learning brain. Use the saved profile and recent learning activity below when relevant. Treat quiz results as evidence for what to explain or practise next; do not claim to know information absent from this context. Recent quiz results: " + JSON.stringify(progressSummary) + ". Recent quiz question history (for avoiding repetition): " + JSON.stringify(Array.isArray(quizHistory) ? quizHistory.slice(-25) : []).slice(0, 3500) + ". Recent flashcard question history (for revision continuity): " + JSON.stringify(Array.isArray(flashcardHistory) ? flashcardHistory.slice(-25) : []).slice(0, 2500) + ". Suggest a connected follow-up such as an explanation, focused quiz, or flashcards only when useful.";
       let accessToken = "";
       if (supabase && prefs.memory !== false) {
         try { const { data } = await supabase.auth.getSession(); accessToken = data.session?.access_token || ""; } catch {}
