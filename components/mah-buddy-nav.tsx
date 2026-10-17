@@ -11,13 +11,14 @@ function Icon({ name }: { name: string }) {
     resources: <><path d="M2.8 5.5c3.1-1.3 6.2-.9 9.2 1.2v13c-3-2.1-6.1-2.5-9.2-1.2z"/><path d="M21.2 5.5C18.1 4.2 15 4.6 12 6.7v13c3-2.1 6.1-2.5 9.2-1.2z"/><path d="M5.5 9h3M5.5 12h3M15.5 9h3M15.5 12h3"/></>,
     profile: <><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></>
   };
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
 export default function MahBuddyNav() {
   const path = usePathname();
   const [ready, setReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
     if (!supabase) { setReady(true); return; }
@@ -32,7 +33,31 @@ export default function MahBuddyNav() {
     return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
 
-  if (!ready || !signedIn || path.startsWith("/login") || path.startsWith("/signup") || path.startsWith("/auth")) return null;
+  useEffect(() => {
+    if (!ready || !signedIn || path.startsWith("/login") || path.startsWith("/signup") || path.startsWith("/auth")) {
+      document.body.classList.remove("mb-has-global-nav", "mb-keyboard-open");
+      return;
+    }
+
+    document.body.classList.add("mb-has-global-nav");
+    const viewport = window.visualViewport;
+    const updateKeyboard = () => {
+      const isMobile = window.matchMedia("(max-width: 760px)").matches;
+      const open = isMobile && Boolean(viewport && window.innerHeight - viewport.height > 130);
+      setKeyboardOpen(open);
+      document.body.classList.toggle("mb-keyboard-open", open);
+    };
+    updateKeyboard();
+    viewport?.addEventListener("resize", updateKeyboard);
+    window.addEventListener("resize", updateKeyboard);
+    return () => {
+      viewport?.removeEventListener("resize", updateKeyboard);
+      window.removeEventListener("resize", updateKeyboard);
+      document.body.classList.remove("mb-has-global-nav", "mb-keyboard-open");
+    };
+  }, [ready, signedIn, path]);
+
+  if (!ready || !signedIn || keyboardOpen || path.startsWith("/login") || path.startsWith("/signup") || path.startsWith("/auth")) return null;
 
   const items = [
     ["/study", "home", "Home"],
@@ -43,29 +68,18 @@ export default function MahBuddyNav() {
 
   return (
     <nav className="mah-buddy-nav" aria-label="Main navigation">
+      <div className="mah-buddy-nav-brand"><span className="mah-buddy-nav-mark">m<span>.</span></span><span>Mah Buddy</span></div>
       <div className="mah-buddy-nav-inner">
         {items.map(([href, icon, label]) => {
           const active = href === "/" ? path === "/" : path === href || path.startsWith(href + "/");
           return (
             <a key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
               <span className="nav-icon"><Icon name={icon} /></span>
-              <small>{label}</small>
+              <span className="nav-label">{label}</span>
             </a>
           );
         })}
       </div>
-      <style jsx>{`
-        .mah-buddy-nav{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:1000;width:min(700px,calc(100% - 22px));height:74px;padding:7px;border:1px solid rgba(222,242,232,.13);border-radius:26px;background:rgba(17,28,25,.96);backdrop-filter:blur(30px) saturate(150%);box-shadow:0 20px 55px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.035)}
-        .mah-buddy-nav-inner{height:100%;display:flex;gap:5px;position:relative}
-        .mah-buddy-nav a{position:relative;flex:1;min-width:0;text-decoration:none;color:#a8b7af;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:20px;transition:background .18s ease,color .18s ease}
-        .mah-buddy-nav a:hover{color:#dceee6;background:rgba(185,232,244,.06)}
-        .mah-buddy-nav a.active{color:#153b32;background:#b9e8f4;box-shadow:0 5px 18px rgba(112,190,208,.14)}
-        .nav-icon{width:30px;height:30px;display:grid;place-items:center}
-        .nav-icon svg{width:23px;height:23px}
-        .mah-buddy-nav small{font-size:10px;line-height:1.1;letter-spacing:-.01em;font-weight:750;white-space:nowrap}
-        @media(max-width:600px){.mah-buddy-nav{height:68px;bottom:9px;border-radius:23px;width:calc(100% - 22px)}.mah-buddy-nav a{border-radius:18px;gap:3px}.nav-icon{width:29px;height:29px}.nav-icon svg{width:22px;height:22px}.mah-buddy-nav small{font-size:9px}}
-        @media(max-width:360px){.mah-buddy-nav{padding:5px}.mah-buddy-nav-inner{gap:2px}.mah-buddy-nav small{font-size:8px}}
-      `}</style>
     </nav>
   );
 }
