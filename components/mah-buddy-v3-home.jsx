@@ -51,9 +51,9 @@ function readStoredDifficulty() {
 }
 
 function InlineMarkdown({ text }) {
-  const pattern = /(\*\*[^*]+\*\*|(?<!\*)\*[^*\n]+\*(?!\*)|\`[^\`\n]+\`|\$[^$\n]+\$|\\\([^\n]+?\\\))/g;
+  const pattern = /(\\[[^\\]]+\\]\\((?:\\/[^\\s)]*|https?:\\/\\/[^\\s)]+)\\)|\\*\\*[^*]+\\*\\*|(?<!\\*)\\*[^*\\n]+\\*(?!\\*)|\\`[^\\`\\n]+\\`|\\$[^$\\n]+\\$|\\\\\\([^\\n]+?\\\\\\))/g;
   return text.split(pattern).filter(Boolean).map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
+    const link = part.match(/^\\[([^\\]]+)\\]\\(([^)]+)\\)$/);\n    if (link) { const href = link[2].trim(); const internal = /^\\/(quiz|flashcards|study|library|profile|settings)(?:[/?#]|$)/.test(href) || href === "/"; const external = /^https?:\\/\\//i.test(href); if (internal) return <a key={index} href={href} style={{color:"var(--mb-accent, #9BE8F4)",textDecoration:"underline",textUnderlineOffset:3,fontWeight:600}}>{link[1]}</a>; if (external) return <a key={index} href={href} target="_blank" rel="noopener noreferrer" style={{color:"var(--mb-accent, #9BE8F4)",textDecoration:"underline",textUnderlineOffset:3,fontWeight:600}}>{link[1]}</a>; return <span key={index}>{link[1]}</span>; }\n    if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
     if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
     if (part.startsWith("\`") && part.endsWith("\`")) return <code className="mb-md-inline-code" key={index}>{part.slice(1, -1)}</code>;
     if (part.startsWith("$") && part.endsWith("$")) return <span className="mb-md-math" key={index}>{part.slice(1, -1)}</span>;
