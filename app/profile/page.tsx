@@ -241,9 +241,10 @@ export default function ProfilePage() {
                   <div className="profile-inline-link reset-link"><span>Reset learning preferences</span><button type="button" onClick={() => { const next = {...defaults, preferredName:draftProfile.preferredName, buddyName:draftProfile.buddyName}; setDraftProfile(next); }}>Reset ↻</button></div>
                 </div>
               )}
+              {saveError && <p className="profile-save-error" role="alert">{saveError}</p>}
               <div className="profile-modal-actions">
-                <button type="button" className="profile-cancel" onClick={() => setActiveSection(null)}>Cancel</button>
-                <button type="button" className="profile-save" onClick={() => { if (activeSection !== "progress") persist(draftProfile); setActiveSection(null); }}>Save changes</button>
+                <button type="button" className="profile-cancel" onClick={() => { setSaveError(""); setActiveSection(null); }} disabled={savingProfile}>Cancel</button>
+                {activeSection !== "progress" && <button type="button" className="profile-save" onClick={() => void saveProfileToAccount()} disabled={savingProfile}>{savingProfile ? "Saving to your account…" : "Save changes"}</button>}
               </div>
             </section>
           </div>
