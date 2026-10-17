@@ -55,6 +55,8 @@ export default function ProfilePage() {
   const [accuracy, setAccuracy] = useState(0);
   const [topicCount, setTopicCount] = useState(0);
   const [flashcardCount, setFlashcardCount] = useState(0);
+  const [activeSection, setActiveSection] = useState<"about" | "learning" | "progress" | "preferences" | null>(null);
+  const [draftProfile, setDraftProfile] = useState<Profile>(defaults);
 
   useEffect(() => {
     const refreshSavedData = () => {
@@ -152,37 +154,64 @@ export default function ProfilePage() {
           <p>Manage your details, study preferences, learning progress, and account settings in one place.</p>
         </section>
 
-        <section className="profile-panel">
-          <div className="panel-title"><div><span>PROFILE</span><h2>About you</h2></div><b>01</b></div>
-          <Field label="Preferred name" sub="How Mah Buddy should address you."><input value={profile.preferredName} onChange={e => persist({preferredName:e.target.value})} placeholder="Your name" autoComplete="nickname"/></Field>
-          <Field label="Name for your buddy" sub="Give your study companion a name."><input value={profile.buddyName} onChange={e => persist({buddyName:e.target.value})} placeholder="Mah Buddy"/></Field>
-          <Field label="Age (optional)" sub="Helps tailor explanations appropriately."><input type="number" inputMode="numeric" min="5" max="120" value={profile.age} onChange={e => persist({age:e.target.value})} placeholder="Leave blank if you prefer"/></Field>
-        </section>
+        <div className="profile-section-list" aria-label="Profile sections">
+          <button type="button" className="profile-section-tile" onClick={() => { setDraftProfile(profile); setActiveSection("about"); }}>
+            <span className="profile-tile-icon">01</span><span className="profile-tile-copy"><b>About you</b><small>{profile.preferredName || "Add your name"} · Personal details</small></span><span className="profile-tile-arrow">↗</span>
+          </button>
+          <button type="button" className="profile-section-tile" onClick={() => { setDraftProfile(profile); setActiveSection("learning"); }}>
+            <span className="profile-tile-icon">02</span><span className="profile-tile-copy"><b>Study preferences</b><small>{profile.educationLevel || "Set your study level"} · Learning style</small></span><span className="profile-tile-arrow">↗</span>
+          </button>
+          <button type="button" className="profile-section-tile" onClick={() => { setDraftProfile(profile); setActiveSection("progress"); }}>
+            <span className="profile-tile-icon">03</span><span className="profile-tile-copy"><b>Learning overview</b><small>{quizCount} quizzes · {topicCount} topics · {flashcardCount} flashcard sets</small></span><span className="profile-tile-arrow">↗</span>
+          </button>
+          <button type="button" className="profile-section-tile" onClick={() => { setDraftProfile(profile); setActiveSection("preferences"); }}>
+            <span className="profile-tile-icon">04</span><span className="profile-tile-copy"><b>Preferences</b><small>Reminders and learning profile controls</small></span><span className="profile-tile-arrow">↗</span>
+          </button>
+        </div>
 
-        <section className="profile-panel">
-          <div className="panel-title"><div><span>LEARNING</span><h2>Your study preferences</h2></div><b>02</b></div>
-          <Field label="Current studies" sub="Choose what best describes you."><select value={profile.educationLevel} onChange={e => persist({educationLevel:e.target.value})}><option value="">Select education level</option><option>Primary school</option><option>Secondary school</option><option>College / university</option><option>Postgraduate study</option><option>Professional learning</option><option>Independent learning</option></select></Field>
-          <Field label="Explanation style" sub="Change the level of detail whenever you need."><select value={profile.explanationStyle} onChange={e => persist({explanationStyle:e.target.value})}><option>Easy</option><option>Normal</option><option>Advanced</option></select></Field>
-          <Field label="Learning level" sub="Adjust language and explanation depth."><select value={profile.learningLevel} onChange={e => persist({learningLevel:e.target.value})}><option value="">Select your level</option>{levels.map(l=><option key={l.value} value={l.value}>{l.value} — {l.detail}</option>)}</select></Field>
-          <Field label="Subjects" sub="Separate subjects with commas."><input value={profile.subjects} onChange={e => persist({subjects:e.target.value})} placeholder="Biology, maths, history"/></Field>
-          <Field label="Current goal" sub="What would you most like help with?"><select value={profile.goal} onChange={e => persist({goal:e.target.value})}><option value="">Select a goal</option><option>Exam preparation</option><option>Homework and assignments</option><option>Understanding difficult topics</option><option>Building study habits</option><option>Learning a new skill</option><option>General learning</option></select></Field>
-          <Field label="Country or region (optional)" sub="For more relevant examples and study guidance."><input value={profile.country} onChange={e => persist({country:e.target.value})} placeholder="Country or region" autoComplete="country-name"/></Field>
-          <Field label="Curriculum (optional)" sub="Only if it applies to your studies."><input value={profile.curriculum} onChange={e => persist({curriculum:e.target.value})} placeholder="e.g. IB, GCSE, AP, national curriculum"/></Field>
-        </section>
-
-        <section className="profile-panel profile-overview">
-          <div className="panel-title"><div><span>YOUR PROGRESS</span><h2>Learning overview</h2></div><b>03</b></div>
-          <div className="profile-stats three-stats"><div><strong>{topicCount}</strong><span>Topics practised</span></div><div><strong>{quizCount}</strong><span>Quizzes completed</span></div><div><strong>{flashcardCount}</strong><span>Flashcard sets</span></div></div>
-          <div className="accuracy-line"><span>Quiz accuracy</span><strong>{accuracy}%</strong></div><div className="accuracy-track"><span style={{width:accuracy+"%"}}/></div>
-          <a className="profile-inline-link" href="/study/progress">View full progress <span>→</span></a>
-          <p className="profile-helper">Synced to your account when signed in, so your progress can follow you across devices.</p>
-        </section>
-
-        <section className="profile-panel">
-          <div className="panel-title"><div><span>SETTINGS</span><h2>Preferences</h2></div><b>04</b></div>
-          <div className="preference-toggle"><span><b>Study reminders</b><small>Save your preference for reminder features when available.</small></span><input type="checkbox" checked={profile.notifications} onChange={e=>persist({notifications:e.target.checked})} aria-label="Enable study reminders"/></div>
-          <div className="profile-inline-link reset-link"><span>Reset learning preferences</span><button type="button" onClick={resetLearningProfile}>Reset ↻</button></div>
-        </section>
+        {activeSection && (
+          <div className="profile-modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setActiveSection(null); }}>
+            <section className="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+              <div className="profile-modal-head"><div><span>YOUR PROFILE</span><h2 id="profile-modal-title">{activeSection === "about" ? "About you" : activeSection === "learning" ? "Study preferences" : activeSection === "progress" ? "Learning overview" : "Preferences"}</h2></div><button type="button" className="profile-modal-close" onClick={() => setActiveSection(null)} aria-label="Close">×</button></div>
+              {activeSection === "about" && (
+                <div className="profile-modal-fields">
+                  <Field label="Preferred name" sub="How Mah Buddy should address you."><input value={draftProfile.preferredName} onChange={e => setDraftProfile(p => ({...p, preferredName:e.target.value}))} placeholder="Your name" autoComplete="nickname"/></Field>
+                  <Field label="Name for your buddy" sub="Give your study companion a name."><input value={draftProfile.buddyName} onChange={e => setDraftProfile(p => ({...p, buddyName:e.target.value}))} placeholder="Mah Buddy"/></Field>
+                  <Field label="Age (optional)" sub="Helps tailor explanations appropriately."><input type="number" inputMode="numeric" min="5" max="120" value={draftProfile.age} onChange={e => setDraftProfile(p => ({...p, age:e.target.value}))} placeholder="Leave blank if you prefer"/></Field>
+                </div>
+              )}
+              {activeSection === "learning" && (
+                <div className="profile-modal-fields">
+                  <Field label="Current studies" sub="Choose what best describes you."><select value={draftProfile.educationLevel} onChange={e => setDraftProfile(p => ({...p, educationLevel:e.target.value}))}><option value="">Select education level</option><option>Primary school</option><option>Secondary school</option><option>College / university</option><option>Postgraduate study</option><option>Professional learning</option><option>Independent learning</option></select></Field>
+                  <Field label="Explanation style" sub="Change the level of detail whenever you need."><select value={draftProfile.explanationStyle} onChange={e => setDraftProfile(p => ({...p, explanationStyle:e.target.value}))}><option>Easy</option><option>Normal</option><option>Advanced</option></select></Field>
+                  <Field label="Learning level" sub="Adjust language and explanation depth."><select value={draftProfile.learningLevel} onChange={e => setDraftProfile(p => ({...p, learningLevel:e.target.value}))}><option value="">Select your level</option>{levels.map(l=><option key={l.value} value={l.value}>{l.value} — {l.detail}</option>)}</select></Field>
+                  <Field label="Subjects" sub="Separate subjects with commas."><input value={draftProfile.subjects} onChange={e => setDraftProfile(p => ({...p, subjects:e.target.value}))} placeholder="Biology, maths, history"/></Field>
+                  <Field label="Current goal" sub="What would you most like help with?"><select value={draftProfile.goal} onChange={e => setDraftProfile(p => ({...p, goal:e.target.value}))}><option value="">Select a goal</option><option>Exam preparation</option><option>Homework and assignments</option><option>Understanding difficult topics</option><option>Building study habits</option><option>Learning a new skill</option><option>General learning</option></select></Field>
+                  <Field label="Country or region (optional)" sub="For relevant examples and study guidance."><input value={draftProfile.country} onChange={e => setDraftProfile(p => ({...p, country:e.target.value}))} placeholder="Country or region" autoComplete="country-name"/></Field>
+                  <Field label="Curriculum (optional)" sub="Only if it applies to your studies."><input value={draftProfile.curriculum} onChange={e => setDraftProfile(p => ({...p, curriculum:e.target.value}))} placeholder="e.g. IB, GCSE, AP, national curriculum"/></Field>
+                </div>
+              )}
+              {activeSection === "progress" && (
+                <div className="profile-modal-progress">
+                  <div className="profile-stats three-stats"><div><strong>{topicCount}</strong><span>Topics practised</span></div><div><strong>{quizCount}</strong><span>Quizzes completed</span></div><div><strong>{flashcardCount}</strong><span>Flashcard sets</span></div></div>
+                  <div className="accuracy-line"><span>Quiz accuracy</span><strong>{accuracy}%</strong></div><div className="accuracy-track"><span style={{width:accuracy+"%"}}/></div>
+                  <a className="profile-inline-link" href="/study/progress">View full progress <span>→</span></a>
+                  <p className="profile-helper">Synced to your account when signed in, so your progress can follow you across devices.</p>
+                </div>
+              )}
+              {activeSection === "preferences" && (
+                <div className="profile-modal-fields">
+                  <div className="preference-toggle"><span><b>Study reminders</b><small>Save your preference for reminder features when available.</small></span><input type="checkbox" checked={draftProfile.notifications} onChange={e => setDraftProfile(p => ({...p, notifications:e.target.checked}))} aria-label="Enable study reminders"/></div>
+                  <div className="profile-inline-link reset-link"><span>Reset learning preferences</span><button type="button" onClick={() => { const next = {...defaults, preferredName:draftProfile.preferredName, buddyName:draftProfile.buddyName}; setDraftProfile(next); }}>Reset ↻</button></div>
+                </div>
+              )}
+              <div className="profile-modal-actions">
+                <button type="button" className="profile-cancel" onClick={() => setActiveSection(null)}>Cancel</button>
+                <button type="button" className="profile-save" onClick={() => { if (activeSection !== "progress") persist(draftProfile); setActiveSection(null); }}>Save changes</button>
+              </div>
+            </section>
+          </div>
+        )}
 
         <section className="account-card">
           <span>ACCOUNT</span><div className="account-line"><div className="account-symbol"><Logo size={24}/></div><div><strong>{email || "Account not connected"}</strong><small>{email ? "Signed-in email managed by your account provider." : "Your profile preferences are saved on this device."}</small></div><b>{email ? "✓" : "○"}</b></div>
