@@ -770,3 +770,5 @@ html[data-theme="dark"]{color-scheme:dark;}
 .profile-save-error{margin:14px 0 0;padding:11px 12px;border:1px solid #7E4545;border-radius:11px;background:#321E1E;color:#FFD1D1;font-size:12px;line-height:1.5}.profile-modal-actions button:disabled{opacity:.6;cursor:wait}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+.mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
+html[data-theme="dark"]{color-scheme:dark;}
