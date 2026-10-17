@@ -56,7 +56,8 @@ export default function ProfilePage() {
   const [topicCount, setTopicCount] = useState(0);
   const [flashcardCount, setFlashcardCount] = useState(0);
   const [activeSection, setActiveSection] = useState<"about" | "learning" | "progress" | "preferences" | null>(null);
-  const [draftProfile, setDraftProfile] = useState<Profile>(defaults);\n  const [savingProfile, setSavingProfile] = useState(false);\n  const [saveError, setSaveError] = useState("");
+  const [draftProfile, setDraftProfile] = useState<Profile>(defaults);
+  const [savingProfile, setSavingProfile] = useState(false);\n  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     const refreshSavedData = () => {
