@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 function pageName(path: string) {
   const clean = path.split("?")[0].replace(/\/+$/, "");
-  const names: Record<string,string> = {
+  const names: Record<string, string> = {
     "/": "AI Assistance",
     "/study": "Study",
     "/quiz": "Quiz",
@@ -13,11 +13,11 @@ function pageName(path: string) {
     "/library": "Library",
     "/profile": "Profile",
     "/settings": "Settings",
-    "/about-mah-buddy": "About Mah Buddy"
+    "/about-mah-buddy": "About Mah Buddy",
   };
   if (names[clean]) return names[clean];
   const last = clean.split("/").filter(Boolean).pop();
-  return last ? last.replace(/[-_]/g," ").replace(/\b\w/g, c => c.toUpperCase()) : "your space";
+  return last ? last.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "your space";
 }
 
 export default function PageTransitionLoading() {
@@ -63,11 +63,50 @@ export default function PageTransitionLoading() {
 
   if (!visible) return null;
   return (
-    <div className="mb-route-loading" role="status" aria-live="polite" aria-label={`Opening ${label}`}>
-      <div className="mb-route-loading-card">
-        <span className="mb-route-spinner" aria-hidden="true" />
-        <span className="mb-route-loading-content"><span className="mb-route-loading-copy"><strong>Opening {label}</strong><small>Getting everything ready…</small></span><span className="mb-route-skeletons" aria-hidden="true"><i/><i/><i/></span></span>
+    <div
+      className="mb-route-loading"
+      role="status"
+      aria-live="polite"
+      aria-label={`Opening ${label}`}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2000,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        padding: "calc(16px + env(safe-area-inset-top)) 14px 14px",
+        background: "rgba(10,16,12,.38)",
+        backdropFilter: "blur(3px)",
+        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        color: "#F0F4F0",
+      }}
+    >
+      <div
+        className="mb-route-loading-card"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          width: "min(100%, 390px)",
+          padding: "13px 15px",
+          border: "1px solid #385344",
+          borderRadius: 16,
+          background: "rgba(29,41,34,.98)",
+          boxShadow: "0 12px 36px rgba(0,0,0,.28)",
+        }}
+      >
+        <span
+          className="mb-route-spinner"
+          aria-hidden="true"
+          style={{ flex: "0 0 20px", width: 20, height: 20, border: "2px solid #395548", borderTopColor: "#9BE8F4", borderRadius: "50%", animation: "mb-spin 700ms linear infinite" }}
+        />
+        <span style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
+          <strong style={{ color: "#F0F4F0", fontSize: 13, fontWeight: 700 }}>Opening {label}</strong>
+          <small style={{ color: "#A0ACA3", fontSize: 11 }}>Getting everything ready…</small>
+        </span>
       </div>
+      <style>{`@keyframes mb-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.mb-route-spinner{animation:none!important}}`}</style>
     </div>
   );
 }
