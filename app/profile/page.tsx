@@ -57,20 +57,31 @@ export default function ProfilePage() {
   const [flashcardCount, setFlashcardCount] = useState(0);
 
   useEffect(() => {
-    try {
-      setProfile({ ...defaults, ...JSON.parse(localStorage.getItem(KEY) || "{}") });
-      const results = JSON.parse(localStorage.getItem("mah-buddy-progress") || "[]");
-      if (Array.isArray(results)) {
-        setQuizCount(results.length);
-        const total = results.reduce((n: number, r: { total?: number }) => n + (Number(r.total) || 0), 0);
-        const correct = results.reduce((n: number, r: { score?: number }) => n + (Number(r.score) || 0), 0);
-        setAccuracy(total ? Math.round(correct / total * 100) : 0);
-        setTopicCount(new Set(results.map((r: { topic?: string }) => String(r.topic || "").trim()).filter(Boolean)).size);
-      }
-      const cards = JSON.parse(localStorage.getItem("mah-buddy-flashcard-history") || "[]");
-      if (Array.isArray(cards)) setFlashcardCount(cards.length);
-    } catch {}
+    const refreshSavedData = () => {
+      try {
+        setProfile({ ...defaults, ...JSON.parse(localStorage.getItem(KEY) || "{}") });
+        const results = JSON.parse(localStorage.getItem("mah-buddy-progress") || "[]");
+        if (Array.isArray(results)) {
+          setQuizCount(results.length);
+          const total = results.reduce((n: number, r: { total?: number }) => n + (Number(r.total) || 0), 0);
+          const correct = results.reduce((n: number, r: { score?: number }) => n + (Number(r.score) || 0), 0);
+          setAccuracy(total ? Math.round(correct / total * 100) : 0);
+          setTopicCount(new Set(results.map((r: { topic?: string }) => String(r.topic || "").trim()).filter(Boolean)).size);
+        }
+        const cards = JSON.parse(localStorage.getItem("mah-buddy-flashcard-history") || "[]");
+        if (Array.isArray(cards)) setFlashcardCount(cards.length);
+      } catch {}
+    };
+    refreshSavedData();
+    window.addEventListener("mah-buddy-persistence-ready", refreshSavedData);
+    window.addEventListener("mah-buddy-profile-changed", refreshSavedData);
+    window.addEventListener("mah-buddy-account-restored", refreshSavedData);
     if (supabase) supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email || ""));
+    return () => {
+      window.removeEventListener("mah-buddy-persistence-ready", refreshSavedData);
+      window.removeEventListener("mah-buddy-profile-changed", refreshSavedData);
+      window.removeEventListener("mah-buddy-account-restored", refreshSavedData);
+    };
   }, []);
 
   function persist(patch: Partial<Profile>) {
@@ -164,7 +175,7 @@ export default function ProfilePage() {
           <div className="profile-stats three-stats"><div><strong>{topicCount}</strong><span>Topics practised</span></div><div><strong>{quizCount}</strong><span>Quizzes completed</span></div><div><strong>{flashcardCount}</strong><span>Flashcard sets</span></div></div>
           <div className="accuracy-line"><span>Quiz accuracy</span><strong>{accuracy}%</strong></div><div className="accuracy-track"><span style={{width:accuracy+"%"}}/></div>
           <a className="profile-inline-link" href="/study/progress">View full progress <span>→</span></a>
-          <p className="profile-helper">Based on saved activity on this device. Activity from other devices may not be included.</p>
+          <p className="profile-helper">Synced to your account when signed in, so your progress can follow you across devices.</p>
         </section>
 
         <section className="profile-panel">
