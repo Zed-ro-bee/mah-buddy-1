@@ -4,7 +4,7 @@ import {supabase} from "../lib/supabase";
 
 type StoredMessage={role:"user"|"assistant"|"system";content:string};
 type StoredChat={id:string;title:string;messages:StoredMessage[];updatedAt:number};
-type StoredProfile={preferredName:string;buddyName:string;age:string;learningLevel:string;goal:string;educationLevel?:string};
+type StoredProfile={preferredName:string;buddyName:string;age:string;learningLevel:string;goal:string;educationLevel?:string;country?:string;curriculum?:string;subjects?:string;explanationStyle?:string;notifications?:boolean};
 
 const CHAT_KEY="mah-buddy-chats", LEGACY_CHAT_KEY="mah-buddy-chat", V3_HISTORY_KEY="mah-buddy-history", V3_CURRENT_KEY="mah-buddy-current", PREFS_KEY="mah-buddy-prefs", PROFILE_KEY="mah-buddy-profile";
 const QUIZ_HISTORY_KEY="mah-buddy-quiz-history", QUIZ_CONFIG_KEY="mah-buddy-quiz-config";
@@ -54,16 +54,18 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
     }
    }catch{}
   };
-  const persistProfile=async()=>{try{const p=readProfile();await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,updated_at:new Date().toISOString()})}catch{}};
-  const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()})}catch{}};
-  const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs()},600)};
+  const persistProfile=async()=>{try{const p=readProfile();const{error}=await client.from("profiles").upsert({id:userId,display_name:p.preferredName||null,preferred_name:p.preferredName||null,buddy_name:p.buddyName||"Mah Buddy",age:p.age||null,learning_level:p.learningLevel||null,goal:p.goal||null,education_level:p.educationLevel||null,country:p.country||null,curriculum:p.curriculum||null,subjects:p.subjects||null,explanation_style:p.explanationStyle||"Normal",notifications:p.notifications===true,updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy profile persistence:",error.message)}catch(error){console.error("Mah Buddy profile persistence:",error)}};
+  const persistPrefs=async()=>{try{const p=readJSON(PREFS_KEY,{});const theme=p.theme||(p.dark?"dark":"system");const{error}=await client.from("user_settings").upsert({user_id:userId,theme,memory_enabled:p.memory!==false,voice_enabled:p.voice!==false,tts_enabled:p.autoSpeak===true,notifications_enabled:p.notifications!==false,updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy settings persistence:",error.message)}catch(error){console.error("Mah Buddy settings persistence:",error)}};
+  const persistLearningState=async()=>{try{const{error}=await client.from("user_learning_state").upsert({user_id:userId,quiz_history:readJSON(QUIZ_HISTORY_KEY,[]),quiz_config:readJSON(QUIZ_CONFIG_KEY,{}),flashcard_history:readJSON(FLASH_HISTORY_KEY,[]),flashcard_config:readJSON(FLASH_CONFIG_KEY,{}),progress:readJSON("mah-buddy-progress",[]),updated_at:new Date().toISOString()});if(error)console.error("Mah Buddy learning-state persistence:",error.message)}catch(error){console.error("Mah Buddy learning-state persistence:",error)}};
+  const schedule=()=>{if(timer)clearTimeout(timer);timer=setTimeout(()=>{void persist();void persistProfile();void persistPrefs();void persistLearningState()},600)};
   const hydrate=async()=>{
    try{
     clearActiveLocal();restoreLocalSnapshot();
-    const[{data:cs,error},{data:settings},{data:remoteProfile}]=await Promise.all([
+    const[{data:cs,error},{data:settings},{data:remoteProfile},{data:learningState}]=await Promise.all([
      client.from("conversations").select("id,title,updated_at").eq("user_id",userId).order("updated_at",{ascending:false}),
      client.from("user_settings").select("theme,voice_enabled,tts_enabled,notifications_enabled,memory_enabled").eq("user_id",userId).maybeSingle(),
-     client.from("profiles").select("preferred_name,buddy_name,age,learning_level,goal,education_level,display_name").eq("id",userId).maybeSingle()
+     client.from("profiles").select("preferred_name,buddy_name,age,learning_level,goal,education_level,display_name,country,curriculum,subjects,explanation_style,notifications").eq("id",userId).maybeSingle(),
+     client.from("user_learning_state").select("quiz_history,quiz_config,flashcard_history,flashcard_config,progress").eq("user_id",userId).maybeSingle()
     ]);
     if(error||!active){hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));return}
     if(cs?.length){
@@ -77,7 +79,8 @@ export default function PersistenceBridge({userId,onSignOut}:{userId:string;onSi
      if(localChats.length)write(V3_HISTORY_KEY,localChats);
     }
     if(settings)write(PREFS_KEY,{...readJSON(PREFS_KEY,{}),theme:settings.theme||"system",voice:settings.voice_enabled!==false,autoSpeak:settings.tts_enabled===true,notifications:settings.notifications_enabled!==false,memory:settings.memory_enabled!==false});
-    if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||""};write(PROFILE_KEY,profile);window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}
+    if(remoteProfile){const profile={...defaultProfile,preferredName:remoteProfile.preferred_name||remoteProfile.display_name||"",buddyName:remoteProfile.buddy_name||"Mah Buddy",age:remoteProfile.age||"",learningLevel:remoteProfile.learning_level||"",goal:remoteProfile.goal||"",educationLevel:remoteProfile.education_level||"",country:remoteProfile.country||"",curriculum:remoteProfile.curriculum||"",subjects:remoteProfile.subjects||"",explanationStyle:remoteProfile.explanation_style||"Normal",notifications:remoteProfile.notifications===true};write(PROFILE_KEY,profile);window.dispatchEvent(new CustomEvent("mah-buddy-profile-changed"));}
+    if(learningState){write(QUIZ_HISTORY_KEY,learningState.quiz_history||[]);write(QUIZ_CONFIG_KEY,learningState.quiz_config||{});write(FLASH_HISTORY_KEY,learningState.flashcard_history||[]);write(FLASH_CONFIG_KEY,learningState.flashcard_config||{});write("mah-buddy-progress",learningState.progress||[]);}
     saveLocalSnapshot();hydrated=true;schedule();window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"));
    }catch{hydrated=true;window.dispatchEvent(new CustomEvent("mah-buddy-persistence-ready"))}
   };
