@@ -232,6 +232,9 @@ export default function MahBuddyV3Home() {
   const [messages, setMessages] = useState([]);
   const [history, setHistory] = useState([]);
   const [currentId, setCurrentId] = useState("");
+  const [ownerId, setOwnerId] = useState("");
+  const [historyReady, setHistoryReady] = useState(false);
+  const syncQueue = useRef(Promise.resolve());
   const [input, setInput] = useState("");
   const [launchPrompt, setLaunchPrompt] = useState("");
   const [busy, setBusy] = useState(false);
@@ -251,17 +254,52 @@ export default function MahBuddyV3Home() {
       const params = new URLSearchParams(window.location.search);
       const prompt = params.get("prompt");
       const autoStart = params.get("autostart") === "1";
-      const saved = JSON.parse(localStorage.getItem("mah-buddy-history") || "[]");
-      setHistory(saved);
       if (prompt && autoStart) {
         setCurrentId("");
         setMessages([]);
         setLaunchPrompt(prompt);
-      } else {
-        const id = localStorage.getItem("mah-buddy-current");
-        const active = saved.find(x => x.id === id) || saved[0];
-        if (active) { setCurrentId(active.id); setMessages(active.messages || []); }
       }
+      void (async () => {
+        let user = null;
+        if (supabase) {
+          try { const { data } = await supabase.auth.getUser(); user = data.user || null; } catch {}
+        }
+        const userId = user?.id || "";
+        setOwnerId(userId);
+        const historyKey = userId ? `mah-buddy-history:${userId}` : "mah-buddy-history:guest";
+        const currentKey = userId ? `mah-buddy-current:${userId}` : "mah-buddy-current:guest";
+        let saved = [];
+        let cloudLoaded = false;
+        if (userId && supabase) {
+          try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData.session?.user?.id === userId ? sessionData.session.access_token : "";
+            if (token) {
+              const response = await fetch("/api/conversations", { headers: { Authorization: "Bearer " + token } });
+              if (response.ok) {
+                const payload = await response.json();
+                saved = Array.isArray(payload.history) ? payload.history : [];
+                cloudLoaded = true;
+              }
+            }
+          } catch {}
+        }
+        if (!cloudLoaded) {
+          try {
+            const cached = JSON.parse(localStorage.getItem(historyKey) || "[]");
+            saved = Array.isArray(cached) ? cached : [];
+          } catch { saved = []; }
+        }
+        setHistory(saved);
+        setHistoryReady(true);
+        try { localStorage.setItem(historyKey, JSON.stringify(saved)); } catch {}
+        if (!(prompt && autoStart)) {
+          const id = localStorage.getItem(currentKey);
+          const active = saved.find(x => x.id === id) || saved[0];
+          if (active) { setCurrentId(active.id); setMessages(active.messages || []); }
+          else { setCurrentId(""); setMessages([]); }
+        }
+      })();
       // Load the same saved preferences used by the Settings page.
       let prefs = {};
       try { prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch {}
@@ -322,16 +360,41 @@ export default function MahBuddyV3Home() {
   }, [launchPrompt]);
 
   useEffect(() => {
-    if (currentId) {
+    if (historyReady && currentId) {
       setHistory(prev => {
         const updated = prev.map(h => h.id === currentId ? { ...h, messages, updatedAt: Date.now(), title: h.title !== "New conversation" ? h.title : (messages.find(m => m.role === "user")?.content || "New conversation").slice(0, 42) } : h);
-        localStorage.setItem("mah-buddy-history", JSON.stringify(updated));
+        const historyKey = ownerId ? `mah-buddy-history:${ownerId}` : "mah-buddy-history:guest";
+        try { localStorage.setItem(historyKey, JSON.stringify(updated)); } catch {}
         return updated;
       });
     }
-    localStorage.setItem("mah-buddy-current", currentId || "");
+    if (historyReady) {
+      const currentKey = ownerId ? `mah-buddy-current:${ownerId}` : "mah-buddy-current:guest";
+      try { localStorage.setItem(currentKey, currentId || ""); } catch {}
+    }
     bottom.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, busy, currentId]);
+  }, [messages, busy, currentId, ownerId, historyReady]);
+
+  useEffect(() => {
+    if (!historyReady || !ownerId || !currentId || !messages.length || !supabase) return;
+    const transcript = messages
+      .filter(m => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .map(m => ({ role: m.role, content: m.content }));
+    const title = (transcript.find(m => m.role === "user")?.content || "New conversation").slice(0, 120);
+    const timer = setTimeout(() => {
+      syncQueue.current = syncQueue.current.catch(() => {}).then(async () => {
+        const { data } = await supabase.auth.getSession();
+        const session = data.session;
+        if (!session?.access_token || session.user.id !== ownerId) return;
+        await fetch("/api/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+          body: JSON.stringify({ id: currentId, title, messages: transcript }),
+        });
+      }).catch(() => {});
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [messages, currentId, ownerId, historyReady]);
 
   function note(text) { setToast(text); setTimeout(() => setToast(""), 1800); }
   function listenTo(text) {
