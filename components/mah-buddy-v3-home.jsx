@@ -154,7 +154,7 @@ function MarkdownAnswer({ content }) {
     while (i < lines.length && lines[i].trim() && !/^\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|(?:---+|\*\*\*+|___+)\s*$)/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
     blocks.push(<p className="mb-md-paragraph" key={blocks.length}>{paragraph.map((part, n) => <span key={n}>{n > 0 ? " " : ""}<InlineMarkdown text={part}/></span>)}</p>);
   }
-  return <div className="mb-md-content" style={{ fontFamily: "var(--mb-ai-response-font, Inter, ui-sans-serif, system-ui, sans-serif)", fontWeight: 700 }}>{blocks}</div>;
+  return <div className="mb-md-content" style={{ fontFamily: "var(--mb-ai-response-font, Inter, ui-sans-serif, system-ui, sans-serif)", fontWeight: 400 }}>{blocks}</div>;
 }
 
 function Mark({ size = 30 }) { return <img className="mb-logo" src="/mah-buddy-logo.svg" width={size} height={size} alt="Mah Buddy" draggable="false" />; }
