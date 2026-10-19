@@ -198,7 +198,9 @@ function readFile(file) {
   });
 }
 
-function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
+function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings, onDelete }) {
+  const [search, setSearch] = useState("");
+  const visibleHistory = history.filter(item => String(item.title || "New conversation").toLowerCase().includes(search.trim().toLowerCase()));
   return <div className="mb-history-overlay" onClick={onClose}><aside className="mb-history" onClick={e => e.stopPropagation()}>
     <div className="mb-history-head"><div className="mb-drawer-brand"><span className="mb-drawer-brand-mark"><Mark size={38}/></span><div><strong>Mah Buddy</strong><small>Your study companion</small></div></div><button className="mb-icon-btn" onClick={onClose} aria-label="Close navigation"><Icon name="close"/></button></div>
     <button className="mb-drawer-new-chat" onClick={onNew}><Icon name="plus" size={18}/> New chat</button>
@@ -214,7 +216,8 @@ function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
       <a className="mb-side-link" href="/settings"><Icon name="settings" size={18}/> Settings</a>
     </nav>
     <div className="mb-history-section-title">RECENT CHATS</div>
-    <div className="mb-history-list">{history.length === 0 ? <p className="mb-history-empty">Your conversations will appear here.</p> : history.map(h => <button className="mb-history-item" key={h.id} onClick={() => onSelect(h.id)}><Icon name="history" size={17}/><span>{h.title || "New conversation"}<small>{new Date(h.updatedAt).toLocaleDateString()}</small></span></button>)}</div>
+    <input aria-label="Search conversations" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search conversations…" style={{width:"100%",boxSizing:"border-box",margin:"0 0 10px",padding:"10px 12px",borderRadius:10,border:"1px solid var(--mb-border, #344238)",background:"var(--mb-surface, #18211b)",color:"inherit",fontSize:13}}/>
+    <div className="mb-history-list">{visibleHistory.length === 0 ? <p className="mb-history-empty">{history.length === 0 ? "Your conversations will appear here." : "No conversations match your search."}</p> : visibleHistory.map(h => <div key={h.id} style={{display:"flex",alignItems:"center",gap:4,width:"100%"}}><button className="mb-history-item" onClick={() => onSelect(h.id)} style={{flex:1,minWidth:0,textAlign:"left"}}><Icon name="history" size={17}/><span style={{minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{h.title || "New conversation"}<small>{new Date(h.updatedAt).toLocaleDateString()}</small></span></button><button className="mb-icon-btn" onClick={() => onDelete(h.id)} aria-label={"Delete conversation: " + (h.title || "New conversation")} title="Delete conversation" style={{flexShrink:0,width:34,height:34}}><Icon name="trash-2" size={15}/></button></div>)}</div>
     <div className="mb-drawer-legal"><a href="/privacy-policy">Privacy Policy</a><span>·</span><a href="/terms-of-service">Terms of Service</a></div>
   </aside></div>;
 }
@@ -501,6 +504,38 @@ export default function MahBuddyV3Home() {
   function newChat() { const id = crypto.randomUUID(); const item = { id, title: "New conversation", messages: [], updatedAt: Date.now() }; setHistory(h => [item, ...h]); setCurrentId(id); setMessages([]); setInput(""); setAttachment(null); setDrawer(false); }
   function selectChat(id) { const item = history.find(h => h.id === id); if (!item) return; setCurrentId(id); setMessages(item.messages || []); setAttachment(null); setDrawer(false); }
 
+  async function deleteChat(id) {
+    const item = history.find(h => h.id === id);
+    if (!item || !window.confirm("Delete this conversation permanently?")) return;
+    try {
+      if (ownerId && supabase) {
+        const { data } = await supabase.auth.getSession();
+        const session = data.session;
+        if (!session?.access_token || session.user.id !== ownerId) { note("Please sign in again to delete this conversation."); return; }
+        const response = await fetch("/api/conversations", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+          body: JSON.stringify({ id }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "Could not delete this conversation.");
+      }
+      const remaining = history.filter(chat => chat.id !== id);
+      setHistory(remaining);
+      const historyKey = ownerId ? `mah-buddy-history:${ownerId}` : "mah-buddy-history:guest";
+      try { localStorage.setItem(historyKey, JSON.stringify(remaining)); } catch {}
+      if (currentId === id) {
+        setCurrentId("");
+        setMessages([]);
+        const currentKey = ownerId ? `mah-buddy-current:${ownerId}` : "mah-buddy-current:guest";
+        try { localStorage.setItem(currentKey, ""); } catch {}
+      }
+      note("Conversation deleted.");
+    } catch (error) {
+      note(error?.message || "Could not delete this conversation.");
+    }
+  }
+
   async function chooseFile(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -595,6 +630,6 @@ export default function MahBuddyV3Home() {
       <div className="mb-composer-area"><input ref={fileRef} type="file" hidden accept="image/*,.pdf,.txt,.md,.csv,.json,.html,audio/*,video/*" onChange={chooseFile}/>{attachment && <div className="mb-attachment-preview"><span>📎</span><div><strong>{attachment.name}</strong><small>{Math.max(1, Math.round(attachment.size / 1024))} KB · ready to attach</small></div><button onClick={() => setAttachment(null)}><Icon name="close" size={16}/></button></div>}<div className={listening ? "mb-composer listening" : "mb-composer"}><button className="mb-composer-btn" onClick={() => fileRef.current?.click()} aria-label="Attach file"><Icon name="plus"/></button><textarea value={input} onChange={e => { setInput(e.target.value); e.currentTarget.style.height = "auto"; e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 150) + "px"; }} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && localStorage.getItem("mb-enter") !== "false") { e.preventDefault(); send(); } }} aria-label="Message Mah Buddy" placeholder="Message Mah Buddy…" rows={1}/>{!input.trim() && <button className={listening ? "mb-composer-btn active" : "mb-composer-btn"} onClick={mic} aria-label="Voice input"><Icon name="mic"/></button>}{(input.trim() || attachment) && <button className="mb-send" onClick={() => send()} disabled={busy} aria-label="Send message"><Icon name="send" size={18}/></button>}</div><small>Mah Buddy can make mistakes. Check important information.</small></div>
       <nav className="mb-mobile-nav mb-nav-four" aria-label="Main navigation"><a className="active" href="/" aria-current="page"><Icon name="message" size={19}/><span>Chat</span></a><a href="/study"><Icon name="book" size={19}/><span>Study</span></a><a href="/library"><Icon name="library" size={19}/><span>Library</span></a><a href="/profile"><Icon name="user" size={19}/><span>Profile</span></a></nav>
     </div></div>
-    {drawer && <HistoryDrawer history={history} onSelect={selectChat} onNew={newChat} onClose={() => setDrawer(false)} onSettings={() => { setDrawer(false); setSettings(true); }}/>} {settings && <SettingsPanel onClose={() => setSettings(false)}/>} {toast && <div className="mb-toast">{toast}</div>}
+    {drawer && <HistoryDrawer history={history} onSelect={selectChat} onNew={newChat} onDelete={deleteChat} onClose={() => setDrawer(false)} onSettings={() => { setDrawer(false); setSettings(true); }}/>} {settings && <SettingsPanel onClose={() => setSettings(false)}/>} {toast && <div className="mb-toast">{toast}</div>}
   </>;
 }
