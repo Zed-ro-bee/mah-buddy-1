@@ -63,7 +63,7 @@ function InlineMarkdown({ text }) {
   const pattern = /(\[[^\]]+\]\((?:\/[^\s)]*|https?:\/\/[^\s)]+)\)|https?:\/\/[^\s<>()]+|www\.[^\s<>()]+|\*\*[^*]+\*\*|(?<!\*)\*[^*\n]+\*(?!\*)|\`[^\`\n]+\`|\$[^$\n]+\$|\\\([^\n]+?\\\))/g;
   return text.split(pattern).filter(Boolean).map((part, index) => {
     const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    const style = { color: "var(--mb-accent, #9BE8F4)", textDecoration: "underline", textUnderlineOffset: 3, fontWeight: 600, cursor: "pointer", position: "relative", zIndex: 1 };
+    const style = { color: "var(--mb-accent, #9BE8F4)", textDecoration: "underline", textUnderlineOffset: 3, fontWeight: 600, cursor: "pointer" };
     if (link) {
       const href = link[2].trim();
       const internal = /^\/(quiz|flashcards|study|library|profile|settings)(?:[/?#]|$)/.test(href) || href === "/";
@@ -79,6 +79,12 @@ function InlineMarkdown({ text }) {
       return <span key={index}><a href={href} target="_blank" rel="noopener noreferrer" style={style}>{url}</a>{trailing}</span>;
     }
     if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
+    if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
+    if (part.startsWith("\`") && part.endsWith("\`")) return <code className="mb-md-inline-code" key={index}>{part.slice(1, -1)}</code>;
+    if (part.startsWith("$") && part.endsWith("$")) return <span className="mb-md-math" key={index}>{part.slice(1, -1)}</span>;
+    if (part.startsWith("\\(") && part.endsWith("\\)")) return <span className="mb-md-math" key={index}>{part.slice(2, -2)}</span>;
+    return <span key={index}>{part}</span>;
+  });
 }
 
 function MarkdownAnswer({ content }) {
