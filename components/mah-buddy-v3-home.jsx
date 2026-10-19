@@ -13,6 +13,14 @@ const CHAT_PALETTES = {
   amber:{bg:"#211D14",surface:"#332B1D",raised:"#4A3B25",accent:"#FFD080",muted:"#C1B49A"},
   midnight:{bg:"#111827",surface:"#1C273B",raised:"#293A56",accent:"#A5BFFF",muted:"#A5B0C5"}
 };
+const AI_RESPONSE_FONTS = {
+  inter: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  roboto: 'Roboto, Arial, sans-serif',
+  poppins: 'Poppins, Arial, sans-serif',
+  georgia: 'Georgia, "Times New Roman", serif',
+  lora: 'Lora, Georgia, serif',
+  monospace: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+};
 function applyChatPreferences(prefs = {}) {
   const palette = CHAT_PALETTES[prefs.palette] || CHAT_PALETTES.forest;
   const accent = /^#[0-9a-fA-F]{6}$/.test(prefs.accent || "") ? prefs.accent : palette.accent;
@@ -33,6 +41,7 @@ function applyChatPreferences(prefs = {}) {
   root.style.setProperty("--mb-border",accent+"35");
   root.style.setProperty("--mb-border-strong",accent+"70");
   root.style.setProperty("--mb-focus","0 0 0 3px "+accent+"45");
+  root.style.setProperty("--mb-ai-response-font", AI_RESPONSE_FONTS[prefs.aiResponseFont] || AI_RESPONSE_FONTS.inter);
   root.classList.toggle("mb-reduced-motion",!!prefs.reducedMotion);
 }
 
@@ -145,7 +154,7 @@ function MarkdownAnswer({ content }) {
     while (i < lines.length && lines[i].trim() && !/^\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?|\`\`\`|\$\$\s*$|(?:---+|\*\*\*+|___+)\s*$)/.test(lines[i]) && !(i + 1 < lines.length && lines[i].includes("|") && isTableDivider(lines[i + 1]))) paragraph.push(lines[i++].trim());
     blocks.push(<p className="mb-md-paragraph" key={blocks.length}>{paragraph.map((part, n) => <span key={n}>{n > 0 ? " " : ""}<InlineMarkdown text={part}/></span>)}</p>);
   }
-  return <div className="mb-md-content">{blocks}</div>;
+  return <div className="mb-md-content" style={{ fontFamily: "var(--mb-ai-response-font, Inter, ui-sans-serif, system-ui, sans-serif)" }}>{blocks}</div>;
 }
 
 function Mark({ size = 30 }) { return <img className="mb-logo" src="/mah-buddy-logo.svg" width={size} height={size} alt="Mah Buddy" draggable="false" />; }
@@ -207,7 +216,33 @@ function HistoryDrawer({ history, onSelect, onNew, onClose, onSettings }) {
 function SettingsPanel({ onClose }) {
   const [voice, setVoice] = useState(true);
   const [enter, setEnter] = useState(true);
-  useEffect(() => { setVoice(localStorage.getItem("mb-voice") !== "false"); setEnter(localStorage.getItem("mb-enter") !== "false"); }, []);
+  const [aiResponseFont, setAiResponseFont] = useState("inter");
+  useEffect(() => {
+    setVoice(localStorage.getItem("mb-voice") !== "false");
+    setEnter(localStorage.getItem("mb-enter") !== "false");
+    try {
+      const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+      const font = Object.prototype.hasOwnProperty.call(AI_RESPONSE_FONTS, prefs.aiResponseFont) ? prefs.aiResponseFont : "inter";
+      setAiResponseFont(font);
+      document.documentElement.style.setProperty("--mb-ai-response-font", AI_RESPONSE_FONTS[font]);
+    } catch {}
+  }, []);
+  const changeAiResponseFont = (font) => {
+    const safeFont = Object.prototype.hasOwnProperty.call(AI_RESPONSE_FONTS, font) ? font : "inter";
+    setAiResponseFont(safeFont);
+    document.documentElement.style.setProperty("--mb-ai-response-font", AI_RESPONSE_FONTS[safeFont]);
+    try {
+      const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+      prefs.aiResponseFont = safeFont;
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      window.dispatchEvent(new CustomEvent("mah-buddy-preferences-changed"));
+      if (supabase) {
+        supabase.auth.getUser().then(({ data }) => {
+          if (data.user) return supabase.auth.updateUser({ data: { mah_buddy_preferences: prefs } });
+        }).catch(() => {});
+      }
+    } catch {}
+  };
   const toggle = (key, setter, value) => {
     setter(value);
     localStorage.setItem(key, value ? "true" : "false");
@@ -224,7 +259,7 @@ function SettingsPanel({ onClose }) {
       }
     } catch {}
   };
-  return <div className="mb-settings-overlay" onClick={onClose}><section className="mb-settings" onClick={e => e.stopPropagation()}><header><div><span className="mb-settings-eyebrow">MAH BUDDY</span><h2>Settings</h2><p>Make Mah Buddy feel exactly right for you.</p></div><button className="mb-icon-btn" onClick={onClose}><Icon name="close"/></button></header><div className="mb-settings-section"><h3>Conversation</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="mic"/></div><div className="mb-setting-copy"><strong>Voice input</strong><span>Use your microphone in chat</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-voice", setVoice, !voice)}><span className={voice ? "on" : ""}/></button></div><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="send"/></div><div className="mb-setting-copy"><strong>Enter to send</strong><span>Press Enter to send messages</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-enter", setEnter, !enter)}><span className={enter ? "on" : ""}/></button></div></div><a className="mb-settings-full-link" href="/settings">Open all settings <span aria-hidden="true">→</span></a><div className="mb-settings-footer"><Mark size={30}/><span>Mah Buddy • Your intelligent study companion</span></div></section></div>;
+  return <div className="mb-settings-overlay" onClick={onClose}><section className="mb-settings" onClick={e => e.stopPropagation()}><header><div><span className="mb-settings-eyebrow">MAH BUDDY</span><h2>Settings</h2><p>Make Mah Buddy feel exactly right for you.</p></div><button className="mb-icon-btn" onClick={onClose}><Icon name="close"/></button></header><div className="mb-settings-section"><h3>AI response appearance</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="spark"/></div><div className="mb-setting-copy"><strong>Response font</strong><span>Change the font used for Mah Buddy's answers only.</span><select aria-label="AI response font" value={aiResponseFont} onChange={e => changeAiResponseFont(e.target.value)} style={{marginTop:9,width:"100%",maxWidth:230,padding:"9px 10px",borderRadius:10,border:"1px solid #3A4A3F",background:"#18211B",color:"#F0F4F0",fontSize:13}}><option value="inter">Inter — clean</option><option value="roboto">Roboto — modern</option><option value="poppins">Poppins — rounded</option><option value="georgia">Georgia — classic serif</option><option value="lora">Lora — literary</option><option value="monospace">Monospace — technical</option></select></div></div></div><div className="mb-settings-section"><h3>Conversation</h3><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="mic"/></div><div className="mb-setting-copy"><strong>Voice input</strong><span>Use your microphone in chat</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-voice", setVoice, !voice)}><span className={voice ? "on" : ""}/></button></div><div className="mb-setting-card"><div className="mb-setting-icon"><Icon name="send"/></div><div className="mb-setting-copy"><strong>Enter to send</strong><span>Press Enter to send messages</span></div><button className="mb-theme-switch" onClick={() => toggle("mb-enter", setEnter, !enter)}><span className={enter ? "on" : ""}/></button></div></div><a className="mb-settings-full-link" href="/settings">Open all settings <span aria-hidden="true">→</span></a><div className="mb-settings-footer"><Mark size={30}/><span>Mah Buddy • Your intelligent study companion</span></div></section></div>;
 }
 
 export default function MahBuddyV3Home() {
