@@ -477,12 +477,16 @@ export default function MahBuddyV3Home() {
         const { data } = await supabase.auth.getSession();
         const session = data.session;
         if (!session?.access_token || session.user.id !== ownerId) return;
-        await fetch("/api/conversations", {
+        const response = await fetch("/api/conversations", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
           body: JSON.stringify({ id: currentId, title, messages: transcript }),
         });
-      }).catch(() => {});
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          note(result.error || "This conversation could not be saved to your account. Please try again.");
+        }
+      }).catch(() => { note("Chat history could not sync. Check your connection and try again."); });
     }, 700);
     return () => clearTimeout(timer);
   }, [messages, currentId, ownerId, historyReady]);
