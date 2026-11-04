@@ -853,3 +853,20 @@ html[data-theme="dark"]{color-scheme:dark;}
 html[data-theme="dark"]{color-scheme:dark;}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+
+
+/* Chat UX refinement — calm, compact welcome and reliable composer reset */
+.mb-hero{min-height:min(40vh,390px);padding:26px 0 20px}
+.mb-hero-eyebrow{display:inline-flex;align-items:center;gap:8px;margin-bottom:15px;color:#9BE8F4;font-size:10px;font-weight:750;letter-spacing:.13em}
+.mb-hero h1{max-width:620px;font-size:clamp(24px,5.2vw,31px);line-height:1.18}
+.mb-hero p{max-width:360px;margin-top:12px;font-size:13px;line-height:1.65}
+.mb-chat{gap:20px;padding-top:22px}
+.mb-msg-label{color:#849188;font-size:10px;letter-spacing:.015em}
+.mb-msg.assistant .mb-msg-label{color:#9BE8F4}
+.mb-answer-card{font-size:14px;line-height:1.72}
+.mb-user-bubble{max-width:min(100%,620px);padding:10px 14px;font-size:14px;line-height:1.6}
+.mb-composer textarea{max-height:180px}
+.mb-header{gap:8px}
+.mb-header>.mb-icon-btn{flex:0 0 38px}
+.mb-brand{min-width:0}
+@media(max-width:420px){.mb-hero{min-height:34vh;padding-top:20px}.mb-chat{gap:17px;padding-top:18px}.mb-composer-area>small{font-size:9px}}
