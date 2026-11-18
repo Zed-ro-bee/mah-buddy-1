@@ -70,7 +70,7 @@ export default function StudyPage() {
     <main className="home-page">
       <header className="home-header">
         <a href="/" className="home-brand" aria-label="Mah Buddy AI Assistance">
-          <span className="home-brand-mark"><Icon name="spark" size={21}/></span>
+          <span className="home-brand-mark"><img src="/mah-buddy-logo.svg" alt="" width="41" height="41"/></span>
           <span><strong>mah buddy</strong><small>YOUR AI STUDY COMPANION</small></span>
         </a>
         <a href="/profile" className="profile-shortcut" aria-label="Open profile"><Icon name="user" size={21}/></a>
