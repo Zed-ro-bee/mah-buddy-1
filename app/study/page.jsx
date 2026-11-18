@@ -106,7 +106,7 @@ export default function StudyPage() {
           <div className="mb-home-v2-showcase-image" style={{ backgroundImage: `linear-gradient(90deg,rgba(10,28,19,.84) 0%,rgba(10,28,19,.54) 48%,rgba(10,28,19,.08) 100%),linear-gradient(0deg,rgba(10,28,19,.24),transparent 58%),url("${slide.image}")`, backgroundPosition: `center,center,${slide.position}` }} />
           <div className="mb-home-v2-showcase-content" key={activeSlide}>
             <span className="mb-home-v2-showcase-eyebrow">{slide.eyebrow}</span>
-            <h2>{slide.title.split("\\n").map((line, index) => <span key={index}>{line}</span>)}</h2>
+            <h2>{slide.title.split(String.fromCharCode(10)).map((line, index) => <span key={index}>{line}</span>)}</h2>
             <p>{slide.description}</p>
             <a href={slide.href} className="mb-home-v2-showcase-cta">{slide.action}<span aria-hidden="true">↗</span></a>
           </div>
