@@ -333,3 +333,71 @@ button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+/* High-specificity page-layer rules override the legacy scoped page styles */
+html body .home-page{background:#F5F7F4!important;color:#17211B!important}
+html body .home-page .home-header{background:rgba(255,255,255,.94)!important;border-bottom-color:#E3EAE3!important}
+html body .home-page .home-brand{color:#17211B!important}
+html body .home-page .home-brand-mark{background:transparent!important}
+html body .home-page .home-brand-mark img{width:41px!important;height:41px!important;object-fit:contain!important}
+html body .home-page .profile-shortcut{background:#fff!important;border-color:#E3EAE3!important;color:#176B45!important}
+html body .home-page .welcome-copy h1{color:#17211B!important}
+html body .home-page .welcome-copy h1 em{color:#176B45!important;background:none!important}
+html body .home-page .welcome-copy p{color:#68766D!important}
+html body .home-page .home-eyebrow{color:#176B45!important}
+html body .home-page .section-heading h2{color:#17211B!important}
+html body .home-page .section-heading>a{color:#176B45!important}
+html body .home-page .ai-companion-card,html body .home-page .progress-card{background:#fff!important;color:#17211B!important;border-color:#E3EAE3!important}
+html body .home-page .ai-companion-copy strong,html body .home-page .progress-copy strong{color:#17211B!important}
+html body .home-page .ai-companion-copy small,html body .home-page .progress-copy p{color:#68766D!important}
+html body .resources-page{background:#F5F7F4!important;color:#17211B!important}
+html body .resources-page .resources-header{background:rgba(255,255,255,.94)!important;border-color:#E3EAE3!important}
+html body .resources-page .resources-hero{background:linear-gradient(120deg,#F0F6F0,#E7F1E9 58%,#DDECE1)!important;border-color:#DDE8DE!important}
+html body .resources-page .resources-hero h1,html body .resources-page .resources-hero .hero-copy h1{color:#17211B!important}
+html body .resources-page .resources-hero p{color:#647268!important}
+html body .resources-page .search-box,html body .resources-page .filter-button{background:#fff!important;border-color:#E3EAE3!important;color:#176B45!important}
+html body .resources-page .subject-card,html body .resources-page .saved-panel,html body .resources-page .library-list,html body .resources-page .note-row,html body .resources-page .learning-card,html body .resources-page .recent-row,html body .resources-page .tool-card{background:#fff!important;border-color:#E3EAE3!important;color:#17211B!important}
+html body .resources-page .subject-copy strong,html body .resources-page .note-content strong,html body .resources-page .learning-meta strong,html body .resources-page .recent-row strong{color:#17211B!important}
+html body .resources-page .subject-copy small,html body .resources-page .note-content small,html body .resources-page .note-content p,html body .resources-page .learning-meta p,html body .resources-page .recent-row small{color:#68766D!important}
+html body .resources-page .library-tabs{background:#E9EEE9!important}
+html body .resources-page .library-tabs button.active{background:#fff!important;color:#176B45!important}
+html body .profile-app{background:#F5F7F4!important;color:#17211B!important}
+html body .profile-app .profile-header{background:rgba(255,255,255,.94)!important;border-color:#E3EAE3!important}
+html body .profile-app .identity-card{background:linear-gradient(145deg,#fff,#F0F6F0)!important;border-color:#E3EAE3!important}
+html body .profile-app .identity-card h1{color:#17211B!important}
+html body .profile-app .identity-card h1 em{color:#176B45!important}
+html body .profile-app .identity-card p,html body .profile-app .avatar-area small{color:#68766D!important}
+html body .profile-app .profile-section-tile{background:#fff!important;border-color:#E3EAE3!important;color:#17211B!important}
+html body .profile-app .profile-tile-icon{background:#EAF3EC!important;color:#176B45!important}
+html body .profile-app .profile-tile-copy b{color:#17211B!important}
+html body .profile-app .profile-tile-copy small{color:#68766D!important}
+html body .profile-app .account-card,html body .profile-app .account-actions{background:#fff!important;border-color:#E3EAE3!important}
+html body .profile-app .account-line strong,html body .profile-app .account-actions b{color:#17211B!important}
+html body .profile-app .account-line small,html body .profile-app .account-actions small{color:#68766D!important}
+html body .mb-settings-page{background:#F5F7F4!important;color:#17211B!important}
+html body .mb-settings-page .mb-pref-topbar{background:rgba(255,255,255,.94)!important;border-color:#E3EAE3!important}
+html body .mb-settings-page .mb-pref-intro{background:linear-gradient(140deg,#fff,#EEF5EF)!important;border-color:#E3EAE3!important}
+html body .mb-settings-page .mb-pref-intro h1,html body .mb-settings-page .mb-pref-group-head h2{color:#17211B!important}
+html body .mb-settings-page .mb-pref-intro p,html body .mb-settings-page .mb-pref-row-copy p{color:#68766D!important}
+html body .mb-settings-page .mb-pref-group{background:#fff!important;border-color:#E3EAE3!important}
+html body .mb-settings-page .mb-pref-row-copy strong{color:#17211B!important}
+html body .mb-settings-page .mb-pref-select,html body .mb-settings-page .mb-pref-static{background:#F7FAF7!important;border-color:#DDE6DE!important;color:#17211B!important}
+html body .mb-settings-page .mb-pref-link-row{border-color:#EDF1ED!important;color:#17211B!important}
+html body .mb-settings-page .mb-pref-link-row strong{color:#17211B!important}
+html body .mb-settings-page .mb-pref-link-row small{color:#68766D!important}
+html body .mb-settings-page .mb-pref-switch.is-on{background:#176B45!important}
+html body .mah-buddy-nav,html body .mb-nav-four{background:rgba(255,255,255,.96)!important;border-color:#E3EAE3!important;box-shadow:0 -5px 24px rgba(22,48,30,.07)!important}
+html body .mb-nav-four a,html body .mb-nav-four button{color:#66736A!important}
+html body .mb-nav-four a.active,html body .mb-nav-four button.active{background:#EAF3EC!important;color:#176B45!important;box-shadow:none!important}
+html body .mah-buddy-nav-brand{color:#17211B!important}
+html body .mah-buddy-nav-inner a.active{background:#EAF3EC!important;color:#176B45!important}
+@media(max-width:600px){
+ html body .home-page .home-content{padding:25px 15px 24px!important}
+ html body .resources-page .subject-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body .profile-app .profile-content{padding:17px 13px 28px!important}
+ html body .mb-settings-page .mb-pref-layout{width:calc(100% - 26px)!important}
+}
+@media(max-width:360px){
+ html body .resources-page .subject-grid{grid-template-columns:1fr!important}
+ html body .mb-settings-page .mb-pref-row{flex-direction:column!important;align-items:stretch!important}
+}
