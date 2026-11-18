@@ -874,3 +874,165 @@ html[data-theme="dark"]{color-scheme:dark;}
 html[data-theme="dark"]{color-scheme:dark;}
 .mb-setting.link{appearance:none;border:0;width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;color:inherit;}
 html[data-theme="dark"]{color-scheme:dark;}
+
+
+/* =========================================================
+   MAH BUDDY — APPLE-INSPIRED INTERFACE REFRESH
+   Shared light design language; existing product logic retained.
+   ========================================================= */
+:root{
+  color-scheme:light!important;
+  --mb-ink:#F5F6F4!important;
+  --mb-ink-raised:#FFFFFF!important;
+  --mb-surface:#FFFFFF!important;
+  --mb-surface-raised:#EEF1ED!important;
+  --mb-violet:#176B45!important;
+  --mb-violet-bright:#1C8053!important;
+  --mb-cyan:#176B45!important;
+  --mb-cloud:#17211B!important;
+  --mb-muted:#66736A!important;
+  --mb-subtle:#7D887F!important;
+  --mb-border:rgba(23,55,36,.10)!important;
+  --mb-border-strong:rgba(23,55,36,.16)!important;
+  --mb-shadow:0 12px 36px rgba(25,45,32,.07)!important;
+}
+html,html[data-theme="dark"],body{
+  color-scheme:light!important;
+  background:#F5F6F4!important;
+  color:#17211B!important;
+}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+a{ -webkit-tap-highlight-color:transparent }
+button,input,textarea,select{accent-color:#176B45}
+::selection{background:#D8EBDD;color:#173B29}
+
+/* Global navigation */
+.mah-buddy-nav{
+  background:rgba(255,255,255,.94)!important;
+  border-color:#E7EBE6!important;
+  box-shadow:0 4px 24px rgba(25,45,32,.055)!important;
+  backdrop-filter:blur(24px) saturate(160%)!important;
+}
+.mah-buddy-nav-brand{color:#17211B!important}
+.mah-buddy-nav-mark{background:#174B37!important;color:#fff!important}
+.mah-buddy-nav-inner a{color:#68756C!important;border-radius:13px!important}
+.mah-buddy-nav-inner a:hover{background:#F1F5F0!important;color:#174B37!important}
+.mah-buddy-nav-inner a.active{background:#EAF3EC!important;color:#176B45!important}
+.mah-buddy-nav-inner .nav-label{font-weight:650!important}
+@media(min-width:761px){
+ .mah-buddy-nav{background:#fff!important;border-right:1px solid #E8ECE7!important;box-shadow:5px 0 28px rgba(24,45,31,.035)!important}
+}
+
+/* AI Assistance workspace */
+.mb-shell,.mb-home{background:#F5F6F4!important;color:#17211B!important}
+.mb-home{max-width:1120px!important}
+.mb-header{background:rgba(245,246,244,.91)!important;border-color:#E5EAE4!important;backdrop-filter:blur(22px)!important}
+.mb-brand{color:#17211B!important;font-weight:650!important}
+.mb-icon-btn{color:#536158!important}
+.mb-icon-btn:hover{background:#EAF0EA!important;border-color:#DCE5DC!important;color:#176B45!important}
+.mb-hero h1{color:#17211B!important;font-weight:650!important;letter-spacing:-.045em!important}
+.mb-hero p{color:#68756C!important}
+.mb-hero-eyebrow{color:#176B45!important}
+.mb-chat{gap:25px!important}
+.mb-msg-label,.mb-msg.assistant .mb-msg-label{color:#176B45!important}
+.mb-answer-card{color:#25342A!important}
+.mb-answer-card strong{color:#17211B!important}
+.mb-user-bubble{background:#EAF2EB!important;border:1px solid #DCE9DE!important;color:#1B3022!important;border-radius:18px 18px 5px 18px!important}
+.mb-answer-actions button{color:#718076!important}
+.mb-answer-actions button:hover{background:#E8EFE8!important;color:#176B45!important}
+.mb-composer-area{background:linear-gradient(180deg,rgba(245,246,244,0),#F5F6F4 24%)!important}
+.mb-composer{background:#fff!important;border:1px solid #DDE5DD!important;border-radius:22px!important;box-shadow:0 8px 30px rgba(29,53,36,.075)!important}
+.mb-composer:focus-within,.mb-composer.listening{border-color:#78A98A!important;box-shadow:0 0 0 4px rgba(23,107,69,.09),0 8px 30px rgba(29,53,36,.06)!important}
+.mb-composer textarea{color:#17211B!important}
+.mb-composer textarea::placeholder{color:#89948C!important}
+.mb-composer-btn{color:#68756C!important}
+.mb-composer-btn:hover{background:#EDF4EE!important;color:#176B45!important}
+.mb-send{background:#176B45!important;color:#fff!important;border-radius:12px!important}
+.mb-send:hover{background:#0F5938!important}
+.mb-composer-area>small{color:#929C94!important}
+.mb-attachment-preview,.mb-attachment-card{background:#fff!important;border-color:#E0E7E0!important;color:#24352A!important}
+.mb-attachment-preview small,.mb-attachment-card small{color:#718076!important}
+.mb-nav-four{background:rgba(255,255,255,.96)!important;border-color:#E3E9E3!important;box-shadow:0 8px 30px rgba(26,47,32,.10)!important}
+.mb-nav-four a,.mb-nav-four button{color:#738076!important}
+.mb-nav-four a.active,.mb-nav-four button.active{background:#EAF3EC!important;color:#176B45!important;box-shadow:none!important}
+.mb-history-overlay{background:rgba(21,34,25,.28)!important}
+.mb-history{background:#fff!important;border-color:#E5EAE4!important;color:#17211B!important;box-shadow:12px 0 40px rgba(20,40,25,.10)!important}
+.mb-history-head{border-color:#E7ECE7!important}
+.mb-side-link{color:#536158!important}
+.mb-side-link:hover,.mb-side-link.active{background:#EDF4EE!important;color:#176B45!important}
+.mb-toast{background:#fff!important;border-color:#DCE5DC!important;color:#17211B!important;box-shadow:0 12px 32px rgba(25,45,32,.12)!important}
+
+/* Home dashboard */
+.home-page{background:#F5F6F4!important;color:#17211B!important}
+.home-header{background:rgba(255,255,255,.92)!important;border-color:#E7EBE6!important;backdrop-filter:blur(22px)!important}
+.home-brand{color:#17211B!important}
+.home-brand small{color:#7A867D!important}
+.home-brand-mark{background:#EAF3EC!important;color:#176B45!important;box-shadow:none!important}
+.profile-shortcut{background:#fff!important;border-color:#E1E8E1!important;color:#526157!important}
+.profile-shortcut:hover{border-color:#9ABAA2!important;color:#176B45!important}
+.home-content{max-width:900px!important;padding-top:34px!important}
+.home-eyebrow{color:#176B45!important}
+.welcome-copy h1{color:#17211B!important;letter-spacing:-.06em!important}
+.welcome-copy h1 em{background:none!important;color:#176B45!important}
+.welcome-copy p{color:#718076!important}
+.feature-carousel{border:0!important;border-radius:24px!important;box-shadow:0 16px 38px rgba(20,40,25,.12)!important}
+.workspace-section{margin-top:34px!important}
+.section-kicker{color:#7A867D!important}
+.section-heading h2{color:#17211B!important;font-weight:650!important}
+.section-heading>a{color:#176B45!important}
+.workspace-card{border:1px solid #E5EAE4!important;border-radius:19px!important;box-shadow:0 6px 20px rgba(28,48,33,.055)!important}
+.ai-companion-card,.progress-card{border:1px solid #E3EAE3!important;background:#fff!important;color:#17211B!important;border-radius:20px!important;box-shadow:0 8px 26px rgba(28,48,33,.055)!important}
+.ai-companion-copy strong,.progress-copy strong{color:#17211B!important}
+.ai-companion-copy small,.progress-copy p{color:#718076!important}
+.ai-companion-copy>span,.progress-copy>span{color:#176B45!important}
+
+/* Profile, settings and shared forms */
+.profile-section-tile,.profile-modal,.mb-settings,.mb-settings-panel{
+  background:#fff!important;color:#17211B!important;border-color:#E3EAE3!important;
+  box-shadow:0 16px 48px rgba(26,47,32,.09)!important;
+}
+.profile-section-tile{border-radius:18px!important}
+.profile-section-tile:hover{background:#F8FAF8!important;border-color:#B7CEBA!important}
+.profile-tile-icon{background:#EDF4EE!important;border-color:#E1EBE1!important;color:#176B45!important}
+.profile-tile-copy b,.profile-modal-head h2{color:#17211B!important}
+.profile-tile-copy small,.profile-modal .profile-field small,.profile-modal .preference-toggle small{color:#718076!important}
+.profile-modal-backdrop{background:rgba(22,35,25,.34)!important}
+.profile-modal{border-radius:24px!important}
+.profile-modal-head{border-color:#E8EDE8!important}
+.profile-modal-head>div>span{color:#176B45!important}
+.profile-modal-close{background:#F2F5F2!important;border-color:#E2E9E2!important;color:#425247!important}
+.profile-modal .profile-field input,.profile-modal .profile-field select,.profile-modal .preference-toggle{
+ background:#F8FAF8!important;border-color:#E0E7E0!important;color:#17211B!important
+}
+.profile-modal .profile-field input:focus,.profile-modal .profile-field select:focus{border-color:#80A98B!important;box-shadow:0 0 0 3px rgba(23,107,69,.09)!important}
+.profile-modal-actions{border-color:#E8EDE8!important}
+.profile-cancel{border-color:#DCE5DC!important;color:#405047!important}
+.profile-save{background:#176B45!important;border-color:#176B45!important;color:#fff!important}
+.profile-save:hover{background:#0F5938!important}
+.profile-save-error{background:#FFF4F2!important;border-color:#F0D0CA!important;color:#9B3428!important}
+
+/* Quiz, flashcards and study tools: consistent surfaces and controls */
+.study,.quiz-page,.flashcards-page,.study-page,.resource-page,.settings-page,.profile-page{
+ background:#F5F6F4!important;color:#17211B!important
+}
+.study h1,.study h2,.study h3,.quiz-page h1,.quiz-page h2,.flashcards-page h1,.flashcards-page h2{color:#17211B!important}
+.study p,.quiz-page p,.flashcards-page p{color:#66736A}
+.study button,.quiz-page button,.flashcards-page button,.settings-page button{
+ border-radius:12px
+}
+.study input,.study select,.study textarea,.quiz-page input,.quiz-page select,.quiz-page textarea,.flashcards-page input,.flashcards-page select{
+ background:#fff!important;color:#17211B!important;border-color:#DDE5DD!important
+}
+.study .home-header,.quiz-page header,.flashcards-page header{background:rgba(255,255,255,.94)!important;border-color:#E5EAE4!important}
+.study .home-brand,.quiz-page a,.flashcards-page a{color:#176B45}
+.study .home-eyebrow,.study .section-kicker{color:#176B45!important}
+.study .workspace-card{background:#fff!important}
+.study .progress-card,.study .ai-companion-card{background:#fff!important;color:#17211B!important}
+.study .progress-card p,.study .ai-companion-card small{color:#718076!important}
+.study .progress-card strong,.study .ai-companion-card strong{color:#17211B!important}
+
+/* Accessibility and motion */
+:focus-visible{outline-color:#176B45!important;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
